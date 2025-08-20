@@ -1,0 +1,43 @@
+# Virtual environments
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyd
+*.pdb
+*.pkl
+
+# Distribution / packaging
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Environment variables / secrets
+.env
+.env.*
+*.sqlite3
+
+# IDE / editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Mypy / Pytest / Coverage
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# Docker
+*.pid
+*.seed
+*.pid.lock
