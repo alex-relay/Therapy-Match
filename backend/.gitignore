@@ -19,6 +19,7 @@ dist/
 
 # Environment variables / secrets
 .env
+.DS_Store
 .env.*
 *.sqlite3
 
