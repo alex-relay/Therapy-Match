@@ -47,11 +47,11 @@ class PersonalityTestScore(Base):
     extraversion = Column(Float, nullable=False)
     conscientiousness = Column(Float, nullable=False)
     agreeableness = Column(Float, nullable=False)
-    vector = Column(Vector(5), nullable=False)
+    vector = Column(Vector(5), nullable=True)
 
 class Matches(Base):
     __tablename__= "matches"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    patient_id = Column(UUID(as_uuid=True), ForeignKey("patients.id", ondelete="CASCADE"), nullable=True)
-    therapist_id = Column(UUID(as_uuid=True), ForeignKey("therapists.id", ondelete="CASCADE"), nullable=True)
+    patient_id = Column(UUID(as_uuid=True), ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    therapist_id = Column(UUID(as_uuid=True), ForeignKey("therapists.id", ondelete="CASCADE"), nullable=False)
 
