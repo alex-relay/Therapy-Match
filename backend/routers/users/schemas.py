@@ -15,28 +15,23 @@ class BaseUser(BaseModel):
     location: Coordinate
     email_address: str
     description: Optional[str] = None
-    user_type: UserType
 
 
 class PatientCreate(BaseUser):
     therapy_needs: list[str]
-    personality_test_id: UUID
+    personality_test_id: Optional[UUID] = None
 
 
 class TherapistCreate(BaseUser):
     therapist_type: str
     specializations: list[str]
-    personality_test_id: UUID
-
-
-class UserRead(BaseUser):
-    id: UUID
+    personality_test_id: Optional[UUID] = None
 
 class PatientRead(PatientCreate):
     id: UUID
 
 class TherapistRead(TherapistCreate):
-    id: UUID
+    id: str
 
 class UserPersonalityTestCreate(BaseModel):
     user_id: UUID

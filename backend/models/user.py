@@ -29,10 +29,9 @@ class Therapist(User, table=True):
     personality_test: Optional["PersonalityTestScore"] = Relationship(
         back_populates="therapists",
         sa_relationship_kwargs={
-            "uselist": False,
             "cascade": "all, delete-orphan",
-            "single_parent": True,
-        },
+            "single_parent": True
+        }
     )
 
 class Patient(User, table=True):
@@ -44,11 +43,7 @@ class Patient(User, table=True):
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(
         back_populates="patients",
-        sa_relationship_kwargs={
-            "uselist": False,
-            "cascade": "all, delete-orphan",
-            "single_parent": True,
-        },
+        sa_relationship_kwargs={"single_parent": True}
     )
 
 class PersonalityTestScore(SQLModel, table=True):
@@ -61,5 +56,13 @@ class PersonalityTestScore(SQLModel, table=True):
     conscientiousness : Decimal = Field(default=0, max_digits=5, decimal_places=3)
     agreeableness : Decimal = Field(default=0, max_digits=5, decimal_places=3)
 
+    therapists: List["Therapist"] = Relationship(back_populates="personality_test")
+    patients: List["Patient"] = Relationship(back_populates="personality_test")
 
 
+class Match(SQLModel, table=True):
+    __tablename__= "matches"
+
+    id: int | None = Field(default=None, primary_key=True)
+    patient_id: int | None = Field(default=None, foreign_key="patients.id")
+    therapist_id: int | None = Field(default=None, foreign_key="therapists.id")
