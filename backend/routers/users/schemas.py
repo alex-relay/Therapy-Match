@@ -9,34 +9,33 @@ class UserType(str, Enum):
     therapist = "therapist"
     patient = "patient"
 
+
 class BaseUser(BaseModel):
     first_name: str
     last_name: str
     location: Coordinate
     email_address: str
     description: Optional[str] = None
-    user_type: UserType
 
 
 class PatientCreate(BaseUser):
     therapy_needs: list[str]
-    personality_test_id: UUID
+    personality_test_id: Optional[UUID] = None
 
 
 class TherapistCreate(BaseUser):
     therapist_type: str
     specializations: list[str]
-    personality_test_id: UUID
+    personality_test_id: Optional[UUID] = None
 
-
-class UserRead(BaseUser):
-    id: UUID
 
 class PatientRead(PatientCreate):
-    id: UUID
+    id: str
+
 
 class TherapistRead(TherapistCreate):
-    id: UUID
+    id: str
+
 
 class UserPersonalityTestCreate(BaseModel):
     user_id: UUID
@@ -46,5 +45,6 @@ class UserPersonalityTestCreate(BaseModel):
     neuroticism: int
     agreeableness: int
 
+
 class UserPersonalityTestRead(UserPersonalityTestCreate):
-    id: UUID
+    id: str

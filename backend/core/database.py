@@ -1,30 +1,26 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from typing import Annotated
+from fastapi import Depends
+from sqlmodel import Session, SQLModel, create_engine
+from backend.models.match import Match  # pylint: disable=unused-import
+from backend.models.user import (  # pylint: disable=unused-import
+    Patient,
+    Therapist,
+    PersonalityTestScore,
+)
 from backend.core.config import DATABASE_URL
 
-# Create async engine
-engine = create_async_engine(DATABASE_URL, echo=False, future=True)
-
-# Create async session factory
-async_session = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
-
-# Create declarative base for models
-Base = declarative_base()
+engine = create_engine(DATABASE_URL, echo="debug")
 
 
-async def get_session() -> AsyncSession:
-    """Dependency for getting async database session.
+def create_db_and_tables():
+    """Create database and tables"""
+    SQLModel.metadata.create_all(engine)
 
-    Yields:
-        AsyncSession: Async database session
-    """
-    async with async_session() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
 
-async def init_db():
-    async with engine.begin() as conn:
-        # run_sync runs synchronous create_all in async context
-        await conn.run_sync(Base.metadata.create_all)
+def get_session():
+    """Provide a database session"""
+    with Session(engine) as session:
+        yield session
+
+
+SessionDep = Annotated[Session, Depends(get_session)]
