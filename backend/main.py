@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from .routers.users.users import router
 from backend.models.user import Therapist, Patient
-from backend.core.database import init_db
+from backend.core.database import create_db_and_tables
 
 app = FastAPI()
 
@@ -15,4 +15,4 @@ async def root():
 @app.on_event("startup")
 async def on_startup():
     # Create tables if they don't exist
-    await init_db()
+    create_db_and_tables()
