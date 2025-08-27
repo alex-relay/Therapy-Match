@@ -46,7 +46,8 @@ class Patient(User, table=True):
     therapy_needs: List[str] = Field(sa_column=Column(ARRAY(String)))
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(
-        back_populates="patients", sa_relationship_kwargs={"single_parent": True}
+        back_populates="patients",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan", "single_parent": True},
     )
 
 
