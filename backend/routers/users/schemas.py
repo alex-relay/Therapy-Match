@@ -1,13 +1,7 @@
-from enum import Enum
 from uuid import UUID
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from pydantic import BaseModel
+from typing import Optional
 from pydantic_extra_types.coordinate import Coordinate
-
-
-class UserType(str, Enum):
-    therapist = "therapist"
-    patient = "patient"
 
 
 class BaseUser(BaseModel):
