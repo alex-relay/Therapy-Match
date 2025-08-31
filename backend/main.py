@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from .routers.users.users import router
-from backend.models.user import Therapist, Patient
-from backend.core.database import create_db_and_tables, run_migrations
+from backend.models import *  # pylint: disable=wildcard-import
+from backend.core.database import run_migrations
 
 
 @asynccontextmanager

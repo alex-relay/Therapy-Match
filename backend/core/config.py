@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     db_host: str = Field(alias="DB_HOST")
     db_port: int = Field(alias="DB_PORT")
     db_name: str = Field(alias="DB_NAME")
+    secret_key: str = Field(alias="SECRET_KEY")
 
     class Config:
         env_file = ".env"

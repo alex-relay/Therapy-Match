@@ -7,20 +7,29 @@ from pydantic_extra_types.coordinate import Coordinate
 class BaseUser(BaseModel):
     first_name: str
     last_name: str
-    location: Coordinate
     email_address: str
-    description: Optional[str] = None
+    password: str
+
+
+class UserCreate(BaseUser):
+    id: str
 
 
 class PatientCreate(BaseUser):
+    id: str
     therapy_needs: list[str]
     personality_test_id: Optional[UUID] = None
+    location: Coordinate
+    description: Optional[str] = None
 
 
 class TherapistCreate(BaseUser):
+    id: str
     therapist_type: str
     specializations: list[str]
     personality_test_id: Optional[UUID] = None
+    location: Coordinate
+    description: Optional[str] = None
 
 
 class PatientRead(PatientCreate):
@@ -29,6 +38,7 @@ class PatientRead(PatientCreate):
 
 class TherapistRead(TherapistCreate):
     id: str
+    user_id: str
 
 
 class UserPersonalityTestCreate(BaseModel):

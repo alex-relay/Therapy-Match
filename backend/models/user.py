@@ -5,28 +5,32 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlmodel import Field, SQLModel, Relationship
 
 
-class User(SQLModel):
+class User(SQLModel, table=True):
     """Base user model"""
+
+    __tablename__ = "users"
 
     id: int | None = Field(default=None, primary_key=True)
     first_name: str
     last_name: str
-    location: str
     email_address: str
-    description: str | None = Field(default=None)
+    hashed_password: str
 
 
-class Therapist(User, table=True):
+class Therapist(SQLModel, table=True):
     """Therapist model"""
 
     __tablename__ = "therapists"
 
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="users.id")
     personality_test_id: int | None = Field(
         default=None, foreign_key="personality_test_scores.id"
     )
-    specializations: List[str] = Field(sa_column=Column(ARRAY(String)))
+    description: str | None = Field(default=None)
+    location: str
     therapist_type: str
+    specializations: List[str] = Field(sa_column=Column(ARRAY(String)))
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(
         back_populates="therapists",
@@ -34,12 +38,13 @@ class Therapist(User, table=True):
     )
 
 
-class Patient(User, table=True):
+class Patient(SQLModel, table=True):
     """Patient model"""
 
     __tablename__ = "patients"
 
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="users.id")
     personality_test_id: int | None = Field(
         default=None, foreign_key="personality_test_scores.id"
     )
