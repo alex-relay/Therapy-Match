@@ -1,30 +1,50 @@
+import re
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field, validator
+from sqlmodel import SQLModel
 from typing import Optional
 from pydantic_extra_types.coordinate import Coordinate
 
 
-class BaseUser(BaseModel):
-    first_name: str
-    last_name: str
-    email_address: str
-    password: str
+class UserBase(SQLModel):
+    first_name: str = Field(min_length=2)
+    last_name: str = Field(min_length=2)
+    email_address: EmailStr
 
 
-class UserCreate(BaseUser):
+class UserCreate(UserBase):
+    password: str = Field(
+        min_length=8,
+        max_length=16,
+        regex=r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$",
+        description="Password must contain at least one uppercase, one lowercase, and one digit",
+    )
+
+    @validator("password")
+    def password_strength(cls, v: str) -> str:
+        if not re.search(r"[a-z]", v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r"\d", v):
+            raise ValueError("Password must contain at least one digit")
+        return v
+
+
+class UserRead(UserBase):
     id: str
 
 
-class PatientCreate(BaseUser):
-    id: str
+class PatientCreate(SQLModel):
+    user_id: str = ""
     therapy_needs: list[str]
     personality_test_id: Optional[UUID] = None
     location: Coordinate
     description: Optional[str] = None
 
 
-class TherapistCreate(BaseUser):
-    id: str
+class TherapistCreate(SQLModel):
+    user_id: str = ""
     therapist_type: str
     specializations: list[str]
     personality_test_id: Optional[UUID] = None
@@ -38,7 +58,6 @@ class PatientRead(PatientCreate):
 
 class TherapistRead(TherapistCreate):
     id: str
-    user_id: str
 
 
 class UserPersonalityTestCreate(BaseModel):

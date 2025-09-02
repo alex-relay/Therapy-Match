@@ -14,7 +14,7 @@ class User(SQLModel, table=True):
     first_name: str
     last_name: str
     email_address: str
-    hashed_password: str
+    password: str
 
 
 class Therapist(SQLModel, table=True):
@@ -45,9 +45,11 @@ class Patient(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     user_id: int | None = Field(default=None, foreign_key="users.id")
+    location: str
     personality_test_id: int | None = Field(
         default=None, foreign_key="personality_test_scores.id"
     )
+    description: str | None = Field(default=None)
     therapy_needs: List[str] = Field(sa_column=Column(ARRAY(String)))
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(

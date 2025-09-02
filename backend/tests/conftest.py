@@ -34,8 +34,7 @@ def create_test_database():
             # Create test database
             conn.execute(text(f"CREATE DATABASE {TEST_DB_CONFIG['database']}"))
         except ProgrammingError as e:
-            print(f"Error creating test database: {e}")
-            raise
+            raise e
         finally:
             conn.close()
 
@@ -63,6 +62,26 @@ def session_fixture():
 
     # Close engine
     engine.dispose()
+
+
+@pytest.fixture
+def mock_jwt_decode(monkeypatch):
+    """Patch jwt.decode to always return a fixed payload."""
+
+    def fake_decode(token, key=None, algorithms=None, options=None):
+        return {
+            "sub": "a@b.com",
+            "exp": 9999999999,
+        }
+
+    monkeypatch.setattr("backend.routers.users.service.jwt.decode", fake_decode)
+    yield
+
+
+@pytest.fixture(scope="function")
+def mock_auth_headers(session_fixture, mock_jwt_decode):
+    # mock the return value of authorization in the headers
+    return {"Authorization": "Bearer token"}
 
 
 @pytest.fixture(scope="function")
