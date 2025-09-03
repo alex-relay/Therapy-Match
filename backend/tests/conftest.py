@@ -1,5 +1,3 @@
-# conftest.py
-import os
 import pytest
 from sqlmodel import create_engine, Session, SQLModel
 from sqlalchemy import text
@@ -7,7 +5,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy.exc import ProgrammingError
 from backend.core.database import get_session
 from backend.main import app
-from backend.models.user import Patient
 
 # Test database configuration
 TEST_DB_CONFIG = {
@@ -34,8 +31,7 @@ def create_test_database():
             # Create test database
             conn.execute(text(f"CREATE DATABASE {TEST_DB_CONFIG['database']}"))
         except ProgrammingError as e:
-            print(f"Error creating test database: {e}")
-            raise
+            raise e
         finally:
             conn.close()
 
@@ -65,12 +61,29 @@ def session_fixture():
     engine.dispose()
 
 
+@pytest.fixture
+def mock_jwt_decode(monkeypatch):
+    """Patch jwt.decode to always return a fixed payload."""
+
+    def fake_decode(token, key=None, algorithms=None, options=None):
+        return {
+            "sub": "a@b.com",
+            "exp": 9999999999,
+        }
+
+    monkeypatch.setattr("backend.routers.users.service.jwt.decode", fake_decode)
+    yield
+
+
+@pytest.fixture(scope="function")
+def mock_auth_headers(mock_jwt_decode):
+    # mock the return value of authorization in the headers
+    return {"Authorization": "Bearer token"}
+
+
 @pytest.fixture(scope="function")
 def client_fixture(session_fixture: Session):
-    def get_session_override():
-        return session_fixture
-
-    app.dependency_overrides[get_session] = get_session_override
+    app.dependency_overrides[get_session] = lambda: session_fixture
 
     client = TestClient(app)
     yield client
