@@ -24,16 +24,13 @@ class Therapist(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     user_id: int | None = Field(default=None, foreign_key="users.id")
-    personality_test_id: int | None = Field(
-        default=None, foreign_key="personality_test_scores.id"
-    )
     description: str | None = Field(default=None)
     location: str
     therapist_type: str
     specializations: List[str] = Field(sa_column=Column(ARRAY(String)))
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(
-        back_populates="therapists",
+        back_populates="therapist",
         sa_relationship_kwargs={"cascade": "all, delete-orphan", "single_parent": True},
     )
 
@@ -46,14 +43,11 @@ class Patient(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     user_id: int | None = Field(default=None, foreign_key="users.id")
     location: str
-    personality_test_id: int | None = Field(
-        default=None, foreign_key="personality_test_scores.id"
-    )
     description: str | None = Field(default=None)
     therapy_needs: List[str] = Field(sa_column=Column(ARRAY(String)))
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(
-        back_populates="patients",
+        back_populates="patient",
         sa_relationship_kwargs={"cascade": "all, delete-orphan", "single_parent": True},
     )
 
@@ -70,5 +64,10 @@ class PersonalityTestScore(SQLModel, table=True):
     conscientiousness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
     agreeableness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
 
-    therapists: List["Therapist"] = Relationship(back_populates="personality_test")
-    patients: List["Patient"] = Relationship(back_populates="personality_test")
+    patient_id: int | None = Field(default=None, foreign_key="patients.id", unique=True)
+    therapist_id: int | None = Field(
+        default=None, foreign_key="therapists.id", unique=True
+    )
+
+    therapist: Optional[Therapist] = Relationship(back_populates="personality_test")
+    patient: Optional[Patient] = Relationship(back_populates="personality_test")
