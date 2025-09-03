@@ -1,8 +1,8 @@
 import re
 from uuid import UUID
-from pydantic import BaseModel, EmailStr, Field, validator
-from sqlmodel import SQLModel
 from typing import Optional
+from pydantic import BaseModel, EmailStr, Field, field_validator
+from sqlmodel import SQLModel
 from pydantic_extra_types.coordinate import Coordinate
 
 
@@ -16,11 +16,11 @@ class UserCreate(UserBase):
     password: str = Field(
         min_length=8,
         max_length=16,
-        regex=r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$",
         description="Password must contain at least one uppercase, one lowercase, and one digit",
     )
 
-    @validator("password")
+    @field_validator("password")
+    @classmethod
     def password_strength(cls, v: str) -> str:
         if not re.search(r"[a-z]", v):
             raise ValueError("Password must contain at least one lowercase letter")

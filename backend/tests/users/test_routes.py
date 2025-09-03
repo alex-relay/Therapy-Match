@@ -58,7 +58,7 @@ def test_create_user(client_fixture, session_fixture):
             "first_name": "John",
             "last_name": "Doe",
             "email_address": "f@b.com",
-            "password": "hashedpassword",
+            "password": "Xassword1",
         },
     )
     assert response.status_code == 201
@@ -85,10 +85,99 @@ def test_create_user_invalid_email(client_fixture):
     assert response.status_code == 422
     data = response.json()["detail"]
     msg = data[0]["msg"]
-    assert (
-        msg
-        == "value is not a valid email address: The part after the @-sign is not valid. It should have a period."
+    assert msg == (
+        "value is not a valid email address: The part after the @-sign is not valid. "
+        "It should have a period."
     )
+
+
+def test_create_user_invalid_password_uppercase_letter(client_fixture):
+    response = client_fixture.post(
+        "/users",
+        json={
+            "first_name": "John",
+            "last_name": "Doe",
+            "email_address": "f@b.com",
+            "password": "hashedpassword",
+        },
+    )
+
+    assert response.status_code == 422
+    error_detail = response.json()["detail"]
+    assert (
+        error_detail[0]["msg"]
+        == "Value error, Password must contain at least one uppercase letter"
+    )
+
+
+def test_create_user_invalid_password_lowercase_letter(client_fixture):
+    response = client_fixture.post(
+        "/users",
+        json={
+            "first_name": "John",
+            "last_name": "Doe",
+            "email_address": "f@b.com",
+            "password": "HASHEDPASSWORD1",
+        },
+    )
+
+    assert response.status_code == 422
+    error_detail = response.json()["detail"]
+    assert (
+        error_detail[0]["msg"]
+        == "Value error, Password must contain at least one lowercase letter"
+    )
+
+
+def test_create_user_invalid_password_number(client_fixture):
+    response = client_fixture.post(
+        "/users",
+        json={
+            "first_name": "John",
+            "last_name": "Doe",
+            "email_address": "f@b.com",
+            "password": "HaSHEDPASSWORD",
+        },
+    )
+
+    assert response.status_code == 422
+    error_detail = response.json()["detail"]
+    assert (
+        error_detail[0]["msg"]
+        == "Value error, Password must contain at least one digit"
+    )
+
+
+def test_invalid_first_name(client_fixture):
+    response = client_fixture.post(
+        "/users",
+        json={
+            "first_name": "J",
+            "last_name": "Doe",
+            "email_address": "f@b.com",
+            "password": "HaSHEDPASSWORD1",
+        },
+    )
+
+    assert response.status_code == 422
+    error_detail = response.json()["detail"]
+    assert error_detail[0]["msg"] == "String should have at least 2 characters"
+
+
+def test_invalid_last_name(client_fixture):
+    response = client_fixture.post(
+        "/users",
+        json={
+            "first_name": "John",
+            "last_name": "D",
+            "email_address": "f@b.com",
+            "password": "HaSHEDPASSWORD1",
+        },
+    )
+
+    assert response.status_code == 422
+    error_detail = response.json()["detail"]
+    assert error_detail[0]["msg"] == "String should have at least 2 characters"
 
 
 def test_create_therapist(client_fixture, session_fixture, mock_auth_headers):
