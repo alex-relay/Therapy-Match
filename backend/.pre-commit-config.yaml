@@ -9,6 +9,11 @@ repos:
     rev: 22.10.0
     hooks:
     -   id: black
+-   repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.0-alpha.6  # pick the version you want
+    hooks:
+      - id: prettier
+        files: ^frontend/.*\.(ts|tsx|js)$
 -   repo: local
     hooks:
     -   id: pylint
@@ -16,4 +21,11 @@ repos:
         entry: pylint
         language: system
         types: [python]
+        require_serial: true
+
+    -   id: eslint
+        name: ESLint
+        entry:  bash -c "cd frontend && npx eslint ."
+        language: node
+        files: ^frontend/.*\.(ts|tsx)$
         require_serial: true
