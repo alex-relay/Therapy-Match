@@ -32,7 +32,7 @@ logger = get_logger(__name__)
 CurrentUserDep = Annotated[User, Depends(get_current_active_user)]
 
 
-@router.post("/token")
+@router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: SessionDep,
@@ -40,12 +40,12 @@ async def login_for_access_token(
     """Authenticate and create token"""
     try:
         user = authenticate_user(session, form_data.username, form_data.password)
-    except:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from exc
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -55,13 +55,17 @@ async def login_for_access_token(
         access_token = create_access_token(
             data={"sub": user.email_address}, expires_delta=access_token_expires
         )
-        return Token(access_token=access_token, token_type="bearer")
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            user={"email_address": user.email_address},
+        )
 
-    except:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not create access token",
-        )
+        ) from e
 
 
 @router.post("/users", status_code=status.HTTP_201_CREATED, response_model=UserRead)

@@ -1,5 +1,5 @@
 "use client";
 
 export default function Page() {
-  return <h1>Hello, Blog Post Page!</h1>;
+  return <h1>Profile Page!</h1>;
 }
