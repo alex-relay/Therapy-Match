@@ -28,9 +28,14 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
+class TokenUser(SQLModel):
+    email_address: str
+
+
 class Token(SQLModel):
     access_token: str
     token_type: str
+    user: TokenUser
 
 
 class TokenData(SQLModel):
@@ -166,22 +171,19 @@ async def get_current_user(
     try:
         user = get_user_by_email(token_data.username, session)
         return user
-    except:
-        raise credentials_exception
+    except Exception as e:
+        raise credentials_exception from e
 
 
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    try:
-        if not current_user:
-            raise HTTPException(status_code=400, detail="Inactive user")
+    if not current_user:
+        raise HTTPException(status_code=400, detail="Inactive user")
 
-        return UserRead(
-            id=str(current_user.id),
-            first_name=current_user.first_name,
-            last_name=current_user.last_name,
-            email_address=current_user.email_address,
-        )
-    except Exception as e:
-        logger.error("Error retrieving active user: %s", e)
+    return UserRead(
+        id=str(current_user.id),
+        first_name=current_user.first_name,
+        last_name=current_user.last_name,
+        email_address=current_user.email_address,
+    )
