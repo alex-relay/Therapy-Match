@@ -1,3 +1,7 @@
+"""
+This module provides the routes for users.
+"""
+
 from datetime import timedelta
 from typing import Annotated
 from fastapi import APIRouter, status, Depends, HTTPException
@@ -13,7 +17,7 @@ from backend.routers.users.schemas import (
     UserCreate,
     UserRead,
 )
-from backend.routers.users.service import Token, create_user
+from backend.routers.users.service import Token, create_user, TokenUser
 
 from backend.core.logging import get_logger
 from .service import (
@@ -58,7 +62,7 @@ async def login_for_access_token(
         return Token(
             access_token=access_token,
             token_type="bearer",
-            user={"email_address": user.email_address},
+            user=TokenUser(email_address=user.email_address),
         )
 
     except Exception as e:
