@@ -80,12 +80,17 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (emailError || passwordError) {
+      return;
+    }
+
     const data = new FormData(e.currentTarget);
     const email = data.get("email");
     const password = data.get("password");
 
     const res = await signIn("credentials", {
-      redirect: false,
+      callbackUrl: "/profile",
+      redirect: true,
       emailAddress: email,
       password,
     });
