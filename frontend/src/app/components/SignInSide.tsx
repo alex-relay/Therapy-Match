@@ -9,11 +9,10 @@ export default function SignInSide({ csrfToken }: { csrfToken: string }) {
       direction={{ xs: "column-reverse", md: "row" }}
       sx={{
         justifyContent: "center",
-        // gap: { xs: 6, sm: 12 },
-        p: { xs: 2, sm: 4 },
+        p: { xs: 2, sm: 0 },
         m: "auto",
         width: "100%",
-        height: "auto",
+        height: "100%",
       }}
     >
       <Content />
