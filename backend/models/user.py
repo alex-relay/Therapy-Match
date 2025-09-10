@@ -11,7 +11,7 @@ class User(SQLModel, table=True):
 
     __tablename__ = "users"
 
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True)
     first_name: str
     last_name: str
     email_address: str
@@ -23,8 +23,8 @@ class Therapist(SQLModel, table=True):
 
     __tablename__ = "therapists"
 
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID = Field(default=None, foreign_key="users.id", nullable=False)
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True)
+    user_id: UUID | None = Field(default=None, foreign_key="users.id")
     description: str | None = Field(default=None)
     location: str
     therapist_type: str
@@ -41,8 +41,8 @@ class Patient(SQLModel, table=True):
 
     __tablename__ = "patients"
 
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID = Field(default=None, foreign_key="users.id", nullable=False)
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True)
+    user_id: UUID | None = Field(default=None, foreign_key="users.id")
     location: str
     description: str | None = Field(default=None)
     therapy_needs: List[str] = Field(sa_column=Column(ARRAY(String)))
