@@ -1,3 +1,4 @@
+from uuid import UUID, uuid4
 from typing import Optional, List
 from decimal import Decimal
 from sqlalchemy import Column, String
@@ -10,7 +11,7 @@ class User(SQLModel, table=True):
 
     __tablename__ = "users"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
     first_name: str
     last_name: str
     email_address: str
@@ -22,8 +23,8 @@ class Therapist(SQLModel, table=True):
 
     __tablename__ = "therapists"
 
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int | None = Field(default=None, foreign_key="users.id")
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    user_id: UUID = Field(default=None, foreign_key="users.id", nullable=False)
     description: str | None = Field(default=None)
     location: str
     therapist_type: str
@@ -40,8 +41,8 @@ class Patient(SQLModel, table=True):
 
     __tablename__ = "patients"
 
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int | None = Field(default=None, foreign_key="users.id")
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    user_id: UUID = Field(default=None, foreign_key="users.id", nullable=False)
     location: str
     description: str | None = Field(default=None)
     therapy_needs: List[str] = Field(sa_column=Column(ARRAY(String)))
@@ -64,8 +65,10 @@ class PersonalityTestScore(SQLModel, table=True):
     conscientiousness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
     agreeableness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
 
-    patient_id: int | None = Field(default=None, foreign_key="patients.id", unique=True)
-    therapist_id: int | None = Field(
+    patient_id: UUID | None = Field(
+        default=None, foreign_key="patients.id", unique=True
+    )
+    therapist_id: UUID | None = Field(
         default=None, foreign_key="therapists.id", unique=True
     )
 
