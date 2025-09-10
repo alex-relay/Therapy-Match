@@ -147,7 +147,7 @@ def register_therapist(
 
     try:
         existing_therapist = session.exec(
-            select(Therapist).where(Therapist.id == current_user.id)
+            select(Therapist).where(Therapist.user_id == current_user.id)
         ).first()
     except Exception as e:
         raise e

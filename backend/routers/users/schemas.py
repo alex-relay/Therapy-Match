@@ -7,12 +7,16 @@ from pydantic_extra_types.coordinate import Coordinate
 
 
 class UserBase(SQLModel):
+    """User Base"""
+
     first_name: str = Field(min_length=2)
     last_name: str = Field(min_length=2)
     email_address: EmailStr
 
 
 class UserCreate(UserBase):
+    """User Create Model"""
+
     password: str = Field(
         min_length=8,
         max_length=16,
@@ -32,11 +36,14 @@ class UserCreate(UserBase):
 
 
 class UserRead(UserBase):
-    id: str
+    """User Read model"""
+
+    id: UUID
 
 
 class PatientCreate(SQLModel):
-    user_id: str = ""
+    """Patient Create Model"""
+
     therapy_needs: list[str]
     personality_test_id: Optional[UUID] = None
     location: Coordinate
@@ -44,7 +51,8 @@ class PatientCreate(SQLModel):
 
 
 class TherapistCreate(SQLModel):
-    user_id: str = ""
+    """Therapist Create Model"""
+
     therapist_type: str
     specializations: list[str]
     personality_test_id: Optional[UUID] = None
@@ -53,14 +61,20 @@ class TherapistCreate(SQLModel):
 
 
 class PatientRead(PatientCreate):
-    id: str
+    """PatientRead Model"""
+
+    id: UUID
 
 
 class TherapistRead(TherapistCreate):
-    id: str
+    """Therapist Read Model"""
+
+    id: UUID
 
 
 class UserPersonalityTestCreate(BaseModel):
+    """User Personality Test Create"""
+
     user_id: UUID
     extraversion: int
     conscientiousness: int
@@ -70,4 +84,6 @@ class UserPersonalityTestCreate(BaseModel):
 
 
 class UserPersonalityTestRead(UserPersonalityTestCreate):
+    """User Personality Test Read"""
+
     id: str

@@ -1,3 +1,4 @@
+from uuid import UUID
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 import jwt
@@ -57,7 +58,7 @@ def create_user(user_data: UserCreate, session: Session) -> User:
 
 
 def create_therapist(
-    user_data: TherapistCreate, user_id: int | None, session: Session
+    user_data: TherapistCreate, user_id: UUID, session: Session
 ) -> TherapistRead:
     coordinate = str(user_data.location)
     therapist = Therapist(

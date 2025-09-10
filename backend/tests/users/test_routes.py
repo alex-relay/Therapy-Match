@@ -1,4 +1,7 @@
 from backend.models.user import Patient, Therapist, User
+import uuid
+
+USER_ID = "c658ffce-d810-4341-a8ef-2d3651489daf"
 
 
 def test_read_main(client_fixture):
@@ -13,7 +16,7 @@ def add_test_patient(session_fixture):
         location="40.7128, -74.0060",
         description="Existing patient for testing",
         therapy_needs=["anxiety"],
-        user_id=1,
+        user_id=USER_ID,
     )
 
     session_fixture.add(existing_patient)
@@ -28,6 +31,7 @@ def add_test_therapist(session_fixture):
         description="Existing patient for testing",
         therapy_needs=["anxiety"],
         therapist_type="licensed",
+        user_id=USER_ID,
     )
 
     session_fixture.add(therapist)
@@ -38,6 +42,7 @@ def add_test_therapist(session_fixture):
 def add_test_user(session_fixture):
     """Add a test user to the database."""
     user = User(
+        id=USER_ID,
         first_name="Existing",
         last_name="User",
         email_address="a@b.com",
