@@ -1,5 +1,7 @@
 "use client";
 
+import SignUp from "../components/SignUp";
+
 export default function Page() {
-  return <h1>Hello, Blog Post Page!</h1>;
+  return <SignUp />;
 }

@@ -1,7 +1,7 @@
 import * as React from "react";
 import Stack from "@mui/material/Stack";
 import SignInCard from "./SignIn";
-import Content from "./Content";
+import Content from "../Content";
 
 export default function SignInSide({ csrfToken }: { csrfToken: string }) {
   return (
