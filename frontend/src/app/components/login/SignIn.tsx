@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import Divider from "@mui/material/Divider";
+// import Divider from "@mui/material/Divider";
 import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
 import Link from "@mui/material/Link";
@@ -13,7 +13,8 @@ import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import ForgotPassword from "./ForgotPassword";
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from "../CustomIcons";
+// import { GoogleIcon, FacebookIcon, SitemarkIcon } from "../CustomIcons";
+import { SitemarkIcon } from "../CustomIcons";
 import { signIn } from "next-auth/react";
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -77,27 +78,6 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
     setOpen(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (emailError || passwordError) {
-      return;
-    }
-
-    const data = new FormData(e.currentTarget);
-    const email = data.get("email");
-    const password = data.get("password");
-
-    const res = await signIn("credentials", {
-      callbackUrl: "/profile",
-      redirect: true,
-      emailAddress: email,
-      password,
-    });
-
-    return res;
-  };
-
   const validateInputs = () => {
     const email = document.getElementById("email") as HTMLInputElement;
     const password = document.getElementById("password") as HTMLInputElement;
@@ -125,6 +105,21 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
     return isValid;
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const data = new FormData(e.currentTarget);
+    const email = data.get("email");
+    const password = data.get("password");
+
+    const res = await signIn("credentials", {
+      callbackUrl: "/profile",
+      redirect: true,
+      emailAddress: email,
+      password,
+    });
+
+    return res;
+  };
+
   return (
     <SignInContainer direction="column" justifyContent="space-between">
       <Card variant="outlined" data-testid="signin-card">
@@ -138,8 +133,15 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
         </Typography>
         <Box
           component="form"
-          onSubmit={handleSubmit}
+          onSubmit={(e) => {
+            e.preventDefault();
+            const isValid = validateInputs();
+            if (isValid) {
+              handleSubmit(e);
+            }
+          }}
           noValidate
+          data-testid="signin-form"
           sx={{
             display: "flex",
             flexDirection: "column",
@@ -156,8 +158,9 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
               id="email"
               type="email"
               name="email"
-              placeholder="your@email.com"
+              placeholder="Enter Email Address"
               autoComplete="email"
+              data-testid="email-input"
               autoFocus
               required
               fullWidth
@@ -175,6 +178,7 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
               type="password"
               id="password"
               autoComplete="current-password"
+              data-testid="password-input"
               autoFocus
               required
               fullWidth
@@ -188,10 +192,10 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
           />
           <ForgotPassword open={open} handleClose={handleClose} />
           <Button
+            data-testid="signin-button"
             type="submit"
             fullWidth
             variant="contained"
-            onClick={validateInputs}
           >
             Sign in
           </Button>
@@ -205,7 +209,7 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
             Forgot your password?
           </Link>
         </Box>
-        <Divider>or</Divider>
+        {/* <Divider>or</Divider>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Button
             fullWidth
@@ -233,7 +237,7 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
               Sign up
             </Link>
           </Typography>
-        </Box>
+        </Box> */}
       </Card>
     </SignInContainer>
   );

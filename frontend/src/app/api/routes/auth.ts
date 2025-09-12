@@ -37,9 +37,6 @@ const useCreateUser = (
 ) => {
   return useMutation({
     mutationFn: createUser,
-    onSettled: (data, error, variables, context) => {
-      console.log({ data, error, variables, context });
-    },
     ...options,
   });
 };
