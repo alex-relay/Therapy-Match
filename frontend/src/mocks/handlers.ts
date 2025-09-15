@@ -20,6 +20,15 @@ const handlers = [
   http.post("api/auth/callback/credentials", async () => {
     return HttpResponse.json({ url: "http://localhost:4000/profile" });
   }),
+  http.post("/users", async ({ request }) => {
+    console.log({ request });
+    return HttpResponse.json({
+      first_name: "at",
+      last_name: "bc",
+      email_address: "d@b.com",
+      id: "7a7e2ee8-cfa7-4caa-8e4e-97d2e4332d84",
+    });
+  }),
 ];
 
 export default handlers;

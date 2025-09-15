@@ -16,6 +16,7 @@ type User = {
   password: string;
 };
 
+// TODO: We need to hash the password on the client side in the request.
 const createUser = (formData: createUserProps): Promise<User> => {
   return fetch(`${API_URL}/users`, {
     headers: {
@@ -41,4 +42,4 @@ const useCreateUser = (
   });
 };
 
-export { useCreateUser };
+export { useCreateUser, createUser };

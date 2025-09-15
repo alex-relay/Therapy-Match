@@ -99,7 +99,9 @@ export default function SignUp() {
 
     if (!password.value || password.value.length < 6) {
       setPasswordError(true);
-      setPasswordErrorMessage("Password must be at least 6 characters long.");
+      setPasswordErrorMessage(
+        "Password must be at least 6 characters long, and contain one number and one uppercase letter.",
+      );
       isValid = false;
     } else {
       setPasswordError(false);
@@ -132,6 +134,7 @@ export default function SignUp() {
     if (firstNameError || lastNameError || emailError || passwordError) {
       return;
     }
+
     const data = new FormData(event.currentTarget);
     const first_name = String(data.get("firstName") ?? "");
     const last_name = String(data.get("lastName") ?? "");
@@ -197,7 +200,7 @@ export default function SignUp() {
               required
               fullWidth
               id="email"
-              placeholder="your@email.com"
+              placeholder="Enter Email"
               name="email"
               autoComplete="email"
               variant="outlined"
@@ -232,6 +235,7 @@ export default function SignUp() {
             fullWidth
             variant="contained"
             onClick={validateInputs}
+            data-testid="signup-button"
           >
             Sign up
           </Button>
