@@ -170,7 +170,7 @@ const config: Config = {
 
   // Options that will be passed to the testEnvironment
   testEnvironmentOptions: {
-    url: "http://localhost:4000", // host + port you want
+    url: "http://localhost:4000",
   },
 
   // Adds a location field to test results
