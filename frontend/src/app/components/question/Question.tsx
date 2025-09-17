@@ -3,7 +3,6 @@
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import CardHeader from "@mui/material/CardHeader";
 import { styled } from "@mui/material/styles";
@@ -23,17 +22,37 @@ const OPTIONS: { option: string; value: number }[] = [
   { option: "agree", value: 5 },
 ];
 
-const OptionButton = styled(Button)(({ theme }) => ({
+const StyledOptionButton = styled(Button)(({ theme }) => ({
   cursor: "pointer",
   ":hover": { backgroundColor: "gray" },
   border: "1px solid",
-  [theme.breakpoints.up("sm")]: {
-    maxWidth: "600px",
+  [theme.breakpoints.down("sm")]: {
+    width: "100%",
+    marginTop: "10px",
+  },
+}));
+
+const StyledOptionsBox = styled(Box)(({ theme }) => ({
+  display: "flex",
+  gap: "10px",
+  [theme.breakpoints.down("sm")]: {
+    display: "block",
+    whitespace: "pre-wrap",
+  },
+}));
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  maxWidth: "800px",
+  [theme.breakpoints.down("sm")]: {
+    maxWidth: "400px",
+    marginLeft: "25px",
+    marginRight: "25px",
+    display: "block",
   },
 }));
 
 const Question = ({ question, index, onAnswer }: QuestionProps) => (
-  <Card variant="outlined" sx={{ maxWidth: "600px" }}>
+  <StyledCard variant="outlined">
     <Box
       sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
     >
@@ -47,9 +66,9 @@ const Question = ({ question, index, onAnswer }: QuestionProps) => (
         alignItems: "center",
       }}
     >
-      <Stack direction="row" gap="5px">
+      <StyledOptionsBox>
         {OPTIONS.map(({ option, value }) => (
-          <OptionButton
+          <StyledOptionButton
             size="small"
             onClick={() => {
               onAnswer(index, value);
@@ -58,11 +77,11 @@ const Question = ({ question, index, onAnswer }: QuestionProps) => (
             value={value}
           >
             <Typography> {option}</Typography>
-          </OptionButton>
+          </StyledOptionButton>
         ))}
-      </Stack>
+      </StyledOptionsBox>
     </CardContent>
-  </Card>
+  </StyledCard>
 );
 
 export default Question;

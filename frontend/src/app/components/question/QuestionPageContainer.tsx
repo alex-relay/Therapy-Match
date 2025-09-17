@@ -8,6 +8,8 @@ import { useState } from "react";
 import Question from "./Question";
 import PageContainer from "../common/PageContainer";
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import { styled } from "@mui/material/styles";
 
 const QuestionPageContainer = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -23,63 +25,86 @@ const QuestionPageContainer = () => {
     setCurrentQuestion((prevState) => prevState + 1);
   };
 
+  const StyledBox = styled(Box)(({ theme }) => ({
+    display: "flex",
+    justifyContent: "space-between",
+    [theme.breakpoints.down("sm")]: {
+      maxWidth: "400px",
+      marginLeft: "25px",
+      marginRight: "25px",
+    },
+  }));
+
+  const StyledStack = styled(Stack)(({ theme }) => ({
+    maxWidth: "800px",
+    gap: "10px",
+    [theme.breakpoints.up("sm")]: {
+      margin: "25px",
+    },
+  }));
+
+  const handleOptionClick = (index: number, value: number) => {
+    setQuestionAnswers((prevState) => {
+      const questionAndAnswer = PERSONALITY_TEST_QUESTIONS[index];
+      const isAnswerExists = !!prevState.find(
+        (prevQuestion) => prevQuestion.question === question,
+      );
+
+      if (isAnswerExists) {
+        const otherAnswers = prevState.filter(
+          (prevQuestion) => prevQuestion.question !== question,
+        );
+        return [
+          ...otherAnswers,
+          {
+            ...questionAndAnswer,
+            answer: value,
+          },
+        ];
+      }
+      return [
+        ...prevState,
+        {
+          ...questionAndAnswer,
+          answer: value,
+        },
+      ];
+    });
+    setCurrentQuestion((prevState) => prevState + 1);
+  };
+
   const { question } = PERSONALITY_TEST_QUESTIONS[currentQuestion];
-
-  const showNextQuestionButton =
-    currentQuestion <= PERSONALITY_TEST_QUESTIONS.length - 2;
-  const showPreviousQuestionButton = currentQuestion > 0;
-
-  console.log(questionAnswers);
 
   return (
     <PageContainer>
-      <Question
-        question={question}
-        index={currentQuestion}
-        onAnswer={(index: number, value: number) => {
-          setQuestionAnswers((prevState) => {
-            const questionAndAnswer = PERSONALITY_TEST_QUESTIONS[index];
-            const isAnswerExists = !!prevState.find(
-              (prevQuestion) => prevQuestion.question === question,
-            );
-
-            console.log({ isAnswerExists });
-
-            if (isAnswerExists) {
-              const otherAnswers = prevState.filter(
-                (prevQuestion) => prevQuestion.question !== question,
-              );
-              console.log({ otherAnswers });
-              return [
-                ...otherAnswers,
-                {
-                  ...questionAndAnswer,
-                  answer: value,
-                },
-              ];
-            }
-            return [
-              ...prevState,
-              {
-                ...questionAndAnswer,
-                answer: value,
-              },
-            ];
-          });
-        }}
-      />
-      <Stack
-        direction="row"
-        maxWidth={"600px"}
-        sx={{ minWidth: "600px", justifyContent: "space-between" }}
-      >
-        {showPreviousQuestionButton && (
-          <Button onClick={handlePreviousQuestionClick}> Previous </Button>
-        )}
-        {showNextQuestionButton && (
-          <Button onClick={handleNextQuestionClick}> Next </Button>
-        )}
-      </Stack>
+      <StyledStack>
+        <Question
+          question={question}
+          index={currentQuestion}
+          onAnswer={handleOptionClick}
+        />
+        <StyledBox>
+          <Button
+            disabled={currentQuestion === 0}
+            onClick={handlePreviousQuestionClick}
+            sx={{ minWidth: "100px", backgroundColor: "white" }}
+          >
+            {" "}
+            Previous{" "}
+          </Button>
+          <Button
+            disabled={currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 2}
+            onClick={handleNextQuestionClick}
+            sx={{
+              backgroundColor: "white",
+              minWidth: "100px",
+            }}
+          >
+            {" "}
+            Next{" "}
+          </Button>
+        </StyledBox>
+      </StyledStack>
     </PageContainer>
   );
 };
