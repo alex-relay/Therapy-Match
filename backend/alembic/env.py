@@ -1,3 +1,10 @@
+import sys
+import os
+
+# get the absolute path to your project root
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.insert(0, BASE_DIR)
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -10,6 +17,8 @@ from backend.models import *  # pylint: disable=wildcard-import
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
+
+
 config = context.config
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 

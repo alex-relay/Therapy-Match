@@ -1,5 +1,4 @@
-from backend.models.user import Patient, Therapist, User
-import uuid
+from backend.tests.test_utils import add_test_patient, add_test_therapist, add_test_user
 
 USER_ID = "c658ffce-d810-4341-a8ef-2d3651489daf"
 
@@ -8,50 +7,6 @@ def test_read_main(client_fixture):
     response = client_fixture.get("/")
     assert response.status_code == 200
     assert response.json() == {"message": "Hello World"}
-
-
-def add_test_patient(session_fixture):
-    """Add a test patient to the database."""
-    existing_patient = Patient(
-        location="40.7128, -74.0060",
-        description="Existing patient for testing",
-        therapy_needs=["anxiety"],
-        user_id=USER_ID,
-    )
-
-    session_fixture.add(existing_patient)
-    session_fixture.commit()
-    session_fixture.refresh(existing_patient)
-
-
-def add_test_therapist(session_fixture):
-    """Add a test therapist to the database."""
-    therapist = Therapist(
-        location="40.7128, -74.0060",
-        description="Existing patient for testing",
-        therapy_needs=["anxiety"],
-        therapist_type="licensed",
-        user_id=USER_ID,
-    )
-
-    session_fixture.add(therapist)
-    session_fixture.commit()
-    session_fixture.refresh(therapist)
-
-
-def add_test_user(session_fixture):
-    """Add a test user to the database."""
-    user = User(
-        id=USER_ID,
-        first_name="Existing",
-        last_name="User",
-        email_address="a@b.com",
-        password="hashedpassword",
-    )
-
-    session_fixture.add(user)
-    session_fixture.commit()
-    session_fixture.refresh(user)
 
 
 def test_create_user(client_fixture, session_fixture):
@@ -77,6 +32,7 @@ def test_create_user(client_fixture, session_fixture):
 
 
 def test_create_user_invalid_email(client_fixture):
+    """invalid email test for creating a user"""
     response = client_fixture.post(
         "/users",
         json={
@@ -97,6 +53,7 @@ def test_create_user_invalid_email(client_fixture):
 
 
 def test_create_user_invalid_password_uppercase_letter(client_fixture):
+    """invalid password test for creating a user"""
     response = client_fixture.post(
         "/users",
         json={
@@ -116,6 +73,7 @@ def test_create_user_invalid_password_uppercase_letter(client_fixture):
 
 
 def test_create_user_invalid_password_lowercase_letter(client_fixture):
+    """invalid password test for creating a user"""
     response = client_fixture.post(
         "/users",
         json={
@@ -135,6 +93,7 @@ def test_create_user_invalid_password_lowercase_letter(client_fixture):
 
 
 def test_create_user_invalid_password_number(client_fixture):
+    """invalid password number test"""
     response = client_fixture.post(
         "/users",
         json={
@@ -154,6 +113,7 @@ def test_create_user_invalid_password_number(client_fixture):
 
 
 def test_invalid_first_name(client_fixture):
+    """invalid first name test"""
     response = client_fixture.post(
         "/users",
         json={
@@ -170,6 +130,7 @@ def test_invalid_first_name(client_fixture):
 
 
 def test_invalid_last_name(client_fixture):
+    """invalid last name test"""
     response = client_fixture.post(
         "/users",
         json={

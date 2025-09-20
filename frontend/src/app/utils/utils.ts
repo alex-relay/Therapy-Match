@@ -15,7 +15,7 @@ export type PersonalityTestQuestionAndAnswers = {
 const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   {
     question: "I am the life of the party.",
-    category: "extraversion",
+    category: "extroversion",
     answer: null,
   },
   {
@@ -34,7 +34,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
     answer: null,
   },
   { question: "I have a rich vocabulary.", category: "openness", answer: null },
-  { question: "I don't talk a lot.", category: "extraversion", answer: null },
+  { question: "I don't talk a lot.", category: "extroversion", answer: null },
   {
     question: "I am interested in people.",
     category: "agreeableness",
@@ -57,7 +57,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   },
   {
     question: "I feel comfortable around people.",
-    category: "extraversion",
+    category: "extroversion",
     answer: null,
   },
   { question: "I insult people.", category: "agreeableness", answer: null },
@@ -74,7 +74,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   },
   {
     question: "I keep in the background.",
-    category: "extraversion",
+    category: "extroversion",
     answer: null,
   },
   {
@@ -96,7 +96,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   },
   {
     question: "I start conversations.",
-    category: "extraversion",
+    category: "extroversion",
     answer: null,
   },
   {
@@ -111,7 +111,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   },
   { question: "I am easily disturbed.", category: "neuroticism", answer: null },
   { question: "I have excellent ideas.", category: "openness", answer: null },
-  { question: "I have little to say.", category: "extraversion", answer: null },
+  { question: "I have little to say.", category: "extroversion", answer: null },
   { question: "I have a soft heart.", category: "agreeableness", answer: null },
   {
     question: "I often forget to put things back in their proper place.",
@@ -126,7 +126,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   },
   {
     question: "I talk to a lot of different people at parties.",
-    category: "extraversion",
+    category: "extroversion",
     answer: null,
   },
   {
@@ -147,7 +147,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   },
   {
     question: "I don't like to draw attention to myself.",
-    category: "extraversion",
+    category: "extroversion",
     answer: null,
   },
   {
@@ -168,7 +168,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   { question: "I use difficult words.", category: "openness", answer: null },
   {
     question: "I don't mind being the center of attention.",
-    category: "extraversion",
+    category: "extroversion",
     answer: null,
   },
   {
@@ -193,7 +193,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   },
   {
     question: "I am quiet around strangers.",
-    category: "extraversion",
+    category: "extroversion",
     answer: null,
   },
   {
