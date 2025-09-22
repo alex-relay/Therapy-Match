@@ -17,7 +17,6 @@ from backend.routers.users.schemas import (
     UserCreate,
     UserRead,
 )
-from backend.routers.users.service import Token, create_user, TokenUser
 
 from backend.core.logging import get_logger
 from .service import (
@@ -28,6 +27,9 @@ from .service import (
     authenticate_user,
     create_access_token,
     get_current_active_user,
+    Token,
+    create_user,
+    TokenUser,
 )
 
 router = APIRouter()

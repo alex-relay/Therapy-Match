@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from .routers.users.users import router
+from .routers.users.users import router as user_router
+from backend.routers.scores.scores import router as scores_router
 from backend.models import *  # pylint: disable=wildcard-import
 from backend.core.database import run_migrations
 
@@ -25,7 +26,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(router)
+app.include_router(scores_router)
+app.include_router(user_router)
 
 
 @app.get("/")

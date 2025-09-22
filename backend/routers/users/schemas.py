@@ -1,7 +1,7 @@
 import re
 from uuid import UUID
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import EmailStr, Field, field_validator
 from sqlmodel import SQLModel
 from pydantic_extra_types.coordinate import Coordinate
 
@@ -70,20 +70,3 @@ class TherapistRead(TherapistCreate):
     """Therapist Read Model"""
 
     id: UUID
-
-
-class UserPersonalityTestCreate(BaseModel):
-    """User Personality Test Create"""
-
-    user_id: UUID
-    extraversion: int
-    conscientiousness: int
-    openness: int
-    neuroticism: int
-    agreeableness: int
-
-
-class UserPersonalityTestRead(UserPersonalityTestCreate):
-    """User Personality Test Read"""
-
-    id: str

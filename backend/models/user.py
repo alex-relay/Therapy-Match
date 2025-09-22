@@ -58,10 +58,10 @@ class PersonalityTestScore(SQLModel, table=True):
 
     __tablename__ = "personality_test_scores"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True)
     neuroticism: Decimal = Field(default=0, max_digits=5, decimal_places=3)
     openness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
-    extraversion: Decimal = Field(default=0, max_digits=5, decimal_places=3)
+    extroversion: Decimal = Field(default=0, max_digits=5, decimal_places=3)
     conscientiousness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
     agreeableness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
 
