@@ -1,3 +1,5 @@
+"""Router for calculating and storing personality test scores."""
+
 from dataclasses import asdict
 from fastapi import APIRouter, status, HTTPException
 from backend.core.database import SessionDep
@@ -50,13 +52,16 @@ def create_therapist_test_scores(
 
     logger.info("Saving test score to db")
 
-    personality_test_score = PersonalityTestScore(
-        **asdict(scores), therapist_id=therapist_id
-    )
+    try:
+        personality_test_score = PersonalityTestScore(
+            **asdict(scores), therapist_id=therapist_id
+        )
+        session.add(personality_test_score)
+        session.commit()
+        session.refresh(personality_test_score)
 
-    session.add(personality_test_score)
-    session.commit()
-    session.refresh(personality_test_score)
+    except Exception as e:
+        raise e
 
     logger.info("Saving test score completed")
 
@@ -90,6 +95,8 @@ def create_patient_test_scores(
     if not scores:
         raise HTTPException(status_code=400, detail="Scores not found")
 
+    logger.info("Saving test score to db")
+
     try:
         personality_test_score = PersonalityTestScore(
             **asdict(scores), patient_id=patient_id
@@ -100,6 +107,8 @@ def create_patient_test_scores(
         session.refresh(personality_test_score)
     except Exception as e:
         raise e
+
+    logger.info("Saving test score completed")
 
     return UserPersonalityTestRead(
         extroversion=personality_test_score.extroversion,
