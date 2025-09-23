@@ -18,6 +18,7 @@ class User(SQLModel, table=True):
     last_name: str
     email_address: EmailStr
     password: str
+    is_anonymous: bool = Field(nullable=False)
 
 
 class Therapist(SQLModel, table=True):

@@ -13,6 +13,7 @@ class UserBase(SQLModel):
     first_name: str = Field(min_length=2)
     last_name: str = Field(min_length=2)
     email_address: EmailStr
+    is_anonymous: bool = True
 
 
 class UserCreate(UserBase):
