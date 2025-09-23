@@ -61,6 +61,8 @@ def create_therapist_test_scores(
         session.refresh(personality_test_score)
 
     except Exception as e:
+        session.rollback()
+        logger.error("Failed to save therapist test scores %s", e)
         raise e
 
     logger.info("Saving test score completed")
@@ -90,9 +92,11 @@ def create_patient_test_scores(
     aggregate_scores = {
         key: value for key, value in data.__dict__.items() if key in PERSONALITY_TRAITS
     }
+    logger.info(msg="Calculating test scores")
     scores = calculate_test_scores(AggregateScores(**aggregate_scores))
 
     if not scores:
+        logger.error("Calculation of test scores is incomplete")
         raise HTTPException(status_code=400, detail="Scores not found")
 
     logger.info("Saving test score to db")
@@ -106,6 +110,8 @@ def create_patient_test_scores(
         session.commit()
         session.refresh(personality_test_score)
     except Exception as e:
+        session.rollback()
+        logger.error("Failed to save patient test scores %s", e)
         raise e
 
     logger.info("Saving test score completed")

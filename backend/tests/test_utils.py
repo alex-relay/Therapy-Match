@@ -1,4 +1,4 @@
-from backend.models.user import Patient, Therapist, User
+from backend.models.user import Patient, Therapist, User, GenderOption
 
 USER_ID = "c658ffce-d810-4341-a8ef-2d3651489daf"
 
@@ -9,6 +9,8 @@ def add_test_patient(session_fixture):
         location="40.7128, -74.0060",
         description="Existing patient for testing",
         therapy_needs=["anxiety"],
+        gender=GenderOption.PREFER_NOT_TO_SAY.value,
+        age=30,
         user_id=USER_ID,
     )
 
@@ -22,8 +24,9 @@ def add_test_therapist(session_fixture):
     therapist = Therapist(
         location="40.7128, -74.0060",
         description="Existing patient for testing",
-        therapy_needs=["anxiety"],
         therapist_type="licensed",
+        gender=GenderOption.FEMALE.value,
+        age=45,
         user_id=USER_ID,
     )
 

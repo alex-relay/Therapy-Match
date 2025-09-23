@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import EmailStr, Field, field_validator
 from sqlmodel import SQLModel
 from pydantic_extra_types.coordinate import Coordinate
+from backend.routers.users.user_types import GenderOption
 
 
 class UserBase(SQLModel):
@@ -48,6 +49,8 @@ class PatientCreate(SQLModel):
     personality_test_id: Optional[UUID] = None
     location: Coordinate
     description: Optional[str] = None
+    age: int = Field(ge=10, le=120)
+    gender: GenderOption
 
 
 class TherapistCreate(SQLModel):
@@ -58,6 +61,8 @@ class TherapistCreate(SQLModel):
     personality_test_id: Optional[UUID] = None
     location: Coordinate
     description: Optional[str] = None
+    age: int = Field(ge=10, le=120)
+    gender: GenderOption
 
 
 class PatientRead(PatientCreate):

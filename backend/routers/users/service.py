@@ -51,9 +51,14 @@ def create_user(user_data: UserCreate, session: Session) -> User:
             "password": hashed_password,
         }
     )
-    session.add(user)
-    session.commit()
-    session.refresh(user)
+    try:
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Failed to create user: {e}")
+        raise e
     return user
 
 
@@ -65,9 +70,14 @@ def create_therapist(
         **{**user_data.model_dump(), "location": coordinate, "user_id": user_id}
     )
 
-    session.add(therapist)
-    session.commit()
-    session.refresh(therapist)
+    try:
+        session.add(therapist)
+        session.commit()
+        session.refresh(therapist)
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Failed to create therapist: {e}")
+        raise e
 
     return TherapistRead(
         **{
@@ -85,9 +95,14 @@ def create_patient(user_data: PatientCreate, user_id, session: Session) -> Patie
         **{**user_data.model_dump(), "location": coordinate, "user_id": user_id}
     )
 
-    session.add(patient)
-    session.commit()
-    session.refresh(patient)
+    try:
+        session.add(patient)
+        session.commit()
+        session.refresh(patient)
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Failed to create patient: {e}")
+        raise e
 
     return PatientRead(
         **{
@@ -116,19 +131,22 @@ def verify_password(plain_password, hashed_password):
 
 
 def get_password_hash(password):
+    """hash user password"""
     return pwd_context.hash(password)
 
 
 def get_user(db, email_address: str):
+    """get user from db"""
     try:
         user = [user for user in db if user.email_address == email_address][0]
         return user
     except Exception as e:
-        logger.error("Error retrieving user from fake DB: %s", e)
+        logger.error("Error retrieving user from DB: %s", e)
         raise e
 
 
 def authenticate_user(session, email_address: str, password: str):
+    """Authenticate user"""
     user = get_user_by_email(email_address, session)
     if not user:
         logger.error("no user found %s", email_address, exc_info=True)
@@ -155,6 +173,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)], session: SessionDep
 ):
+    """gets the current user from the token"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -179,6 +198,7 @@ async def get_current_user(
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)],
 ):
+    """gets the current active user"""
     if not current_user:
         raise HTTPException(status_code=400, detail="Inactive user")
 
