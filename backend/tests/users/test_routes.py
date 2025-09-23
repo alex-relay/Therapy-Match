@@ -1,4 +1,5 @@
 from backend.tests.test_utils import add_test_patient, add_test_therapist, add_test_user
+from backend.models.user import GenderOption
 
 USER_ID = "c658ffce-d810-4341-a8ef-2d3651489daf"
 
@@ -156,6 +157,8 @@ def test_create_therapist(client_fixture, session_fixture, mock_auth_headers):
             "description": "Experienced therapist",
             "specializations": ["anxiety", "depression"],
             "therapist_type": "licensed",
+            "gender": GenderOption.NON_BINARY.value,
+            "age": 27,
         },
         headers=mock_auth_headers,
     )
@@ -178,6 +181,8 @@ def test_create_patient(client_fixture, session_fixture, mock_auth_headers):
             "location": "40.7128, -74.0060",
             "therapy_needs": ["anxiety", "depression"],
             "description": "This is a test description",
+            "gender": GenderOption.NON_BINARY.value,
+            "age": 22,
         },
         headers=mock_auth_headers,
     )
@@ -225,6 +230,8 @@ def test_create_patient_returns_409_for_existing_patient(
             "location": "40.7128, -74.0060",
             "therapy_needs": ["anxiety", "depression"],
             "description": "This is a test description",
+            "age": 30,
+            "gender": GenderOption.MALE.value,
         },
         headers=mock_auth_headers,
     )
@@ -247,6 +254,8 @@ def test_create_therapist_returns_409_for_existing_therapist(
             "description": "Experienced therapist",
             "specializations": ["anxiety", "depression"],
             "therapist_type": "licensed",
+            "age": 30,
+            "gender": GenderOption.MALE.value,
         },
         headers=mock_auth_headers,
     )

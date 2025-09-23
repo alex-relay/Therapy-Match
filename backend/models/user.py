@@ -2,8 +2,10 @@ from uuid import UUID, uuid4
 from typing import Optional, List
 from decimal import Decimal
 from sqlalchemy import Column, String
+from pydantic import EmailStr
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlmodel import Field, SQLModel, Relationship
+from backend.routers.users.user_types import GenderOption
 
 
 class User(SQLModel, table=True):
@@ -14,7 +16,7 @@ class User(SQLModel, table=True):
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
     first_name: str
     last_name: str
-    email_address: str
+    email_address: EmailStr
     password: str
 
 
@@ -29,6 +31,8 @@ class Therapist(SQLModel, table=True):
     location: str
     therapist_type: str
     specializations: List[str] = Field(sa_column=Column(ARRAY(String)))
+    age: int = Field(ge=10, le=120)
+    gender: GenderOption
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(
         back_populates="therapist",
@@ -46,6 +50,8 @@ class Patient(SQLModel, table=True):
     location: str
     description: str | None = Field(default=None)
     therapy_needs: List[str] = Field(sa_column=Column(ARRAY(String)))
+    age: int = Field(ge=10, le=120)
+    gender: GenderOption
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(
         back_populates="patient",
