@@ -1,6 +1,6 @@
 "use client";
 
-import QuestionPageContainer from "../components/question/QuestionPageContainer";
+import QuestionPageContainer from "../components/personalityTestQuestions/QuestionPage";
 
 export default function Page() {
   return <QuestionPageContainer />;
