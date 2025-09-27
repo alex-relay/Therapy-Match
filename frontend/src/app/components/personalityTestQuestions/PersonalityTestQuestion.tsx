@@ -24,11 +24,10 @@ const OPTIONS: { option: string; value: number }[] = [
 
 const StyledOptionButton = styled(Button)(({ theme }) => ({
   cursor: "pointer",
-  ":hover": { backgroundColor: "gray" },
+  ":hover": { backgroundColor: theme.palette.action.hover },
   border: "1px solid",
   [theme.breakpoints.down("sm")]: {
     width: "100%",
-    marginTop: "10px",
   },
 }));
 
@@ -36,23 +35,13 @@ const StyledOptionsBox = styled(Box)(({ theme }) => ({
   display: "flex",
   gap: "10px",
   [theme.breakpoints.down("sm")]: {
-    display: "block",
-    whitespace: "pre-wrap",
-  },
-}));
-
-const StyledCard = styled(Card)(({ theme }) => ({
-  maxWidth: "800px",
-  [theme.breakpoints.down("sm")]: {
-    maxWidth: "400px",
-    marginLeft: "25px",
-    marginRight: "25px",
-    display: "block",
+    flexDirection: "column",
+    width: "100%",
   },
 }));
 
 const Question = ({ question, index, onAnswer }: QuestionProps) => (
-  <StyledCard variant="outlined">
+  <Card sx={{ width: "100%" }} variant="outlined">
     <Box
       sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
     >
@@ -81,7 +70,7 @@ const Question = ({ question, index, onAnswer }: QuestionProps) => (
         ))}
       </StyledOptionsBox>
     </CardContent>
-  </StyledCard>
+  </Card>
 );
 
 export default Question;

@@ -3,13 +3,13 @@ import {
   PERSONALITY_TEST_QUESTIONS,
   PersonalityTestQuestionAndAnswers,
 } from "@/app/utils/utils";
-import Stack from "@mui/material/Stack";
 import { useState } from "react";
-import Question from "./Question";
+import PersonalityTestQuestion from "./PersonalityTestQuestion";
 import PageContainer from "../common/PageContainer";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import { styled } from "@mui/material/styles";
+import StyledStack from "../common/PageStyledStack";
 
 const QuestionPageContainer = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -28,18 +28,11 @@ const QuestionPageContainer = () => {
   const StyledBox = styled(Box)(({ theme }) => ({
     display: "flex",
     justifyContent: "space-between",
+    width: "100%",
     [theme.breakpoints.down("sm")]: {
       maxWidth: "400px",
       marginLeft: "25px",
       marginRight: "25px",
-    },
-  }));
-
-  const StyledStack = styled(Stack)(({ theme }) => ({
-    maxWidth: "800px",
-    gap: "10px",
-    [theme.breakpoints.up("sm")]: {
-      margin: "25px",
     },
   }));
 
@@ -70,15 +63,21 @@ const QuestionPageContainer = () => {
         },
       ];
     });
-    setCurrentQuestion((prevState) => prevState + 1);
+    if (currentQuestion < PERSONALITY_TEST_QUESTIONS.length - 1) {
+      setCurrentQuestion((prevState) => prevState + 1);
+    }
   };
 
   const { question } = PERSONALITY_TEST_QUESTIONS[currentQuestion];
 
+  const isNextButtonDisabled =
+    currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 2 ||
+    questionAnswers.length === currentQuestion;
+
   return (
     <PageContainer>
       <StyledStack>
-        <Question
+        <PersonalityTestQuestion
           question={question}
           index={currentQuestion}
           onAnswer={handleOptionClick}
@@ -93,7 +92,7 @@ const QuestionPageContainer = () => {
             Previous{" "}
           </Button>
           <Button
-            disabled={currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 2}
+            disabled={isNextButtonDisabled}
             onClick={handleNextQuestionClick}
             sx={{
               backgroundColor: "white",
