@@ -2,6 +2,7 @@
 
 import PageContainer from "@/app/components/common/PageContainer";
 import StyledStack from "@/app/components/common/PageStyledStack";
+import AgeForm from "@/app/components/generalQuestions/AgeForm";
 import GenderForm from "@/app/components/generalQuestions/GenderForm";
 import { CardContent, CardHeader } from "@mui/material";
 import Card from "@mui/material/Card";
@@ -20,7 +21,7 @@ const GENERAL_QUESTIONS_MAP = {
 
 const GENERAL_QUESTIONS_COMPONENT_MAP = {
   "1": <GenderForm />,
-  "2": null,
+  "2": <AgeForm />,
   "3": null,
   "4": null,
   "5": null,
@@ -45,14 +46,15 @@ const Questions = () => {
     <PageContainer>
       <StyledStack>
         <Typography>On step {params.step}</Typography>
-        <Card variant="outlined">
-          <CardHeader title={headerTitle} />
+        <Card variant="outlined" sx={{ width: "100%", maxWidth: "700px" }}>
+          <CardHeader title={headerTitle} sx={{ textAlign: "center" }} />
           <CardContent
             sx={{
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
               alignItems: "center",
+              width: "100%",
             }}
           >
             {formComponent}

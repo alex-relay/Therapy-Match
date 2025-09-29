@@ -33,7 +33,7 @@ export default function GenderForm() {
   };
 
   return (
-    <FormControl fullWidth>
+    <FormControl sx={{ width: "80%" }}>
       <RadioGroup
         aria-labelledby="gender-question-label"
         name="gender-question-label"
