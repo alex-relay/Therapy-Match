@@ -4,6 +4,7 @@ import PageContainer from "@/app/components/common/PageContainer";
 import StyledStack from "@/app/components/common/PageStyledStack";
 import AgeForm from "@/app/components/generalQuestions/AgeForm";
 import GenderForm from "@/app/components/generalQuestions/GenderForm";
+import LocationForm from "@/app/components/generalQuestions/LocationForm";
 import { CardContent, CardHeader } from "@mui/material";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
@@ -22,7 +23,7 @@ const GENERAL_QUESTIONS_MAP = {
 const GENERAL_QUESTIONS_COMPONENT_MAP = {
   "1": <GenderForm />,
   "2": <AgeForm />,
-  "3": null,
+  "3": <LocationForm />,
   "4": null,
   "5": null,
   "6": null,
