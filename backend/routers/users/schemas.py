@@ -16,6 +16,12 @@ class UserBase(SQLModel):
     is_anonymous: bool = True
 
 
+class AnonymousSessionCookie(SQLModel):
+    model_config = {"extra": "forbid"}
+
+    anonymous_session: str
+
+
 class UserCreate(UserBase):
     """User Create Model"""
 
@@ -70,6 +76,16 @@ class PatientRead(PatientCreate):
     """PatientRead Model"""
 
     id: UUID
+
+
+class AnonymousSessionPatientRead(SQLModel):
+    id: UUID
+    therapy_needs: list[str] | None = None
+    personality_test_id: UUID | None = None
+    location: Coordinate | None = None
+    description: str | None = None
+    age: int | None = None
+    gender: GenderOption | None = None
 
 
 class TherapistRead(TherapistCreate):

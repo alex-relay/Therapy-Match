@@ -1,11 +1,12 @@
 """
 This module provides the routes for users.
 """
-
+from uuid import uuid4
 from datetime import timedelta
 from typing import Annotated
 from fastapi import APIRouter, status, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 from sqlmodel import select
 from backend.core.database import SessionDep
 from backend.models.user import Patient, User, Therapist
@@ -29,6 +30,7 @@ from .service import (
     get_current_active_user,
     Token,
     create_user,
+    create_anonymous_patient_session,
     TokenUser,
 )
 
@@ -170,6 +172,39 @@ def register_therapist(
 
 
 @router.get("/users", tags=["users"])
-async def read_users(current_user: CurrentUserDep):
+async def read_users():
     """Retrieve a list of users. For demonstration purposes only."""
     return [{"username": "Rick"}, {"username": "Morty"}]
+
+
+@router.post("/anonymous-session")
+def create_anonymous_session(session: SessionDep) -> JSONResponse:
+    content = {"message": "Anonymous patient session created successfully"}
+    try:
+        logger.info("Creating the access token")
+
+        session_id = str(uuid4())
+        access_token = create_access_token({"sub": session_id}, timedelta(minutes=60))
+
+        logger.info("Creating the anonymous session")
+
+        create_anonymous_patient_session(session_id, session)
+
+        response = JSONResponse(content=content)
+        response.set_cookie(
+            key="anonymous_session",
+            value=access_token,
+            httponly=True,
+            max_age=60 * 60,
+            path="/questions",
+            samesite="lax",
+        )
+
+        return response
+
+    except Exception as e:
+        logger.error("error: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not create access token",
+        )

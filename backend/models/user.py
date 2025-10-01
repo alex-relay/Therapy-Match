@@ -21,6 +21,27 @@ class User(SQLModel, table=True):
     is_anonymous: bool = Field(nullable=False)
 
 
+class AnonymousPatient(SQLModel, table=True):
+    """anonymous patient model"""
+
+    __tablename__ = "anonymous_patients"
+
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True)
+    session_id: str = Field(index=True, unique=True)
+    location: str | None = Field(default=None)
+    description: str | None = Field(default=None)
+    therapy_needs: List[str] = Field(
+        default_factory=list, sa_column=Column(ARRAY(String))
+    )
+    gender: GenderOption | None = Field(default=None)
+    age: int | None = Field(ge=10, le=120, default=None)
+
+    personality_test: Optional["AnonymousPersonalityTestScore"] = Relationship(
+        back_populates="anonymous_patient",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan", "single_parent": True},
+    )
+
+
 class Therapist(SQLModel, table=True):
     """Therapist model"""
 
@@ -57,6 +78,24 @@ class Patient(SQLModel, table=True):
     personality_test: Optional["PersonalityTestScore"] = Relationship(
         back_populates="patient",
         sa_relationship_kwargs={"cascade": "all, delete-orphan", "single_parent": True},
+    )
+
+
+class AnonymousPersonalityTestScore(SQLModel, table=True):
+    """Anonymous personality test scores model"""
+
+    __tablename__ = "anonymous_personality_test_scores"
+
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True)
+    neuroticism: Decimal = Field(default=0, max_digits=5, decimal_places=3)
+    openness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
+    extroversion: Decimal = Field(default=0, max_digits=5, decimal_places=3)
+    conscientiousness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
+    agreeableness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
+
+    patient_id: UUID = Field(foreign_key="anonymous_patients.id", unique=True)
+    anonymous_patient: AnonymousPatient = Relationship(
+        back_populates="personality_test",
     )
 
 

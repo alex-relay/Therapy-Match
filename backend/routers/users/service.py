@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session, select, SQLModel
 from passlib.context import CryptContext
 from backend.core.database import SessionDep
-from backend.models.user import Therapist, Patient, User
+from backend.models.user import Therapist, Patient, User, AnonymousPatient
 from backend.core.logging import get_logger
 from backend.routers.users.schemas import (
     TherapistCreate,
@@ -57,9 +57,27 @@ def create_user(user_data: UserCreate, session: Session) -> User:
         session.refresh(user)
     except Exception as e:
         session.rollback()
-        logger.error(f"Failed to create user: {e}")
+        logger.error(f"Failed to create anonymous patient: {e}")
         raise e
     return user
+
+
+def create_anonymous_patient_session(
+    anonymous_session_id: str, session: Session
+) -> AnonymousPatient:
+
+    patient = AnonymousPatient(session_id=anonymous_session_id)
+
+    try:
+        session.add(patient)
+        session.commit()
+        session.refresh(patient)
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Failed to create user: {e}")
+        raise e
+
+    return patient
 
 
 def create_therapist(
@@ -156,7 +174,7 @@ def authenticate_user(session, email_address: str, password: str):
     return user
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Create access token"""
     to_encode = data.copy()
 
@@ -208,3 +226,6 @@ async def get_current_active_user(
         last_name=current_user.last_name,
         email_address=current_user.email_address,
     )
+
+
+# async def create_anonymous_patient_session(anonymous_patient_id: str):
