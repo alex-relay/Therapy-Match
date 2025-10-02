@@ -3,7 +3,7 @@ from typing import Optional, List
 from decimal import Decimal
 from sqlalchemy import Column, String
 from pydantic import EmailStr
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM as PG_ENUM
 from sqlmodel import Field, SQLModel, Relationship
 from backend.routers.users.user_types import GenderOption
 
@@ -33,7 +33,9 @@ class AnonymousPatient(SQLModel, table=True):
     therapy_needs: List[str] = Field(
         default_factory=list, sa_column=Column(ARRAY(String))
     )
-    gender: GenderOption | None = Field(default=None)
+    gender: GenderOption | None = Field(
+        default=None, sa_column=Column(PG_ENUM(GenderOption, name="genderoption"))
+    )
     age: int | None = Field(ge=10, le=120, default=None)
 
     personality_test: Optional["AnonymousPersonalityTestScore"] = Relationship(
