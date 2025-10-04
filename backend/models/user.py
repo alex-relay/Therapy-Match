@@ -84,7 +84,7 @@ class Patient(SQLModel, table=True):
 
 
 class AnonymousPersonalityTestScore(SQLModel, table=True):
-    """Anonymous personality test scores model"""
+    """Anonymous personality test scores for patient model"""
 
     __tablename__ = "anonymous_personality_test_scores"
 

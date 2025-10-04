@@ -1,6 +1,12 @@
-from backend.tests.test_utils import add_test_patient, add_test_therapist, add_test_user
-from backend.models.user import GenderOption, AnonymousPatient
 from sqlmodel import select
+from backend.tests.test_utils import (
+    add_test_patient,
+    add_test_therapist,
+    add_test_user,
+    add_anonymous_patient,
+    USER_ID,
+)
+from backend.models.user import GenderOption, AnonymousPatient
 
 USER_ID = "c658ffce-d810-4341-a8ef-2d3651489daf"
 
@@ -290,3 +296,95 @@ def test_create_therapist_returns_409_for_existing_therapist(
 
     assert response.status_code == 409
     assert response.json() == {"detail": "Therapist already exists"}
+
+
+def test_patch_anonyomous_patient_updates(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test that a patch request to an anonymous patient updates the record"""
+
+    add_anonymous_patient(session_fixture)
+
+    response = client_fixture.patch(
+        "/anonymous-patient",
+        json={
+            "age": 30,
+        },
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+    )
+
+    anonymous_session_record = session_fixture.exec(select(AnonymousPatient)).first()
+
+    assert response.status_code == 200
+    assert anonymous_session_record.age == 30
+
+
+def test_patch_anonyomous_patient_does_not_affect_older_data(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test that a patch request to an anonymous patient updates the record"""
+
+    mock_overrides = {"description": "test_description", "gender": "male"}
+
+    add_anonymous_patient(session_fixture, mock_overrides)
+
+    response = client_fixture.patch(
+        "/anonymous-patient",
+        json={
+            "age": 30,
+        },
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+    )
+
+    anonymous_session_record = session_fixture.exec(select(AnonymousPatient)).first()
+
+    assert response.status_code == 200
+    assert anonymous_session_record.age == 30
+    assert anonymous_session_record.description == mock_overrides["description"]
+    assert anonymous_session_record.gender == mock_overrides["gender"]
+
+
+def test_patch_anonymous_patient_overwrites_previous_patch(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Check that a previous write can be overwritten"""
+    mock_overrides = {
+        "age": 29,
+    }
+
+    add_anonymous_patient(session_fixture, mock_overrides)
+
+    response = client_fixture.patch(
+        "/anonymous-patient",
+        json={
+            "age": 30,
+        },
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+    )
+
+    anonymous_session_record = session_fixture.exec(select(AnonymousPatient)).first()
+
+    assert response.status_code == 200
+    assert anonymous_session_record.age == 30
+
+
+def test_patch_anonymous_patient_patch_prevents_unauthorized_cookie_attribute(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Check if the request handles the case of an invalid cookie params"""
+    mock_overrides = {
+        "age": 29,
+    }
+
+    add_anonymous_patient(session_fixture, mock_overrides)
+
+    response = client_fixture.patch(
+        "/anonymous-patient",
+        json={
+            "age": 30,
+        },
+        headers={**mock_auth_headers, "Cookie": f"test_session={USER_ID}"},
+    )
+
+    data = response.json()
+    assert data["detail"][1]["msg"] == "Extra inputs are not permitted"

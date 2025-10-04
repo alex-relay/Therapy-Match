@@ -1,6 +1,6 @@
 """utility functions for creating users, therapists and patients for testing"""
 
-from backend.models.user import Patient, Therapist, User, GenderOption
+from backend.models.user import Patient, Therapist, User, GenderOption, AnonymousPatient
 
 USER_ID = "c658ffce-d810-4341-a8ef-2d3651489daf"
 
@@ -51,3 +51,23 @@ def add_test_user(session_fixture):
     session_fixture.add(user)
     session_fixture.commit()
     session_fixture.refresh(user)
+
+
+def add_anonymous_patient(session_fixture, mock_overrides=None):
+    if not mock_overrides:
+        mock_overrides = {}
+    base_data = {
+        "session_id": USER_ID,
+        "location": None,
+        "description": None,
+        "therapy_needs": None,
+        "gender": None,
+        "age": None,
+        "personality_test": None,
+    }
+
+    patient = AnonymousPatient(**{**base_data, **mock_overrides})
+
+    session_fixture.add(patient)
+    session_fixture.commit()
+    session_fixture.refresh(patient)
