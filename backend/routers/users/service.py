@@ -16,6 +16,8 @@ from backend.routers.users.schemas import (
     PatientCreate,
     UserCreate,
     UserRead,
+    AnonymousSessionPatientBase,
+    AnonymousSessionPatientRead,
 )
 from backend.core.config import settings
 
@@ -44,6 +46,7 @@ class TokenData(SQLModel):
 
 
 def create_user(user_data: UserCreate, session: Session) -> User:
+    """creates a user"""
     hashed_password = get_password_hash(user_data.password)
     user = User(
         **{
@@ -57,15 +60,15 @@ def create_user(user_data: UserCreate, session: Session) -> User:
         session.refresh(user)
     except Exception as e:
         session.rollback()
-        logger.error(f"Failed to create anonymous patient: {e}")
-        raise e
+        logger.exception("Failed to create anonymous patient %s", e)
+        raise ValueError("Failed to create anonymous patient") from e
     return user
 
 
 def create_anonymous_patient_session(
     anonymous_session_id: str, session: Session
 ) -> AnonymousPatient:
-
+    """creates an anonymous patient session"""
     patient = AnonymousPatient(session_id=anonymous_session_id)
 
     try:
@@ -74,8 +77,31 @@ def create_anonymous_patient_session(
         session.refresh(patient)
     except Exception as e:
         session.rollback()
-        logger.error(f"Failed to create user: {e}")
-        raise e
+        logger.exception("Failed to create anonymous patient: %s", e)
+        raise ValueError("Unable to create anonymous patient session") from e
+
+    return patient
+
+
+def patch_anonymous_patient_session(
+    patient: AnonymousSessionPatientRead,
+    data: AnonymousSessionPatientBase,
+    session: Session,
+):
+    if not patient:
+        raise Exception("Anonymous Patient with session_id not found.")
+
+    patient_data = data.model_dump(exclude_unset=True)
+    patient.sqlmodel_update(patient_data)
+
+    try:
+        session.add(patient)
+        session.commit()
+        session.refresh(patient)
+    except Exception as e:
+        session.rollback()
+        logger.exception("unable to update patient: %s", e)
+        raise ValueError("Unable to update patient") from e
 
     return patient
 
@@ -83,30 +109,34 @@ def create_anonymous_patient_session(
 def create_therapist(
     user_data: TherapistCreate, user_id: UUID, session: Session
 ) -> TherapistRead:
+    """creates a therapist"""
     coordinate = str(user_data.location)
     therapist = Therapist(
         **{**user_data.model_dump(), "location": coordinate, "user_id": user_id}
     )
 
+    if not therapist:
+        raise ValueError("Therapist not found")
+
     try:
         session.add(therapist)
         session.commit()
         session.refresh(therapist)
+        return TherapistRead(
+            **{
+                **therapist.model_dump(),
+                "id": str(therapist.id),
+                "user_id": str(therapist.user_id),
+            }
+        )
     except Exception as e:
         session.rollback()
-        logger.error(f"Failed to create therapist: {e}")
-        raise e
-
-    return TherapistRead(
-        **{
-            **therapist.model_dump(),
-            "id": str(therapist.id),
-            "user_id": str(therapist.user_id),
-        }
-    )
+        logger.exception("Failed to create therapist: %s", e)
+        raise ValueError("cannot create a therapist") from e
 
 
 def create_patient(user_data: PatientCreate, user_id, session: Session) -> PatientRead:
+    """creates a patient"""
     coordinate = str(user_data.location)
 
     patient = Patient(
@@ -117,18 +147,17 @@ def create_patient(user_data: PatientCreate, user_id, session: Session) -> Patie
         session.add(patient)
         session.commit()
         session.refresh(patient)
+        return PatientRead(
+            **{
+                **patient.model_dump(),
+                "id": str(patient.id),
+                "user_id": str(patient.user_id),
+            }
+        )
     except Exception as e:
         session.rollback()
-        logger.error(f"Failed to create patient: {e}")
-        raise e
-
-    return PatientRead(
-        **{
-            **patient.model_dump(),
-            "id": str(patient.id),
-            "user_id": str(patient.user_id),
-        }
-    )
+        logger.exception("Failed to create patient: %s", e)
+        raise ValueError("Cannot create a patient") from e
 
 
 def get_user_by_email(email: str | None, session: Session) -> User | None:

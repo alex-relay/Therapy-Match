@@ -4,12 +4,12 @@ This module provides the routes for users.
 from uuid import uuid4
 from datetime import timedelta
 from typing import Annotated
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from sqlmodel import select
 from backend.core.database import SessionDep
-from backend.models.user import Patient, User, Therapist
+from backend.models.user import Patient, User, Therapist, AnonymousPatient
 from backend.routers.users.schemas import (
     TherapistCreate,
     PatientRead,
@@ -17,6 +17,9 @@ from backend.routers.users.schemas import (
     TherapistRead,
     UserCreate,
     UserRead,
+    AnonymousSessionCookie,
+    AnonymousSessionPatientBase,
+    AnonymousSessionPatientResponse,
 )
 
 from backend.core.logging import get_logger
@@ -32,6 +35,7 @@ from .service import (
     create_user,
     create_anonymous_patient_session,
     TokenUser,
+    patch_anonymous_patient_session,
 )
 
 router = APIRouter()
@@ -48,12 +52,12 @@ async def login_for_access_token(
     """Authenticate and create token"""
     try:
         user = authenticate_user(session, form_data.username, form_data.password)
-    except Exception as exc:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
-        ) from exc
+        ) from e
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -104,7 +108,7 @@ async def register_user(data: UserCreate, session: SessionDep) -> UserRead:
             email_address=user.email_address,
         )
     except Exception as e:
-        raise e
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post(
@@ -120,13 +124,13 @@ def register_patient(
             select(Patient).where(Patient.user_id == current_user.id)
         ).first()
     except Exception as e:
-        raise e
+        logger.exception("cannot find patient: %s", e)
+        raise HTTPException(status_code=400, detail="Unable to find patient") from e
 
     if existing_patient:
-        logger.error(
+        logger.exception(
             "Attempt to register with existing patient: %s",
             current_user.email_address,
-            exc_info=True,
         )
         raise HTTPException(status_code=409, detail="Patient already exists")
 
@@ -136,7 +140,7 @@ def register_patient(
         user = create_patient(data, current_user.id, session)
         return user
     except Exception as e:
-        raise e
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post(
@@ -154,7 +158,10 @@ def register_therapist(
             select(Therapist).where(Therapist.user_id == current_user.id)
         ).first()
     except Exception as e:
-        raise e
+        logger.exception("error: %s", e)
+        raise HTTPException(
+            status_code=400, detail="Unable to find existing therapist"
+        ) from e
 
     if existing_therapist:
         logger.error(
@@ -162,13 +169,13 @@ def register_therapist(
         )
         raise HTTPException(status_code=409, detail="Therapist already exists")
 
-    logger.info("Registering therapist: %s", current_user.email_address, exc_info=True)
+    logger.info("Registering therapist: %s", current_user.email_address)
 
     try:
         therapist = create_therapist(data, current_user.id, session)
         return therapist
     except Exception as e:
-        raise e
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/users", tags=["users"])
@@ -203,8 +210,45 @@ def create_anonymous_session(session: SessionDep) -> JSONResponse:
         return response
 
     except Exception as e:
-        logger.error("error: %s", e)
+        logger.exception("error: %s", e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Could not create access token",
+            status_code=500,
+            detail=str(e),
+        ) from e
+
+
+@router.patch("/anonymous-patient", response_model=AnonymousSessionPatientResponse)
+def patch_anonymous_patient(
+    data: AnonymousSessionPatientBase,
+    cookie: Annotated[AnonymousSessionCookie, Cookie()],
+    session: SessionDep,
+):
+
+    session_id = cookie.anonymous_session
+
+    if not session_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Session does not exist",
         )
+
+    anonymous_patient = session.exec(
+        select(AnonymousPatient).where(AnonymousPatient.session_id == session_id)
+    ).first()
+    if not anonymous_patient:
+        raise HTTPException(status_code=404, detail="Anonymous patient not found")
+
+    try:
+        updated_anonymous_session = patch_anonymous_patient_session(
+            anonymous_patient, data, session
+        )
+        return AnonymousSessionPatientResponse(
+            id=updated_anonymous_session.id,
+            therapy_needs=updated_anonymous_session.therapy_needs,
+            location=updated_anonymous_session.location,
+            age=updated_anonymous_session.age,
+            gender=updated_anonymous_session.gender,
+            description=updated_anonymous_session.description,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e

@@ -78,14 +78,22 @@ class PatientRead(PatientCreate):
     id: UUID
 
 
-class AnonymousSessionPatientRead(SQLModel):
-    id: UUID
+class AnonymousSessionPatientBase(SQLModel):
     therapy_needs: list[str] | None = None
     personality_test_id: UUID | None = None
     location: Coordinate | None = None
     description: str | None = None
     age: int | None = None
     gender: GenderOption | None = None
+
+
+class AnonymousSessionPatientRead(AnonymousSessionPatientBase):
+    id: UUID
+    session_id: str
+
+
+class AnonymousSessionPatientResponse(AnonymousSessionPatientBase):
+    id: UUID
 
 
 class TherapistRead(TherapistCreate):
