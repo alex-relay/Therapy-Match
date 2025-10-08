@@ -17,8 +17,6 @@ class UserBase(SQLModel):
 
 
 class AnonymousSessionCookie(SQLModel):
-    model_config = {"extra": "forbid"}
-
     anonymous_session: str
 
 

@@ -57,7 +57,7 @@ def add_anonymous_patient(session_fixture, mock_overrides=None):
     if not mock_overrides:
         mock_overrides = {}
     base_data = {
-        "session_id": USER_ID,
+        "session_id": "a@b.com",
         "location": None,
         "description": None,
         "therapy_needs": None,

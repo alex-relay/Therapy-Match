@@ -13,7 +13,7 @@ import { useParams } from "next/navigation";
 const GENERAL_QUESTIONS_MAP = {
   "1": "What is your gender identity?",
   "2": "What is your age?",
-  "3": "In what city are you located?",
+  "3": "What is your postal code?",
   "4": "What led you to consider therapy today?",
   "5": "What are your primary goals for therapy?",
   "6": "Have you received a mental health diagnosis in the past. If so, which one?",

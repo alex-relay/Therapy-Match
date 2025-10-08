@@ -1,5 +1,5 @@
 "use client";
-
+import { usePatchQuestion } from "@/app/api/profile/profile";
 import { useState } from "react";
 import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
@@ -32,6 +32,12 @@ export default function AgeForm() {
   const router = useRouter();
   const params = useParams();
 
+  const { mutate: answerMutate } = usePatchQuestion({
+    onSuccess: () => {
+      router.push(`/questions/${parseInt(step) + 1}`);
+    },
+  });
+
   const step = params.step as string;
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -39,7 +45,7 @@ export default function AgeForm() {
     if (!validateAgeInput(age, setError)) {
       return;
     }
-    router.push(`/questions/${parseInt(step) + 1}`);
+    answerMutate({ age: Number(age) });
   };
 
   return (
