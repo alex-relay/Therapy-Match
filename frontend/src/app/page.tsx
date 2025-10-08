@@ -7,6 +7,7 @@ import CardMedia from "@mui/material/CardMedia";
 import StyledStack from "./components/common/PageStyledStack";
 import { useRouter } from "next/navigation";
 import { styled } from "@mui/material/styles";
+import { useCreateAnonymousSession } from "../app/api/users/users";
 
 const StyledCard = styled(Card)(({ theme }) => ({
   ":hover": {
@@ -25,6 +26,13 @@ const StyledCard = styled(Card)(({ theme }) => ({
 
 export default function Home() {
   const router = useRouter();
+
+  const { mutate: anonymousSessionMutate } = useCreateAnonymousSession({
+    onSuccess: () => {
+      router.push("/questions/1");
+    },
+  });
+
   return (
     <PageContainer>
       <StyledStack>
@@ -33,7 +41,7 @@ export default function Home() {
         </Typography>
         <StyledCard
           onClick={() => {
-            router.push("/questions/1");
+            anonymousSessionMutate();
           }}
           variant="outlined"
         >

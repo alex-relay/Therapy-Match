@@ -6,6 +6,7 @@ import FormControl from "@mui/material/FormControl";
 import { StyledFormControlLabel, StyledRadioButton } from "./OptionsContainers";
 import { useTheme } from "@mui/material/styles";
 import { useParams, useRouter } from "next/navigation";
+import { usePatchQuestion } from "@/app/api/profile/profile";
 
 const OPTIONS_MAP = {
   male: "Male",
@@ -22,6 +23,11 @@ export default function GenderForm() {
   const router = useRouter();
   const params = useParams();
   const theme = useTheme();
+  const { mutate: answerMutate } = usePatchQuestion({
+    onSuccess: () => {
+      router.push(`/questions/${parseInt(step) + 1}`);
+    },
+  });
 
   const step = params.step as string;
 
@@ -29,7 +35,7 @@ export default function GenderForm() {
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setSelectedValue(event.target.value as GenderFormValues);
-    router.push(`/questions/${parseInt(step) + 1}`);
+    answerMutate({ gender: event.target.value });
   };
 
   return (

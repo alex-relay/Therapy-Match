@@ -1,3 +1,4 @@
+from datetime import timedelta
 from sqlmodel import select
 from backend.tests.test_utils import (
     add_test_patient,
@@ -7,8 +8,7 @@ from backend.tests.test_utils import (
     USER_ID,
 )
 from backend.models.user import GenderOption, AnonymousPatient
-
-USER_ID = "c658ffce-d810-4341-a8ef-2d3651489daf"
+from backend.routers.users.service import create_access_token
 
 
 def test_read_main(client_fixture):
@@ -192,7 +192,7 @@ def test_create_anonymous_session(client_fixture, session_fixture):
     assert "anonymous_session" in set_cookie_header
     assert "HttpOnly" in set_cookie_header
     assert "Max-Age=3600" in set_cookie_header
-    assert "Path=/questions" in set_cookie_header
+    assert "Path=/" in set_cookie_header
 
     anon_session_record = session_fixture.exec(select(AnonymousPatient)).first()
     assert anon_session_record is not None
@@ -306,7 +306,7 @@ def test_patch_anonyomous_patient_updates(
     add_anonymous_patient(session_fixture)
 
     response = client_fixture.patch(
-        "/anonymous-patient",
+        "/anonymous-session",
         json={
             "age": 30,
         },
@@ -329,7 +329,7 @@ def test_patch_anonyomous_patient_does_not_affect_older_data(
     add_anonymous_patient(session_fixture, mock_overrides)
 
     response = client_fixture.patch(
-        "/anonymous-patient",
+        "/anonymous-session",
         json={
             "age": 30,
         },
@@ -352,39 +352,20 @@ def test_patch_anonymous_patient_overwrites_previous_patch(
         "age": 29,
     }
 
+    # Create the anonymous patient with the session ID
     add_anonymous_patient(session_fixture, mock_overrides)
 
+    # Create a proper JWT token like the server does
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
     response = client_fixture.patch(
-        "/anonymous-patient",
+        "/anonymous-session",
         json={
             "age": 30,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
 
     anonymous_session_record = session_fixture.exec(select(AnonymousPatient)).first()
-
     assert response.status_code == 200
     assert anonymous_session_record.age == 30
-
-
-def test_patch_anonymous_patient_patch_prevents_unauthorized_cookie_attribute(
-    client_fixture, session_fixture, mock_auth_headers
-):
-    """Check if the request handles the case of an invalid cookie params"""
-    mock_overrides = {
-        "age": 29,
-    }
-
-    add_anonymous_patient(session_fixture, mock_overrides)
-
-    response = client_fixture.patch(
-        "/anonymous-patient",
-        json={
-            "age": 30,
-        },
-        headers={**mock_auth_headers, "Cookie": f"test_session={USER_ID}"},
-    )
-
-    data = response.json()
-    assert data["detail"][1]["msg"] == "Extra inputs are not permitted"

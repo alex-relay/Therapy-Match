@@ -9,12 +9,12 @@ type createUserProps = {
   password: string;
 };
 
-type User = {
+interface User {
   first_name: string;
   last_name: string;
   email_address: string;
   password: string;
-};
+}
 
 // TODO: We need to hash the password on the client side in the request.
 const createUser = (formData: createUserProps): Promise<User> => {

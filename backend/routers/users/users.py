@@ -3,11 +3,14 @@ This module provides the routes for users.
 """
 from uuid import uuid4
 from datetime import timedelta
+from typing import Optional
 from typing import Annotated
+import jwt
 from fastapi import APIRouter, status, Depends, HTTPException, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from sqlmodel import select
+from backend.core.config import settings
 from backend.core.database import SessionDep
 from backend.models.user import Patient, User, Therapist, AnonymousPatient
 from backend.routers.users.schemas import (
@@ -185,7 +188,13 @@ async def read_users():
 
 
 @router.post("/anonymous-session")
-def create_anonymous_session(session: SessionDep) -> JSONResponse:
+def create_anonymous_session(
+    session: SessionDep,
+    anonymous_session: Optional[str] = Cookie(None, alias="anonymous_session"),
+) -> JSONResponse:
+    if anonymous_session:
+        return JSONResponse({"messsage": "Cookie has already been created"})
+
     content = {"message": "Anonymous patient session created successfully"}
     try:
         logger.info("Creating the access token")
@@ -203,8 +212,9 @@ def create_anonymous_session(session: SessionDep) -> JSONResponse:
             value=access_token,
             httponly=True,
             max_age=60 * 60,
-            path="/questions",
-            samesite="lax",
+            path="/",
+            samesite="none",
+            secure=True,
         )
 
         return response
@@ -217,30 +227,34 @@ def create_anonymous_session(session: SessionDep) -> JSONResponse:
         ) from e
 
 
-@router.patch("/anonymous-patient", response_model=AnonymousSessionPatientResponse)
+@router.patch("/anonymous-session", response_model=AnonymousSessionPatientResponse)
 def patch_anonymous_patient(
     data: AnonymousSessionPatientBase,
     cookie: Annotated[AnonymousSessionCookie, Cookie()],
-    session: SessionDep,
+    db_session: SessionDep,
 ):
+    anonymous_session = jwt.decode(
+        cookie.anonymous_session, settings.secret_key, algorithms=["HS256"]
+    )
 
-    session_id = cookie.anonymous_session
+    session_id = anonymous_session.get("sub")
 
     if not session_id:
         raise HTTPException(
             status_code=401,
-            detail="Session does not exist",
+            detail="Anonymous session does not exist",
         )
 
-    anonymous_patient = session.exec(
+    anonymous_patient = db_session.exec(
         select(AnonymousPatient).where(AnonymousPatient.session_id == session_id)
     ).first()
+
     if not anonymous_patient:
         raise HTTPException(status_code=404, detail="Anonymous patient not found")
 
     try:
         updated_anonymous_session = patch_anonymous_patient_session(
-            anonymous_patient, data, session
+            anonymous_patient, data, db_session
         )
         return AnonymousSessionPatientResponse(
             id=updated_anonymous_session.id,
