@@ -44,6 +44,7 @@ export default function Home() {
             anonymousSessionMutate();
           }}
           variant="outlined"
+          data-testid="myself-tile"
         >
           <CardHeader title="Myself" />
           <CardMedia

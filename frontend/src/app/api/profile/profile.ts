@@ -2,7 +2,7 @@ import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-interface PatientProfile {
+export interface PatientProfile {
   therapy_needs: string[] | null;
   personality_test_id: string | null;
   location: string | null;
