@@ -1,11 +1,12 @@
 "use client";
-import { usePatchQuestion } from "@/app/api/profile/profile";
+import { usePatchQuestion } from "../../api/profile/profile";
 import { useState } from "react";
 import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 
 const validateAgeInput = (age: string, onError: (message: string) => void) => {
+  const validAgeString = "Please enter a valid age between 18 and 120.";
   if (!age) {
     onError("Please enter your age.");
     return false;
@@ -14,12 +15,12 @@ const validateAgeInput = (age: string, onError: (message: string) => void) => {
   const ageNumber = Number(age);
 
   if (isNaN(ageNumber)) {
-    onError("Age must be a number between 18 and 120");
+    onError(validAgeString);
     return false;
   }
 
   if (ageNumber > 120 || ageNumber < 18) {
-    onError("Please enter a valid age between 18 and 120.");
+    onError(validAgeString);
     return false;
   }
 
@@ -62,6 +63,7 @@ export default function AgeForm() {
         variant="outlined"
         sx={{ width: "40%" }}
         value={age}
+        placeholder="e.g. 27"
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
           setAge(event.target.value);
         }}

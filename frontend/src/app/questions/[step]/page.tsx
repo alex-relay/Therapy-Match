@@ -1,11 +1,12 @@
 "use client";
 
-import PageContainer from "@/app/components/common/PageContainer";
-import StyledStack from "@/app/components/common/PageStyledStack";
-import AgeForm from "@/app/components/generalQuestions/AgeForm";
-import GenderForm from "@/app/components/generalQuestions/GenderForm";
-import LocationForm from "@/app/components/generalQuestions/LocationForm";
-import { CardContent, CardHeader } from "@mui/material";
+import PageContainer from "../../components/common/PageContainer";
+import StyledStack from "../../components/common/PageStyledStack";
+import AgeForm from "../../components/generalQuestions/AgeForm";
+import GenderForm from "../../components/generalQuestions/GenderForm";
+import LocationForm from "../../components/generalQuestions/LocationForm";
+import CardContent from "@mui/material/CardContent";
+import CardHeader from "@mui/material/CardHeader";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
 import { useParams } from "next/navigation";

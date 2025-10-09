@@ -6,7 +6,7 @@ import FormControl from "@mui/material/FormControl";
 import { StyledFormControlLabel, StyledRadioButton } from "./OptionsContainers";
 import { useTheme } from "@mui/material/styles";
 import { useParams, useRouter } from "next/navigation";
-import { usePatchQuestion } from "@/app/api/profile/profile";
+import { usePatchQuestion } from "../../api/profile/profile";
 
 const OPTIONS_MAP = {
   male: "Male",
