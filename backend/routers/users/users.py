@@ -271,7 +271,8 @@ def patch_anonymous_patient(
         return AnonymousSessionPatientResponse(
             id=updated_anonymous_session.id,
             therapy_needs=updated_anonymous_session.therapy_needs,
-            location=location,
+            latitude=location.lat if location and location.lat else None,
+            longitude=location.lon if location and location.lon else None,
             age=updated_anonymous_session.age,
             gender=updated_anonymous_session.gender,
             description=updated_anonymous_session.description,

@@ -36,8 +36,8 @@ def get_coordinates_from_postal_code(
             return None
 
         return {
-            "latitude": float(location.latitude),
-            "longitude": float(location.longitude),
+            "latitude": float(location.latitude.iloc[0]),
+            "longitude": float(location.longitude.iloc[0]),
         }
     except Exception as e:
         logger.exception("Unable to find location: %s", e)

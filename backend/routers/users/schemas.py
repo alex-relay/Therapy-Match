@@ -84,13 +84,16 @@ class LocationCoordinate(SQLModel):
 POSTAL_CODE_REGEX = re.compile(r"^[ABCEGHJ-NPRSTVXY]\d[A-Z][ -]?\d[A-Z]\d$")
 
 
-class AnonymousSessionPatientUpdate(SQLModel):
+class AnonymousSessionPatientBase(SQLModel):
     therapy_needs: list[str] | None = None
     personality_test_id: UUID | None = None
-    postal_code: str | None = None
     description: str | None = None
     age: int | None = None
     gender: GenderOption | None = None
+
+
+class AnonymousSessionPatientUpdate(AnonymousSessionPatientBase):
+    postal_code: str | None = None
 
     @field_validator("postal_code")
     @classmethod
@@ -102,26 +105,17 @@ class AnonymousSessionPatientUpdate(SQLModel):
         return v
 
 
-class AnonymousSessionPatientRead(SQLModel):
+class AnonymousSessionPatientRead(AnonymousSessionPatientBase):
     id: UUID
     session_id: str
-    therapy_needs: list[str] | None = None
-    personality_test_id: UUID | None = None
     latitude: float | None = None
     longitude: float | None = None
-    description: str | None = None
-    age: int | None = None
-    gender: GenderOption | None = None
 
 
-class AnonymousSessionPatientResponse(SQLModel):
+class AnonymousSessionPatientResponse(AnonymousSessionPatientBase):
     id: UUID
-    therapy_needs: list[str] | None = None
-    personality_test_id: UUID | None = None
-    location: LocationCoordinate | None = None
-    description: str | None = None
-    age: int | None = None
-    gender: GenderOption | None = None
+    latitude: float | None = None
+    longitude: float | None = None
 
 
 class TherapistRead(TherapistCreate):

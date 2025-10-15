@@ -111,7 +111,11 @@ def patch_anonymous_patient_session(
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-        if not location:
+        if (
+            not location
+            or location["latitude"] is None
+            or location["longitude"] is None
+        ):
             raise HTTPException(status_code=404, detail="Invalid postal code")
 
         logger.info("Updating patient with location: %s", location)
