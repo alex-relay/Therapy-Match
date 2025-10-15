@@ -16,9 +16,10 @@ from backend.routers.users.schemas import (
     PatientCreate,
     UserCreate,
     UserRead,
-    AnonymousSessionPatientBase,
+    AnonymousSessionPatientUpdate,
     AnonymousSessionPatientRead,
 )
+from backend.routers.users.location_service import get_coordinates_from_postal_code
 from backend.core.config import settings
 
 logger = get_logger(__name__)
@@ -83,16 +84,42 @@ def create_anonymous_patient_session(
     return patient
 
 
+def get_anonymous_patient(db_session: Session, session_id: str) -> AnonymousPatient:
+    try:
+        anonymous_patient = db_session.exec(
+            select(AnonymousPatient).where(AnonymousPatient.session_id == session_id)
+        ).first()
+        return anonymous_patient
+    except Exception as e:
+        logger.exception("Unable to get anonymous patient: %s", e)
+        raise ValueError("Unable to find anonymous patient") from e
+
+
 def patch_anonymous_patient_session(
     patient: AnonymousSessionPatientRead,
-    data: AnonymousSessionPatientBase,
+    data: AnonymousSessionPatientUpdate,
     session: Session,
 ):
     if not patient:
         raise Exception("Anonymous Patient with session_id not found.")
 
-    patient_data = data.model_dump(exclude_unset=True)
-    patient.sqlmodel_update(patient_data)
+    if data.postal_code:
+        logger.info("fetching coordinate from postal code: %s", data.postal_code)
+
+        try:
+            location = get_coordinates_from_postal_code(data.postal_code)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e)) from e
+
+        if not location:
+            raise HTTPException(status_code=404, detail="Invalid postal code")
+
+        logger.info("Updating patient with location: %s", location)
+
+        patient.sqlmodel_update(location)
+    else:
+        patient_data = data.model_dump(exclude_unset=True)
+        patient.sqlmodel_update(patient_data)
 
     try:
         session.add(patient)
@@ -255,6 +282,3 @@ async def get_current_active_user(
         last_name=current_user.last_name,
         email_address=current_user.email_address,
     )
-
-
-# async def create_anonymous_patient_session(anonymous_patient_id: str):

@@ -76,22 +76,52 @@ class PatientRead(PatientCreate):
     id: UUID
 
 
-class AnonymousSessionPatientBase(SQLModel):
+class LocationCoordinate(SQLModel):
+    lat: float
+    lon: float
+
+
+POSTAL_CODE_REGEX = re.compile(r"^[ABCEGHJ-NPRSTVXY]\d[A-Z][ -]?\d[A-Z]\d$")
+
+
+class AnonymousSessionPatientUpdate(SQLModel):
     therapy_needs: list[str] | None = None
     personality_test_id: UUID | None = None
-    location: Coordinate | None = None
+    postal_code: str | None = None
+    description: str | None = None
+    age: int | None = None
+    gender: GenderOption | None = None
+
+    @field_validator("postal_code")
+    @classmethod
+    def validate_postal_code(cls, v):
+        if v is None:
+            return v
+        if not POSTAL_CODE_REGEX.match(v):
+            raise ValueError("Invalid Canadian postal code format")
+        return v
+
+
+class AnonymousSessionPatientRead(SQLModel):
+    id: UUID
+    session_id: str
+    therapy_needs: list[str] | None = None
+    personality_test_id: UUID | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     description: str | None = None
     age: int | None = None
     gender: GenderOption | None = None
 
 
-class AnonymousSessionPatientRead(AnonymousSessionPatientBase):
+class AnonymousSessionPatientResponse(SQLModel):
     id: UUID
-    session_id: str
-
-
-class AnonymousSessionPatientResponse(AnonymousSessionPatientBase):
-    id: UUID
+    therapy_needs: list[str] | None = None
+    personality_test_id: UUID | None = None
+    location: LocationCoordinate | None = None
+    description: str | None = None
+    age: int | None = None
+    gender: GenderOption | None = None
 
 
 class TherapistRead(TherapistCreate):
