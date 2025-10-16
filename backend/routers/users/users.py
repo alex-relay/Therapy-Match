@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from sqlmodel import select
 from backend.core.config import settings
 from backend.core.database import SessionDep
-from backend.models.user import Patient, User, Therapist, AnonymousPatient
+from backend.models.user import Patient, User, Therapist
 from backend.routers.users.schemas import (
     TherapistCreate,
     PatientRead,
@@ -21,8 +21,9 @@ from backend.routers.users.schemas import (
     UserCreate,
     UserRead,
     AnonymousSessionCookie,
-    AnonymousSessionPatientBase,
+    AnonymousSessionPatientUpdate,
     AnonymousSessionPatientResponse,
+    LocationCoordinate,
 )
 
 from backend.core.logging import get_logger
@@ -39,6 +40,7 @@ from .service import (
     create_anonymous_patient_session,
     TokenUser,
     patch_anonymous_patient_session,
+    get_anonymous_patient,
 )
 
 router = APIRouter()
@@ -229,7 +231,7 @@ def create_anonymous_session(
 
 @router.patch("/anonymous-session", response_model=AnonymousSessionPatientResponse)
 def patch_anonymous_patient(
-    data: AnonymousSessionPatientBase,
+    data: AnonymousSessionPatientUpdate,
     cookie: Annotated[AnonymousSessionCookie, Cookie()],
     db_session: SessionDep,
 ):
@@ -245,9 +247,10 @@ def patch_anonymous_patient(
             detail="Anonymous session does not exist",
         )
 
-    anonymous_patient = db_session.exec(
-        select(AnonymousPatient).where(AnonymousPatient.session_id == session_id)
-    ).first()
+    try:
+        anonymous_patient = get_anonymous_patient(db_session, session_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
     if not anonymous_patient:
         raise HTTPException(status_code=404, detail="Anonymous patient not found")
@@ -256,10 +259,20 @@ def patch_anonymous_patient(
         updated_anonymous_session = patch_anonymous_patient_session(
             anonymous_patient, data, db_session
         )
+
+        location = None
+
+        if updated_anonymous_session.latitude and updated_anonymous_session.longitude:
+            location = LocationCoordinate(
+                lat=updated_anonymous_session.latitude,
+                lon=updated_anonymous_session.longitude,
+            )
+
         return AnonymousSessionPatientResponse(
             id=updated_anonymous_session.id,
             therapy_needs=updated_anonymous_session.therapy_needs,
-            location=updated_anonymous_session.location,
+            latitude=location.lat if location and location.lat else None,
+            longitude=location.lon if location and location.lon else None,
             age=updated_anonymous_session.age,
             gender=updated_anonymous_session.gender,
             description=updated_anonymous_session.description,

@@ -2,20 +2,34 @@ import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export interface PatientProfile {
+export type Coordinate = {
+  lat: number;
+  lon: number;
+};
+
+export interface PatientProfilePatchRequest {
   therapy_needs: string[] | null;
   personality_test_id: string | null;
-  location: string | null;
+  postal_code: string | null;
   description: string | null;
   age: number | null;
   gender: string | null;
 }
 
-export type PatchQuestionProps = Partial<PatientProfile>;
+export interface PatientProfileResponse {
+  therapy_needs: string[] | null;
+  personality_test_id: string | null;
+  location: Coordinate | null;
+  description: string | null;
+  age: number | null;
+  gender: string | null;
+}
+
+export type PatchQuestionProps = Partial<PatientProfilePatchRequest>;
 
 export const patchQuestion = async ({
   ...profileData
-}: PatchQuestionProps): Promise<PatientProfile> => {
+}: PatchQuestionProps): Promise<PatientProfileResponse> => {
   const response = await fetch(`${API_URL}/anonymous-session`, {
     method: "PATCH",
     body: JSON.stringify(profileData),
@@ -32,7 +46,11 @@ export const patchQuestion = async ({
 };
 
 export const usePatchQuestion = (
-  options?: UseMutationOptions<PatientProfile, Error, PatchQuestionProps>,
+  options?: UseMutationOptions<
+    PatientProfileResponse,
+    Error,
+    PatchQuestionProps
+  >,
 ) => {
   return useMutation({
     mutationFn: patchQuestion,

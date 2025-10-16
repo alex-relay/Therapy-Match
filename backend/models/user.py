@@ -28,7 +28,8 @@ class AnonymousPatient(SQLModel, table=True):
 
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
     session_id: str = Field(index=True, unique=True)
-    location: str | None = Field(default=None)
+    latitude: float | None = Field(default=None)
+    longitude: float | None = Field(default=None)
     description: str | None = Field(default=None)
     therapy_needs: List[str] = Field(
         default_factory=list, sa_column=Column(ARRAY(String))
