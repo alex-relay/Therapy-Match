@@ -1,3 +1,5 @@
+""" location service """
+
 import ssl
 import pgeocode
 import certifi
@@ -20,7 +22,8 @@ def get_coordinates_from_postal_code(
         postal_code: A Canadian postal code string, or None.
 
     Returns:
-        A dictionary with 'latitude' and 'longitude' keys (both float), or None if postal_code is falsy.
+        A dictionary with 'latitude' and 'longitude' keys (both float),
+        or None if postal_code is falsy.
 
     Raises:
         ValueError: If the postal code cannot be resolved to coordinates.
@@ -32,7 +35,11 @@ def get_coordinates_from_postal_code(
         nomi = pgeocode.Nominatim("ca")
         location = nomi.query_postal_code(postal_code)
 
-        if location.empty:
+        if (
+            location.empty
+            or location["latitude"].isna().any()
+            or location["longitude"].isna().any()
+        ):
             return None
 
         return {
