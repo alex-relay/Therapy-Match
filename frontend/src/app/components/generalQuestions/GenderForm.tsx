@@ -4,7 +4,6 @@ import { useState } from "react";
 import RadioGroup from "@mui/material/RadioGroup";
 import FormControl from "@mui/material/FormControl";
 import { StyledFormControlLabel, StyledRadioButton } from "./OptionsContainers";
-import { useTheme } from "@mui/material/styles";
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "../../api/profile/profile";
 
@@ -14,7 +13,7 @@ const OPTIONS_MAP = {
   non_binary: "Non-binary",
   other: "Other",
   prefer_not_to_say: "Prefer not to say",
-};
+} as const;
 
 type GenderFormValues = keyof typeof OPTIONS_MAP | "";
 
@@ -22,7 +21,6 @@ export default function GenderForm() {
   const [selectedValue, setSelectedValue] = useState<GenderFormValues>("");
   const router = useRouter();
   const params = useParams();
-  const theme = useTheme();
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
       router.push(`/questions/${parseInt(step) + 1}`);
@@ -39,10 +37,14 @@ export default function GenderForm() {
   };
 
   return (
-    <FormControl sx={{ width: "80%" }}>
+    <FormControl
+      id="gender-question-label"
+      component="fieldset"
+      sx={{ width: "80%" }}
+    >
       <RadioGroup
         aria-labelledby="gender-question-label"
-        name="gender-question-label"
+        name="selectedGender"
         sx={{ gap: 2 }}
         onChange={handleRadioButtonChange}
       >
@@ -53,11 +55,6 @@ export default function GenderForm() {
             value={key}
             control={<StyledRadioButton />}
             checked={selectedValue === key}
-            sx={
-              selectedValue === key
-                ? { backgroundColor: theme.palette.primary.main }
-                : {}
-            }
           />
         ))}
       </RadioGroup>
