@@ -8,24 +8,20 @@ import LocationForm from "../../components/generalQuestions/LocationForm";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Card from "@mui/material/Card";
-import Typography from "@mui/material/Typography";
 import { useParams } from "next/navigation";
-
-const GENERAL_QUESTIONS_MAP = {
-  "1": "What is your gender identity?",
-  "2": "What is your age?",
-  "3": "What is your postal code?",
-  "4": "What led you to consider therapy today?",
-  "5": "What are your primary goals for therapy?",
-  "6": "Have you received a mental health diagnosis in the past. If so, which one?",
-  "7": "Are there certain qualities or traits that you are looking for in a therapist?",
-};
+import TherapyNeeds from "@/app/components/generalQuestions/TherapyNeedsForm";
 
 const GENERAL_QUESTIONS_COMPONENT_MAP = {
-  "1": <GenderForm />,
-  "2": <AgeForm />,
-  "3": <LocationForm />,
-  "4": null,
+  "1": {
+    component: GenderForm,
+    title: "What is your gender identity?",
+  },
+  "2": { component: AgeForm, title: "What is your age?" },
+  "3": { component: LocationForm, title: "What is your postal code?" },
+  "4": {
+    component: TherapyNeeds,
+    title: "What led you to consider therapy today?",
+  },
   "5": null,
   "6": null,
   "7": null,
@@ -37,18 +33,18 @@ const Questions = () => {
   const params = useParams();
   const step = params.step as Step;
 
-  if (!step || !GENERAL_QUESTIONS_MAP[step]) {
+  if (!step || !GENERAL_QUESTIONS_COMPONENT_MAP[step]) {
     return "Step does not exist";
   }
 
-  const formComponent = step && GENERAL_QUESTIONS_COMPONENT_MAP[step];
-  const headerTitle = step && GENERAL_QUESTIONS_MAP[step];
+  const FormComponent =
+    step && GENERAL_QUESTIONS_COMPONENT_MAP[step]?.component;
+  const headerTitle = step && GENERAL_QUESTIONS_COMPONENT_MAP[step]?.title;
 
   return (
     <PageContainer>
       <StyledStack>
-        <Typography>On step {params.step}</Typography>
-        <Card variant="outlined" sx={{ width: "100%", maxWidth: "700px" }}>
+        <Card variant="outlined" sx={{ width: "100%", maxWidth: "800px" }}>
           <CardHeader title={headerTitle} sx={{ textAlign: "center" }} />
           <CardContent
             sx={{
@@ -59,7 +55,7 @@ const Questions = () => {
               width: "100%",
             }}
           >
-            {formComponent}
+            {<FormComponent />}
           </CardContent>
         </Card>
       </StyledStack>

@@ -21,6 +21,7 @@ const StyledFormControlLabel = styled(FormControlLabel)(
       boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
       backgroundColor: checked ? null : theme.palette.action.hover,
     },
+    ...(checked && { backgroundColor: theme.palette.primary.main }),
   }),
 );
 
