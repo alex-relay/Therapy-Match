@@ -3,7 +3,10 @@
 import { useState } from "react";
 import RadioGroup from "@mui/material/RadioGroup";
 import FormControl from "@mui/material/FormControl";
-import { StyledFormControlLabel, StyledRadioButton } from "./OptionsContainers";
+import {
+  StyledFormControlLabel,
+  StyledRadioButton,
+} from "../common/OptionsContainers";
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "../../api/profile/profile";
 
