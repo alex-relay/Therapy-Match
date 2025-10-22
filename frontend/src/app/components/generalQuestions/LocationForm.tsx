@@ -5,6 +5,8 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import NavigationButtons from "../common/NavigationButtons";
+import GENERAL_QUESTIONS_COMPONENT_MAP from "./generalQuestions";
 
 const transformPostalCode = (postalCode: string) => {
   if (!postalCode) {
@@ -48,16 +50,21 @@ const LocationForm = () => {
   const params = useParams();
   const router = useRouter();
 
+  const step = params.step as string;
+  const stepAsNumber = parseInt(step, 10);
+
+  if (isNaN(stepAsNumber)) {
+    router.push("/questions/1");
+    return null;
+  }
+
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      router.push(`/questions/${parseInt(step) + 1}`);
+      router.push(`/questions/${stepAsNumber + 1}`);
     },
   });
 
-  const step = params.step as string;
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleNextButtonClick = () => {
     const cleanPostalCode = transformPostalCode(postalCode);
     if (!validatePostalCode(cleanPostalCode, setError)) {
       return;
@@ -68,21 +75,45 @@ const LocationForm = () => {
   return (
     <Box
       component="form"
-      onSubmit={handleSubmit}
       width="100%"
       display="flex"
+      flexDirection="column"
       justifyContent="center"
+      gap={2}
     >
-      <TextField
-        type="text"
-        variant="outlined"
-        sx={{ width: "40%" }}
-        value={postalCode}
-        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-          setPostalCode(event.target.value);
+      <Box
+        sx={{
+          marginLeft: "auto",
+          marginRight: "auto",
         }}
-        helperText={!!error ? error : null}
-        error={!!error}
+      >
+        <TextField
+          type="text"
+          variant="outlined"
+          sx={{ width: "100%" }}
+          value={postalCode}
+          aria-label="Postal Code"
+          placeholder="e.g., M5A 4L1"
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setPostalCode(event.target.value);
+          }}
+          helperText={error || null}
+          error={!!error}
+        />
+      </Box>
+      <NavigationButtons
+        onNextButtonClick={handleNextButtonClick}
+        isPrevButtonDisabled={stepAsNumber === 1}
+        isNextButtonDisabled={
+          stepAsNumber ===
+          Object.entries(GENERAL_QUESTIONS_COMPONENT_MAP).length
+        }
+        onPrevButtonClick={() => {
+          router.push(`/questions/${stepAsNumber - 1}`);
+        }}
+        sx={{
+          width: "100%",
+        }}
       />
     </Box>
   );

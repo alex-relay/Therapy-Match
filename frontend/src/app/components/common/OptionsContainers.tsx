@@ -1,9 +1,9 @@
 import FormControlLabel from "@mui/material/FormControlLabel";
-import { styled } from "@mui/material/styles";
+import { styled, Theme } from "@mui/material/styles";
 import Radio from "@mui/material/Radio";
 
 const StyledFormControlLabel = styled(FormControlLabel)(
-  ({ theme, checked }) => ({
+  ({ theme, checked }: { theme: Theme; checked?: boolean }) => ({
     border: "1px solid",
     borderColor: "black",
     "& .MuiRadio-root": {

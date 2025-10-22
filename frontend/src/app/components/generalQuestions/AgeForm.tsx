@@ -32,14 +32,13 @@ export default function AgeForm() {
   const [error, setError] = useState("");
   const router = useRouter();
   const params = useParams();
+  const step = params.step as string;
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
       router.push(`/questions/${parseInt(step) + 1}`);
     },
   });
-
-  const step = params.step as string;
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
