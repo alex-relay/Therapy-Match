@@ -16,7 +16,7 @@ from backend.routers.users.schemas import (
     PatientCreate,
     UserCreate,
     UserRead,
-    AnonymousSessionPatientUpdate,
+    AnonymousSessionPatientBase,
     AnonymousSessionPatientRead,
 )
 from backend.routers.users.location_service import get_coordinates_from_postal_code
@@ -85,6 +85,7 @@ def create_anonymous_patient_session(
 
 
 def get_anonymous_patient(db_session: Session, session_id: str) -> AnonymousPatient:
+    """gets an anonymous patient by session id"""
     try:
         anonymous_patient = db_session.exec(
             select(AnonymousPatient).where(AnonymousPatient.session_id == session_id)
@@ -97,9 +98,10 @@ def get_anonymous_patient(db_session: Session, session_id: str) -> AnonymousPati
 
 def patch_anonymous_patient_session(
     patient: AnonymousSessionPatientRead,
-    data: AnonymousSessionPatientUpdate,
+    data: AnonymousSessionPatientBase,
     session: Session,
 ):
+    """updates an anonymous patient session via session id and patch data"""
     if not patient:
         raise Exception("Anonymous Patient with session_id not found.")
 
@@ -119,7 +121,6 @@ def patch_anonymous_patient_session(
             raise HTTPException(status_code=404, detail="Invalid postal code")
 
         logger.info("Updating patient with location: %s", location)
-
         patient.sqlmodel_update(location)
     else:
         patient_data = data.model_dump(exclude_unset=True)

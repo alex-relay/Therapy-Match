@@ -12,6 +12,8 @@ def add_test_patient(session_fixture):
         description="Existing patient for testing",
         therapy_needs=["anxiety"],
         gender=GenderOption.PREFER_NOT_TO_SAY.value,
+        is_lgbtq_therapist_preference=True,
+        is_religious_therapist_preference=False,
         age=30,
         user_id=USER_ID,
     )
@@ -64,6 +66,8 @@ def add_anonymous_patient(session_fixture, mock_overrides=None):
         "gender": None,
         "age": None,
         "personality_test": None,
+        "is_lgbtq_therapist_preference": None,
+        "is_religious_therapist_preference": None,
     }
 
     patient = AnonymousPatient(**{**base_data, **mock_overrides})

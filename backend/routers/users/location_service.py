@@ -1,6 +1,6 @@
 """ location service """
-
 import ssl
+import numpy as np
 import pgeocode
 import certifi
 from backend.core.logging import get_logger
@@ -35,16 +35,12 @@ def get_coordinates_from_postal_code(
         nomi = pgeocode.Nominatim("ca")
         location = nomi.query_postal_code(postal_code)
 
-        if (
-            location.empty
-            or location["latitude"].isna().any()
-            or location["longitude"].isna().any()
-        ):
+        if np.isnan(location["longitude"]) or np.isnan(location["latitude"]):
             return None
 
         return {
-            "latitude": float(location.latitude.iloc[0]),
-            "longitude": float(location.longitude.iloc[0]),
+            "latitude": float(location["latitude"]),
+            "longitude": float(location["longitude"]),
         }
     except Exception as e:
         logger.exception("Unable to find location: %s", e)

@@ -17,6 +17,8 @@ class UserBase(SQLModel):
 
 
 class AnonymousSessionCookie(SQLModel):
+    """session cookie for the anonymous patient session"""
+
     anonymous_session: str
 
 
@@ -56,6 +58,8 @@ class PatientCreate(SQLModel):
     description: Optional[str] = None
     age: int = Field(ge=10, le=120)
     gender: GenderOption
+    is_lgbtq_therapist_preference: bool
+    is_religious_therapist_preference: bool
 
 
 class TherapistCreate(SQLModel):
@@ -77,6 +81,8 @@ class PatientRead(PatientCreate):
 
 
 class LocationCoordinate(SQLModel):
+    """coordinates model"""
+
     lat: float
     lon: float
 
@@ -85,14 +91,16 @@ POSTAL_CODE_REGEX = re.compile(r"^[ABCEGHJ-NPRSTVXY]\d[A-Z][ -]?\d[A-Z]\d$")
 
 
 class AnonymousSessionPatientBase(SQLModel):
+    """base model for anonymous session patient"""
+
     therapy_needs: list[str] | None = None
     personality_test_id: UUID | None = None
     description: str | None = None
     age: int | None = None
     gender: GenderOption | None = None
+    is_lgbtq_therapist_preference: bool | None = None
+    is_religious_therapist_preference: bool | None = None
 
-
-class AnonymousSessionPatientUpdate(AnonymousSessionPatientBase):
     postal_code: str | None = None
 
     @field_validator("postal_code")
@@ -106,6 +114,8 @@ class AnonymousSessionPatientUpdate(AnonymousSessionPatientBase):
 
 
 class AnonymousSessionPatientRead(AnonymousSessionPatientBase):
+    """read model for pulling an anonymous patient session in the db"""
+
     id: UUID
     session_id: str
     latitude: float | None = None
@@ -113,6 +123,8 @@ class AnonymousSessionPatientRead(AnonymousSessionPatientBase):
 
 
 class AnonymousSessionPatientResponse(AnonymousSessionPatientBase):
+    """response model for an anonymous patient session"""
+
     id: UUID
     latitude: float | None = None
     longitude: float | None = None

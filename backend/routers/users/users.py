@@ -21,7 +21,7 @@ from backend.routers.users.schemas import (
     UserCreate,
     UserRead,
     AnonymousSessionCookie,
-    AnonymousSessionPatientUpdate,
+    AnonymousSessionPatientBase,
     AnonymousSessionPatientResponse,
     LocationCoordinate,
 )
@@ -231,7 +231,7 @@ def create_anonymous_session(
 
 @router.patch("/anonymous-session", response_model=AnonymousSessionPatientResponse)
 def patch_anonymous_patient(
-    data: AnonymousSessionPatientUpdate,
+    data: AnonymousSessionPatientBase,
     cookie: Annotated[AnonymousSessionCookie, Cookie()],
     db_session: SessionDep,
 ):
