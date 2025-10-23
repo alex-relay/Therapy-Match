@@ -1,7 +1,7 @@
 import AgeForm from "./AgeForm";
 import GenderForm from "./GenderForm";
 import LocationForm from "./LocationForm";
-import TherapyNeeds from "./TherapyNeedsForm";
+import TherapyNeedsForm from "./TherapyNeedsForm";
 
 const GENERAL_QUESTIONS_COMPONENT_MAP = {
   "1": {
@@ -11,7 +11,7 @@ const GENERAL_QUESTIONS_COMPONENT_MAP = {
   "2": { component: AgeForm, title: "What is your age?" },
   "3": { component: LocationForm, title: "What is your postal code?" },
   "4": {
-    component: TherapyNeeds,
+    component: TherapyNeedsForm,
     title: "What led you to consider therapy today?",
   },
   "5": null,

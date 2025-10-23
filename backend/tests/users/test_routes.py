@@ -1,3 +1,4 @@
+import numpy as np
 from datetime import timedelta
 import pandas as pd
 from sqlmodel import select
@@ -220,6 +221,8 @@ def test_create_patient(client_fixture, session_fixture, mock_auth_headers):
             "description": "This is a test description",
             "gender": GenderOption.NON_BINARY.value,
             "age": 22,
+            "is_lgbtq_therapist_preference": True,
+            "is_religious_therapist_preference": False,
         },
         headers=mock_auth_headers,
     )
@@ -270,6 +273,8 @@ def test_create_patient_returns_409_for_existing_patient(
             "description": "This is a test description",
             "age": 30,
             "gender": GenderOption.MALE.value,
+            "is_lgbtq_therapist_preference": True,
+            "is_religious_therapist_preference": False,
         },
         headers=mock_auth_headers,
     )
@@ -380,7 +385,12 @@ def test_patch_anonymous_patient_saves_location_coordinates(
 ):
     """Check that a postal code saves lon and lat coordinates"""
 
-    mock_location = pd.DataFrame({"latitude": [43.6555], "longitude": [-79.3626]})
+    mock_location = pd.Series(
+        {
+            "latitude": np.float64(43.6555),
+            "longitude": np.float64(-79.3626),
+        }
+    )
 
     mocker.patch("pgeocode.Nominatim.query_postal_code", return_value=mock_location)
 
@@ -432,31 +442,11 @@ def test_patch_anonymous_patient_no_location(
 
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
-    mock_location = pd.DataFrame()
-
-    mocker.patch("pgeocode.Nominatim.query_postal_code", return_value=mock_location)
-
-    response = client_fixture.patch(
-        "/anonymous-session",
-        json={"postal_code": "L4J 6B6"},
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
-    )
-
-    data = response.json()
-
-    assert data == {"detail": "404: Invalid postal code"}
-
-
-def test_patch_anonymous_patient_none_coordinates(
-    client_fixture, session_fixture, mock_auth_headers, mocker
-):
-    """test if the coordinates are None, but a dataframe is returned from pgeocode"""
-    add_anonymous_patient(session_fixture)
-
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
-    mock_location = pd.DataFrame(
-        {"country_code": ["CA"], "latitude": [None], "longitude": [None]}
+    mock_location = pd.Series(
+        {
+            "latitude": np.nan,
+            "longitude": np.nan,
+        }
     )
 
     mocker.patch("pgeocode.Nominatim.query_postal_code", return_value=mock_location)

@@ -38,6 +38,8 @@ class AnonymousPatient(SQLModel, table=True):
         default=None, sa_column=Column(PG_ENUM(GenderOption, name="genderoption"))
     )
     age: int | None = Field(ge=10, le=120, default=None)
+    is_lgbtq_therapist_preference: bool | None = Field(default=None)
+    is_religious_therapist_preference: bool | None = Field(default=None)
 
     personality_test: Optional["AnonymousPersonalityTestScore"] = Relationship(
         back_populates="anonymous_patient",
@@ -77,6 +79,8 @@ class Patient(SQLModel, table=True):
     therapy_needs: List[str] = Field(sa_column=Column(ARRAY(String)))
     age: int = Field(ge=10, le=120)
     gender: GenderOption
+    is_lgbtq_therapist_preference: bool
+    is_religious_therapist_preference: bool
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(
         back_populates="patient",
