@@ -64,7 +64,8 @@ const LocationForm = () => {
     },
   });
 
-  const handleNextButtonClick = () => {
+  const handleNextButtonClick = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     const cleanPostalCode = transformPostalCode(postalCode);
     if (!validatePostalCode(cleanPostalCode, setError)) {
       return;
@@ -77,6 +78,7 @@ const LocationForm = () => {
       component="form"
       width="100%"
       display="flex"
+      onSubmit={handleNextButtonClick}
       flexDirection="column"
       justifyContent="center"
       gap={2}
@@ -102,7 +104,6 @@ const LocationForm = () => {
         />
       </Box>
       <NavigationButtons
-        onNextButtonClick={handleNextButtonClick}
         isPrevButtonDisabled={stepAsNumber === 1}
         isNextButtonDisabled={
           stepAsNumber ===
