@@ -4,7 +4,6 @@ import { SxProps } from "@mui/material/styles";
 
 type NavigationButtonsProps = {
   onPrevButtonClick: () => void;
-  onNextButtonClick: () => void;
   isNextButtonDisabled?: boolean;
   isPrevButtonDisabled?: boolean;
   sx?: SxProps;
@@ -12,7 +11,6 @@ type NavigationButtonsProps = {
 
 const NavigationButtons = ({
   onPrevButtonClick,
-  onNextButtonClick,
   isNextButtonDisabled = false,
   isPrevButtonDisabled = false,
   sx = {},
@@ -23,13 +21,20 @@ const NavigationButtons = ({
         onClick={onPrevButtonClick}
         disabled={isPrevButtonDisabled}
         variant="outlined"
+        type="button"
+        sx={{
+          width: "100px",
+        }}
       >
         Previous
       </Button>
       <Button
-        onClick={onNextButtonClick}
         variant="outlined"
         disabled={isNextButtonDisabled}
+        type="submit"
+        sx={{
+          width: "100px",
+        }}
       >
         Next
       </Button>

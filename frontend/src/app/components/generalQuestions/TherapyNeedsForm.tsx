@@ -1,12 +1,10 @@
 "use client";
 
 import FormGroup from "@mui/material/FormGroup";
-import FormControl from "@mui/material/FormControl";
 import { useState } from "react";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import { StyledFormControlLabel } from "../common/OptionsContainers";
-import { Stack } from "@mui/material";
 import NavigationButtons from "../common/NavigationButtons";
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "@/app/api/profile/profile";
@@ -60,53 +58,59 @@ const TherapyNeeds = () => {
     });
   };
 
+  const handleNextButtonClick = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    answerMutate({ therapy_needs: therapyNeeds });
+  };
+
   return (
-    <Stack gap={2}>
-      <FormControl sx={{ width: "100%" }} component="fieldset">
-        <FormGroup
-          row
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2,
-          }}
-        >
-          {Object.entries(TherapyNeedsOptionsMap).map(([key, value]) => {
-            const isChecked = therapyNeeds.includes(key as TherapyNeedsOptions);
-            return (
-              <Box
-                width="300px"
-                key={key}
-                sx={{
-                  textAlign: "center",
-                }}
-              >
-                <StyledFormControlLabel
-                  control={
-                    <Checkbox
-                      checked={isChecked}
-                      value={key}
-                      onChange={(event) => handleOptionClick(event, isChecked)}
-                      name={key}
-                      sx={{
-                        display: "none",
-                      }}
-                    />
-                  }
-                  checked={isChecked}
-                  label={value}
-                />
-              </Box>
-            );
-          })}
-        </FormGroup>
-      </FormControl>
-      <NavigationButtons
-        onNextButtonClick={() => {
-          answerMutate({ therapy_needs: therapyNeeds });
+    <Box
+      display="flex"
+      gap={2}
+      sx={{ width: "100%", flexDirection: "column" }}
+      component="form"
+      onSubmit={handleNextButtonClick}
+    >
+      <FormGroup
+        row
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 2,
         }}
+      >
+        {Object.entries(TherapyNeedsOptionsMap).map(([key, value]) => {
+          const isChecked = therapyNeeds.includes(key as TherapyNeedsOptions);
+          return (
+            <Box
+              width="300px"
+              key={key}
+              sx={{
+                textAlign: "center",
+              }}
+            >
+              <StyledFormControlLabel
+                control={
+                  <Checkbox
+                    checked={isChecked}
+                    value={key}
+                    onChange={(event) => handleOptionClick(event, isChecked)}
+                    name={key}
+                    sx={{
+                      display: "none",
+                    }}
+                  />
+                }
+                checked={isChecked}
+                label={value}
+              />
+            </Box>
+          );
+        })}
+      </FormGroup>
+      <NavigationButtons
         onPrevButtonClick={() => {
           router.push(`/questions/${stepAsNumber - 1}`);
         }}
@@ -117,7 +121,7 @@ const TherapyNeeds = () => {
         }
         isPrevButtonDisabled={stepAsNumber === 1}
       />
-    </Stack>
+    </Box>
   );
 };
 
