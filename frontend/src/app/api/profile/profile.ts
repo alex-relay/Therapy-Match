@@ -3,8 +3,8 @@ import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export type Coordinate = {
-  lat: number;
-  lon: number;
+  latitude: number;
+  longitude: number;
 };
 
 export interface PatientProfilePatchRequest {
@@ -14,6 +14,7 @@ export interface PatientProfilePatchRequest {
   description: string | null;
   age: number | null;
   gender: string | null;
+  religion: string | null;
 }
 
 export interface PatientProfileResponse {
@@ -23,6 +24,8 @@ export interface PatientProfileResponse {
   description: string | null;
   age: number | null;
   gender: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export type PatchQuestionProps = Partial<PatientProfilePatchRequest>;

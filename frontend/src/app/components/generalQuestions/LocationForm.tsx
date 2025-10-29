@@ -6,7 +6,7 @@ import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import NavigationButtons from "../common/NavigationButtons";
-import GENERAL_QUESTIONS_COMPONENT_MAP from "./generalQuestions";
+import { getNextStep, PageName } from "@/app/utils/utils";
 
 const transformPostalCode = (postalCode: string) => {
   if (!postalCode) {
@@ -50,17 +50,12 @@ const LocationForm = () => {
   const params = useParams();
   const router = useRouter();
 
-  const step = params.step as string;
-  const stepAsNumber = parseInt(step, 10);
-
-  if (isNaN(stepAsNumber)) {
-    router.push("/questions/1");
-    return null;
-  }
+  const step = params.step as PageName;
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      router.push(`/questions/${stepAsNumber + 1}`);
+      const nextStep = getNextStep(step);
+      router.push(`/questions/${nextStep}`);
     },
   });
 
@@ -85,14 +80,12 @@ const LocationForm = () => {
     >
       <Box
         sx={{
-          marginLeft: "auto",
-          marginRight: "auto",
+          margin: "auto",
         }}
       >
         <TextField
           type="text"
           variant="outlined"
-          sx={{ width: "100%" }}
           value={postalCode}
           aria-label="Postal Code"
           placeholder="e.g., M5A 4L1"
@@ -104,13 +97,10 @@ const LocationForm = () => {
         />
       </Box>
       <NavigationButtons
-        isPrevButtonDisabled={stepAsNumber === 1}
-        isNextButtonDisabled={
-          stepAsNumber ===
-          Object.entries(GENERAL_QUESTIONS_COMPONENT_MAP).length
-        }
+        isPrevButtonDisabled={step === "gender"}
+        isNextButtonDisabled={!postalCode}
         onPrevButtonClick={() => {
-          router.push(`/questions/${stepAsNumber - 1}`);
+          router.push(`/questions/${step}`);
         }}
         sx={{
           width: "100%",

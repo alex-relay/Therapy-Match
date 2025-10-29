@@ -1,3 +1,5 @@
+import GENERAL_QUESTIONS_COMPONENT_MAP from "../components/generalQuestions/generalQuestions";
+
 export type QuestionOptions = {
   agree: number;
   slightly_agree: number;
@@ -210,4 +212,35 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   { question: "I am full of ideas.", category: "openness", answer: null },
 ];
 
-export { PERSONALITY_TEST_QUESTIONS };
+export type PageName =
+  | "gender"
+  | "religion"
+  | "religious-importance"
+  | "age"
+  | "location"
+  | "therapy-needs"
+  | "religious-importance";
+
+type StepInfo = {
+  component: React.ComponentType<any> | null;
+  title: string;
+  getNextStep: (answer?: string) => PageName;
+};
+
+export type GeneralQuestionsComponentMap = {
+  [key in PageName]: StepInfo;
+};
+
+const getNextStep = (
+  currentStep: PageName,
+  data?: string | undefined,
+): PageName => {
+  const stepInfo: StepInfo =
+    GENERAL_QUESTIONS_COMPONENT_MAP[currentStep as PageName];
+  if (stepInfo) {
+    return stepInfo.getNextStep(data);
+  }
+  return "gender";
+};
+
+export { PERSONALITY_TEST_QUESTIONS, getNextStep };

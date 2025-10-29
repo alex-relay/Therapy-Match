@@ -29,7 +29,7 @@ export default function Home() {
 
   const { mutate: anonymousSessionMutate } = useCreateAnonymousSession({
     onSuccess: () => {
-      router.push("/questions/1");
+      router.push("/questions/gender");
     },
   });
 

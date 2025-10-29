@@ -4,6 +4,7 @@ import { useState } from "react";
 import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
+import NavigationButtons from "../common/NavigationButtons";
 
 const validateAgeInput = (age: string, onError: (message: string) => void) => {
   const validAgeString = "Please enter a valid age between 18 and 120.";
@@ -54,20 +55,30 @@ export default function AgeForm() {
       onSubmit={handleSubmit}
       width="100%"
       display="flex"
+      flexDirection={"column"}
       justifyContent="center"
+      gap={2}
     >
-      <TextField
-        type="text"
-        inputMode="numeric"
-        variant="outlined"
-        sx={{ width: "40%" }}
-        value={age}
-        placeholder="e.g. 27"
-        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-          setAge(event.target.value);
-        }}
-        helperText={!!error ? error : null}
-        error={!!error}
+      <Box margin="auto">
+        <TextField
+          type="text"
+          inputMode="numeric"
+          variant="outlined"
+          value={age}
+          placeholder="e.g. 27"
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setAge(event.target.value);
+          }}
+          helperText={!!error ? error : null}
+          error={!!error}
+        />
+      </Box>
+      <NavigationButtons
+        onPrevButtonClick={() =>
+          router.push(`/questions/${parseInt(step) - 1}`)
+        }
+        isNextButtonDisabled={!age}
+        isPrevButtonDisabled={parseInt(step) === 1}
       />
     </Box>
   );

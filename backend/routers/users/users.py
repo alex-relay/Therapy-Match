@@ -235,6 +235,7 @@ def patch_anonymous_patient(
     cookie: Annotated[AnonymousSessionCookie, Cookie()],
     db_session: SessionDep,
 ):
+    """updates an anonymous patient session via session id from cookie and patch data"""
     anonymous_session = jwt.decode(
         cookie.anonymous_session, settings.secret_key, algorithms=["HS256"]
     )
@@ -260,19 +261,14 @@ def patch_anonymous_patient(
             anonymous_patient, data, db_session
         )
 
-        location = None
-
-        if updated_anonymous_session.latitude and updated_anonymous_session.longitude:
-            location = LocationCoordinate(
-                lat=updated_anonymous_session.latitude,
-                lon=updated_anonymous_session.longitude,
-            )
+        latitude = updated_anonymous_session.latitude
+        longitude = updated_anonymous_session.longitude
 
         return AnonymousSessionPatientResponse(
             id=updated_anonymous_session.id,
             therapy_needs=updated_anonymous_session.therapy_needs,
-            latitude=location.lat if location and location.lat else None,
-            longitude=location.lon if location and location.lon else None,
+            latitude=latitude,
+            longitude=longitude,
             age=updated_anonymous_session.age,
             gender=updated_anonymous_session.gender,
             description=updated_anonymous_session.description,

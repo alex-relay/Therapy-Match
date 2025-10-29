@@ -7,12 +7,11 @@ import CardHeader from "@mui/material/CardHeader";
 import Card from "@mui/material/Card";
 import { useParams } from "next/navigation";
 import GENERAL_QUESTIONS_COMPONENT_MAP from "../../components/generalQuestions/generalQuestions";
-
-type Step = "1" | "2" | "3" | "4" | "5" | "6" | "7";
+import { PageName } from "@/app/utils/utils";
 
 const Questions = () => {
   const params = useParams();
-  const step = params.step as Step;
+  const step = params.step as PageName;
 
   if (!step || !GENERAL_QUESTIONS_COMPONENT_MAP[step]) {
     return "Step does not exist";

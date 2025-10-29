@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import RadioGroup from "@mui/material/RadioGroup";
-import FormControl from "@mui/material/FormControl";
 import {
   StyledFormControlLabel,
   StyledRadioButton,
@@ -10,19 +9,25 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "../../api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
+import Box from "@mui/material/Box";
 
 const OPTIONS_MAP = {
-  male: "Male",
-  female: "Female",
-  non_binary: "Non-binary",
-  other: "Other",
+  jewish: "Jewish",
+  muslim: "Muslim",
+  hindu: "Hindu",
+  buddhist: "Buddhist",
+  christian: "Christian",
+  sikh: "Sikh",
+  not_applicable: "Not applicable",
   prefer_not_to_say: "Prefer not to say",
 } as const;
 
-type GenderFormValues = keyof typeof OPTIONS_MAP | "";
+type ReligionFormValues = keyof typeof OPTIONS_MAP;
 
-export default function GenderForm() {
-  const [selectedValue, setSelectedValue] = useState<GenderFormValues>("");
+export default function ReligionForm() {
+  const [selectedValue, setSelectedValue] = useState<ReligionFormValues | null>(
+    null,
+  );
   const router = useRouter();
   const params = useParams();
   const step = params.step as PageName;
@@ -37,19 +42,27 @@ export default function GenderForm() {
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    setSelectedValue(event.target.value as GenderFormValues);
-    answerMutate({ gender: event.target.value });
+    setSelectedValue(event.target.value as ReligionFormValues);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (selectedValue) {
+      answerMutate({ religion: selectedValue });
+    }
   };
 
   return (
-    <FormControl
-      id="gender-question-label"
-      component="fieldset"
-      sx={{ width: "80%" }}
+    <Box
+      display="flex"
+      gap={2}
+      sx={{ width: "80%", flexDirection: "column" }}
+      component="form"
+      onSubmit={handleSubmit}
     >
       <RadioGroup
-        aria-labelledby="gender-question-label"
-        name="selectedGender"
+        aria-labelledby="religion-question-label"
+        name="selectedReligion"
         sx={{ gap: 2 }}
         onChange={handleRadioButtonChange}
       >
@@ -63,6 +76,6 @@ export default function GenderForm() {
           />
         ))}
       </RadioGroup>
-    </FormControl>
+    </Box>
   );
 }
