@@ -222,7 +222,7 @@ export type PageName =
   | "religious-importance";
 
 type StepInfo = {
-  component: React.ComponentType<any> | null;
+  component: React.ComponentType;
   title: string;
   getNextStep: (answer?: string) => PageName;
 };

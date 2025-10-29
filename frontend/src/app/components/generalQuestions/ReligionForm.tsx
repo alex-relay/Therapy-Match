@@ -10,6 +10,8 @@ import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "../../api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import Box from "@mui/material/Box";
+import { FormControl } from "@mui/material";
+import NavigationButtons from "../common/NavigationButtons";
 
 const OPTIONS_MAP = {
   jewish: "Jewish",
@@ -60,22 +62,30 @@ export default function ReligionForm() {
       component="form"
       onSubmit={handleSubmit}
     >
-      <RadioGroup
-        aria-labelledby="religion-question-label"
-        name="selectedReligion"
-        sx={{ gap: 2 }}
-        onChange={handleRadioButtonChange}
-      >
-        {Object.entries(OPTIONS_MAP).map(([key, value]) => (
-          <StyledFormControlLabel
-            key={key}
-            label={value}
-            value={key}
-            control={<StyledRadioButton />}
-            checked={selectedValue === key}
-          />
-        ))}
-      </RadioGroup>
+      <FormControl>
+        <RadioGroup
+          aria-labelledby="religion-question-label"
+          name="selectedReligion"
+          sx={{ gap: 2 }}
+          onChange={handleRadioButtonChange}
+        >
+          {Object.entries(OPTIONS_MAP).map(([key, value]) => (
+            <StyledFormControlLabel
+              key={key}
+              label={value}
+              value={key}
+              control={<StyledRadioButton />}
+              checked={selectedValue === key}
+            />
+          ))}
+        </RadioGroup>
+      </FormControl>
+      <NavigationButtons
+        isNextButtonDisabled={!selectedValue}
+        onPrevButtonClick={() => {
+          router.push(`/questions/gender`);
+        }}
+      />
     </Box>
   );
 }

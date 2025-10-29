@@ -15,6 +15,8 @@ export interface PatientProfilePatchRequest {
   age: number | null;
   gender: string | null;
   religion: string | null;
+  is_religious_therapist_preference: boolean | null;
+  is_lgbtq_therapist_preference: boolean | null;
 }
 
 export interface PatientProfileResponse {

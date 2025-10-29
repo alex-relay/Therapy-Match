@@ -1,7 +1,9 @@
+""" schemas for the user router """
+
 import re
 from uuid import UUID
 from typing import Optional
-from pydantic import EmailStr, Field, field_validator
+from pydantic import EmailStr, Field, field_validator, ConfigDict
 from sqlmodel import SQLModel
 from pydantic_extra_types.coordinate import Coordinate
 from backend.routers.users.user_types import GenderOption
@@ -34,6 +36,7 @@ class UserCreate(UserBase):
     @field_validator("password")
     @classmethod
     def password_strength(cls, v: str) -> str:
+        """Validates password strength"""
         if not re.search(r"[a-z]", v):
             raise ValueError("Password must contain at least one lowercase letter")
         if not re.search(r"[A-Z]", v):
@@ -100,12 +103,13 @@ class AnonymousSessionPatientBase(SQLModel):
     gender: GenderOption | None = None
     is_lgbtq_therapist_preference: bool | None = None
     is_religious_therapist_preference: bool | None = None
-
     postal_code: str | None = None
+    model_config = ConfigDict(extra="forbid")
 
     @field_validator("postal_code")
     @classmethod
     def validate_postal_code(cls, v):
+        """Validates the canadian postal code format"""
         if v is None:
             return v
         if not POSTAL_CODE_REGEX.match(v):

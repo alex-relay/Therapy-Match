@@ -4,6 +4,7 @@ import GenderForm from "./GenderForm";
 import LocationForm from "./LocationForm";
 import TherapyNeedsForm from "./TherapyNeedsForm";
 import ReligionForm from "./ReligionForm";
+import ReligiousPreferenceForm from "./ReligiousPreferenceForm";
 
 const GENERAL_QUESTIONS_COMPONENT_MAP: GeneralQuestionsComponentMap = {
   gender: {
@@ -24,9 +25,9 @@ const GENERAL_QUESTIONS_COMPONENT_MAP: GeneralQuestionsComponentMap = {
     },
   },
   "religious-importance": {
-    component: null,
+    component: ReligiousPreferenceForm,
     title:
-      "How important is it to have a therapist who shares your religious beliefs?",
+      "Is it important to have a therapist who shares your religious beliefs?",
     getNextStep: () => {
       return "age";
     },
