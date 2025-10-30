@@ -13,18 +13,8 @@ import { getNextStep, PageName } from "@/app/utils/utils";
 import NavigationButtons from "../common/NavigationButtons";
 import Stack from "@mui/material/Stack";
 
-const OPTIONS_MAP = {
-  male: "Male",
-  female: "Female",
-  non_binary: "Non-binary",
-  other: "Other",
-  prefer_not_to_say: "Prefer not to say",
-} as const;
-
-type GenderFormValues = keyof typeof OPTIONS_MAP | "";
-
-export default function GenderForm() {
-  const [selectedValue, setSelectedValue] = useState<GenderFormValues>("");
+export default function ReligiousPreferenceForm() {
+  const [selectedValue, setSelectedValue] = useState<boolean | null>(null);
   const router = useRouter();
   const params = useParams();
   const step = params.step as PageName;
@@ -39,12 +29,12 @@ export default function GenderForm() {
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    setSelectedValue(event.target.value as GenderFormValues);
+    setSelectedValue(event.target.value === "yes" ? true : false);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    answerMutate({ gender: selectedValue });
+    answerMutate({ is_religious_therapist_preference: selectedValue });
   };
 
   return (
@@ -55,7 +45,7 @@ export default function GenderForm() {
       sx={{ gap: 2 }}
     >
       <FormControl
-        id="gender-question-label"
+        id="religious-preference-question-label"
         sx={{
           margin: "auto",
           width: "80%",
@@ -63,24 +53,29 @@ export default function GenderForm() {
         }}
       >
         <RadioGroup
-          aria-labelledby="gender-question-label"
-          name="selectedGender"
+          aria-labelledby="religious-preference-question-label"
+          name="religiousPreference"
           sx={{ gap: 2 }}
           onChange={handleRadioButtonChange}
         >
-          {Object.entries(OPTIONS_MAP).map(([key, value]) => (
-            <StyledFormControlLabel
-              key={key}
-              label={value}
-              value={key}
-              control={<StyledRadioButton />}
-              checked={selectedValue === key}
-            />
-          ))}
+          <StyledFormControlLabel
+            key="yes"
+            value="yes"
+            label="Yes"
+            control={<StyledRadioButton />}
+            checked={!!selectedValue}
+          />
+          <StyledFormControlLabel
+            key="no"
+            value="no"
+            label="No"
+            control={<StyledRadioButton />}
+            checked={selectedValue === false}
+          />
         </RadioGroup>
       </FormControl>
       <NavigationButtons
-        isNextButtonDisabled={!selectedValue}
+        isNextButtonDisabled={selectedValue === null}
         onPrevButtonClick={() => {
           router.push(`/questions/religion`);
         }}

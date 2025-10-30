@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import RadioGroup from "@mui/material/RadioGroup";
-import FormControl from "@mui/material/FormControl";
 import {
   StyledFormControlLabel,
   StyledRadioButton,
@@ -10,21 +9,27 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "../../api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
+import Box from "@mui/material/Box";
+import { FormControl } from "@mui/material";
 import NavigationButtons from "../common/NavigationButtons";
-import Stack from "@mui/material/Stack";
 
 const OPTIONS_MAP = {
-  male: "Male",
-  female: "Female",
-  non_binary: "Non-binary",
-  other: "Other",
+  jewish: "Jewish",
+  muslim: "Muslim",
+  hindu: "Hindu",
+  buddhist: "Buddhist",
+  christian: "Christian",
+  sikh: "Sikh",
+  not_applicable: "Not applicable",
   prefer_not_to_say: "Prefer not to say",
 } as const;
 
-type GenderFormValues = keyof typeof OPTIONS_MAP | "";
+type ReligionFormValues = keyof typeof OPTIONS_MAP;
 
-export default function GenderForm() {
-  const [selectedValue, setSelectedValue] = useState<GenderFormValues>("");
+export default function ReligionForm() {
+  const [selectedValue, setSelectedValue] = useState<ReligionFormValues | null>(
+    null,
+  );
   const router = useRouter();
   const params = useParams();
   const step = params.step as PageName;
@@ -39,32 +44,28 @@ export default function GenderForm() {
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    setSelectedValue(event.target.value as GenderFormValues);
+    setSelectedValue(event.target.value as ReligionFormValues);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    answerMutate({ gender: selectedValue });
+    if (selectedValue) {
+      answerMutate({ religion: selectedValue });
+    }
   };
 
   return (
-    <Stack
+    <Box
+      display="flex"
+      gap={2}
+      sx={{ width: "80%", flexDirection: "column" }}
       component="form"
       onSubmit={handleSubmit}
-      width="100%"
-      sx={{ gap: 2 }}
     >
-      <FormControl
-        id="gender-question-label"
-        sx={{
-          margin: "auto",
-          width: "80%",
-          display: "block",
-        }}
-      >
+      <FormControl>
         <RadioGroup
-          aria-labelledby="gender-question-label"
-          name="selectedGender"
+          aria-labelledby="religion-question-label"
+          name="selectedReligion"
           sx={{ gap: 2 }}
           onChange={handleRadioButtonChange}
         >
@@ -82,9 +83,9 @@ export default function GenderForm() {
       <NavigationButtons
         isNextButtonDisabled={!selectedValue}
         onPrevButtonClick={() => {
-          router.push(`/questions/religion`);
+          router.push(`/questions/gender`);
         }}
       />
-    </Stack>
+    </Box>
   );
 }
