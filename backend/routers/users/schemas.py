@@ -3,7 +3,7 @@
 import re
 from uuid import UUID
 from typing import Optional
-from pydantic import EmailStr, Field, field_validator, ConfigDict
+from pydantic import EmailStr, Field, field_validator, ConfigDict, StrictBool
 from sqlmodel import SQLModel
 from pydantic_extra_types.coordinate import Coordinate
 from backend.routers.users.user_types import GenderOption
@@ -61,8 +61,8 @@ class PatientCreate(SQLModel):
     description: Optional[str] = None
     age: int = Field(ge=10, le=120)
     gender: GenderOption
-    is_lgbtq_therapist_preference: bool
-    is_religious_therapist_preference: bool
+    is_lgbtq_therapist_preference: StrictBool
+    is_religious_therapist_preference: StrictBool
 
 
 class TherapistCreate(SQLModel):
@@ -101,9 +101,10 @@ class AnonymousSessionPatientBase(SQLModel):
     description: str | None = None
     age: int | None = None
     gender: GenderOption | None = None
-    is_lgbtq_therapist_preference: bool | None = None
-    is_religious_therapist_preference: bool | None = None
+    is_lgbtq_therapist_preference: StrictBool | None = None
+    is_religious_therapist_preference: StrictBool | None = None
     postal_code: str | None = None
+
     model_config = ConfigDict(extra="forbid")
 
     @field_validator("postal_code")

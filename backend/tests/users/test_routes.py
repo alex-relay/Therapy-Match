@@ -1,5 +1,5 @@
-import numpy as np
 from datetime import timedelta
+import numpy as np
 import pandas as pd
 from sqlmodel import select
 from backend.tests.test_utils import (
@@ -460,3 +460,43 @@ def test_patch_anonymous_patient_no_location(
     data = response.json()
 
     assert data == {"detail": "404: Invalid postal code"}
+
+
+def test_patch_anonymous_patient_lgbtq_preference(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """test if the dataframe is empty from pgeocode"""
+    add_anonymous_patient(session_fixture)
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
+    response = client_fixture.patch(
+        "/anonymous-session",
+        json={"is_lgbtq_therapist_preference": True},
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+    )
+
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["is_lgbtq_therapist_preference"] is True
+
+
+def test_patch_anonymous_patient_lgbtq_preference_invalid_value(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """test if the dataframe is empty from pgeocode"""
+    add_anonymous_patient(session_fixture)
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
+    response = client_fixture.patch(
+        "/anonymous-session",
+        json={"is_lgbtq_therapist_preference": 1},
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+    )
+
+    data = response.json()
+
+    assert response.status_code == 422
+    assert data["detail"][0]["msg"] == "Input should be a valid boolean"
