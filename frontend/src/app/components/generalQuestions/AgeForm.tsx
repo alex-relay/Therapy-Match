@@ -1,10 +1,12 @@
 "use client";
 import { usePatchQuestion } from "../../api/profile/profile";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import NavigationButtons from "../common/NavigationButtons";
+import { getNextStep, PageName } from "@/app/utils/utils";
+import { NavContext } from "@/app/navigationContext";
 
 const validateAgeInput = (age: string, onError: (message: string) => void) => {
   const validAgeString = "Please enter a valid age between 18 and 120.";
@@ -33,11 +35,14 @@ export default function AgeForm() {
   const [error, setError] = useState("");
   const router = useRouter();
   const params = useParams();
-  const step = params.step as string;
+  const { history, setHistory } = useContext(NavContext);
+  const step = params.step as PageName;
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      router.push(`/questions/${parseInt(step) + 1}`);
+      const nextStep = getNextStep(step);
+      router.push(`/questions/${nextStep}`);
+      setHistory((prevState) => [...prevState, step]);
     },
   });
 
@@ -74,11 +79,20 @@ export default function AgeForm() {
         />
       </Box>
       <NavigationButtons
-        onPrevButtonClick={() =>
-          router.push(`/questions/${parseInt(step) - 1}`)
-        }
+        onPrevButtonClick={() => {
+          if (!history.length) {
+            router.push("/");
+            return;
+          }
+
+          router.push(`/questions/${history[history.length - 1]}`);
+
+          setHistory((prevState) =>
+            prevState.filter((_, i) => i < prevState.length - 1),
+          );
+        }}
         isNextButtonDisabled={!age}
-        isPrevButtonDisabled={parseInt(step) === 1}
+        isPrevButtonDisabled={false}
       />
     </Box>
   );

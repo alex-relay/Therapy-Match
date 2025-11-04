@@ -4,9 +4,10 @@ import { usePatchQuestion } from "@/app/api/profile/profile";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import NavigationButtons from "../common/NavigationButtons";
 import { getNextStep, PageName } from "@/app/utils/utils";
+import { NavContext } from "@/app/navigationContext";
 
 const transformPostalCode = (postalCode: string) => {
   if (!postalCode) {
@@ -49,6 +50,7 @@ const LocationForm = () => {
   const [error, setError] = useState("");
   const params = useParams();
   const router = useRouter();
+  const { history, setHistory } = useContext(NavContext);
 
   const step = params.step as PageName;
 
@@ -56,6 +58,7 @@ const LocationForm = () => {
     onSuccess: () => {
       const nextStep = getNextStep(step);
       router.push(`/questions/${nextStep}`);
+      setHistory((prevState) => [...prevState, step]);
     },
   });
 
@@ -100,7 +103,15 @@ const LocationForm = () => {
         isPrevButtonDisabled={step === "gender"}
         isNextButtonDisabled={!postalCode}
         onPrevButtonClick={() => {
-          router.push(`/questions/${step}`);
+          if (!history.length) {
+            router.push(`/`);
+          }
+
+          router.push(`/questions/${history[history.length - 1]}`);
+
+          setHistory((prevState) =>
+            prevState.filter((_, i) => i < prevState.length - 1),
+          );
         }}
         sx={{
           width: "100%",

@@ -1,14 +1,15 @@
 "use client";
 
 import FormGroup from "@mui/material/FormGroup";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import { StyledFormControlLabel } from "../common/OptionsContainers";
 import NavigationButtons from "../common/NavigationButtons";
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "@/app/api/profile/profile";
-import GENERAL_QUESTIONS_COMPONENT_MAP from "./generalQuestions";
+import { getNextStep, PageName } from "@/app/utils/utils";
+import { NavContext } from "@/app/navigationContext";
 
 const TherapyNeedsOptionsMap = {
   anxiety: "Anxiety",
@@ -35,12 +36,15 @@ type TherapyNeedsOptions = keyof typeof TherapyNeedsOptionsMap;
 const TherapyNeeds = () => {
   const [therapyNeeds, setTherapyNeeds] = useState<TherapyNeedsOptions[]>([]);
   const router = useRouter();
-  const { step } = useParams();
-  const stepAsNumber = parseInt(step as string) || 1;
+  const params = useParams();
+  const { history, setHistory } = useContext(NavContext);
+  const step = params.step as PageName;
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      router.push(`/questions/${stepAsNumber + 1}`);
+      const nextStep = getNextStep(step);
+      router.push(`/questions/${nextStep}`);
+      setHistory((prevState) => [...prevState, step]);
     },
   });
 
@@ -112,14 +116,18 @@ const TherapyNeeds = () => {
       </FormGroup>
       <NavigationButtons
         onPrevButtonClick={() => {
-          router.push(`/questions/${stepAsNumber - 1}`);
+          if (!history.length) {
+            router.push("/");
+            return;
+          }
+          router.push(`/questions/${history[history.length - 1]}`);
+
+          setHistory((prevState) =>
+            prevState.filter((_, i) => i < prevState.length - 1),
+          );
         }}
-        isNextButtonDisabled={
-          stepAsNumber ===
-            Object.entries(GENERAL_QUESTIONS_COMPONENT_MAP).length ||
-          therapyNeeds.length === 0
-        }
-        isPrevButtonDisabled={stepAsNumber === 1}
+        isNextButtonDisabled={false}
+        isPrevButtonDisabled={step === "gender"}
       />
     </Box>
   );

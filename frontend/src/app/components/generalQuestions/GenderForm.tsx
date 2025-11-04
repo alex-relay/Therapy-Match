@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import RadioGroup from "@mui/material/RadioGroup";
 import FormControl from "@mui/material/FormControl";
 import {
@@ -12,6 +12,7 @@ import { usePatchQuestion } from "../../api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import NavigationButtons from "../common/NavigationButtons";
 import Stack from "@mui/material/Stack";
+import { NavContext } from "@/app/navigationContext";
 
 const OPTIONS_MAP = {
   male: "Male",
@@ -33,8 +34,11 @@ export default function GenderForm() {
     onSuccess: () => {
       const nextStep = getNextStep(step);
       router.push(`/questions/${nextStep}`);
+      setHistory((prevState) => [...prevState, step]);
     },
   });
+
+  const { history, setHistory } = useContext(NavContext);
 
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -81,8 +85,18 @@ export default function GenderForm() {
       </FormControl>
       <NavigationButtons
         isNextButtonDisabled={!selectedValue}
+        isPrevButtonDisabled={!history.length}
         onPrevButtonClick={() => {
-          router.push(`/questions/religion`);
+          if (!history.length) {
+            router.push(`/`);
+            return;
+          }
+
+          router.push(`/questions/${history[history.length - 1]}`);
+
+          setHistory((prevState) =>
+            prevState.filter((_, i) => i < prevState.length - 1),
+          );
         }}
       />
     </Stack>

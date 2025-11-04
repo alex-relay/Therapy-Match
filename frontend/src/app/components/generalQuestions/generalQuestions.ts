@@ -3,33 +3,29 @@ import AgeForm from "./AgeForm";
 import GenderForm from "./GenderForm";
 import LocationForm from "./LocationForm";
 import TherapyNeedsForm from "./TherapyNeedsForm";
-import ReligionForm from "./ReligionForm";
 import ReligiousPreferenceForm from "./ReligiousPreferenceForm";
+import LGBTQPreferenceForm from "./LGBTQPreferenceForm";
 
 const GENERAL_QUESTIONS_COMPONENT_MAP: GeneralQuestionsComponentMap = {
   gender: {
     component: GenderForm,
     title: "What is your gender identity?",
     getNextStep: () => {
-      return "religion";
-    },
-  },
-  religion: {
-    component: ReligionForm,
-    title: "What religion do you identify with?",
-    getNextStep: (answer = "") => {
-      if (answer === "prefer_not_to_say" || answer === "not_applicable") {
-        return "age";
-      }
       return "religious-importance";
     },
   },
   "religious-importance": {
     component: ReligiousPreferenceForm,
-    title:
-      "Is it important to have a therapist who shares your religious beliefs?",
+    title: "Is it important to have a therapist who is spiritual?",
     getNextStep: () => {
       return "age";
+    },
+  },
+  "lgbtq-preference": {
+    component: LGBTQPreferenceForm,
+    title: "Do you prefer a therapist who is LGBTG+ informed?",
+    getNextStep: () => {
+      return "religious-importance";
     },
   },
   age: {
