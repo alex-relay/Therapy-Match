@@ -29,16 +29,17 @@ export default function GenderForm() {
   const router = useRouter();
   const params = useParams();
   const step = params.step as PageName;
+  const { stepHistory, setStepHistory } = useContext(NavContext);
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
       const nextStep = getNextStep(step);
+      if (stepHistory.indexOf(step) < 0) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
       router.push(`/questions/${nextStep}`);
-      setHistory((prevState) => [...prevState, step]);
     },
   });
-
-  const { history, setHistory } = useContext(NavContext);
 
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -85,18 +86,23 @@ export default function GenderForm() {
       </FormControl>
       <NavigationButtons
         isNextButtonDisabled={!selectedValue}
-        isPrevButtonDisabled={!history.length}
+        isPrevButtonDisabled={
+          !stepHistory.length || stepHistory.indexOf(step) === 0
+        }
         onPrevButtonClick={() => {
           if (!history.length) {
             router.push(`/`);
             return;
           }
 
-          router.push(`/questions/${history[history.length - 1]}`);
+          const stepInHistory = stepHistory.indexOf(step);
 
-          setHistory((prevState) =>
-            prevState.filter((_, i) => i < prevState.length - 1),
-          );
+          const previousStep =
+            stepInHistory >= 0
+              ? stepHistory[stepInHistory - 1]
+              : stepHistory[stepHistory.length - 1];
+
+          router.push(`/questions/${previousStep}`);
         }}
       />
     </Stack>

@@ -37,14 +37,17 @@ const TherapyNeeds = () => {
   const [therapyNeeds, setTherapyNeeds] = useState<TherapyNeedsOptions[]>([]);
   const router = useRouter();
   const params = useParams();
-  const { history, setHistory } = useContext(NavContext);
+  const { stepHistory, setStepHistory } = useContext(NavContext);
   const step = params.step as PageName;
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
       const nextStep = getNextStep(step);
+
+      if (stepHistory.indexOf(step) < 0) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
       router.push(`/questions/${nextStep}`);
-      setHistory((prevState) => [...prevState, step]);
     },
   });
 
@@ -117,14 +120,18 @@ const TherapyNeeds = () => {
       <NavigationButtons
         onPrevButtonClick={() => {
           if (!history.length) {
-            router.push("/");
+            router.push(`/`);
             return;
           }
-          router.push(`/questions/${history[history.length - 1]}`);
 
-          setHistory((prevState) =>
-            prevState.filter((_, i) => i < prevState.length - 1),
-          );
+          const stepInHistory = stepHistory.indexOf(step);
+
+          const previousStep =
+            stepInHistory >= 0
+              ? stepHistory[stepInHistory - 1]
+              : stepHistory[stepHistory.length - 1];
+
+          router.push(`/questions/${previousStep}`);
         }}
         isNextButtonDisabled={false}
         isPrevButtonDisabled={step === "gender"}
