@@ -9,10 +9,10 @@ import {
 import { useState, useContext } from "react";
 import NavigationButtons from "../common/NavigationButtons";
 import { useParams, useRouter } from "next/navigation";
-import Stack from "@mui/material/Stack";
 import { usePatchQuestion } from "@/app/api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import { NavContext } from "@/app/navigationContext";
+import QuestionFormWrapper from "./QuestionFormWrapper";
 
 type LGBTQPreferenceOptions = "yes" | "no";
 
@@ -42,7 +42,7 @@ const LGBTQPreferenceForm = () => {
     e.preventDefault();
 
     answerMutate({
-      is_religious_therapist_preference: selectedValue === "yes" ? true : false,
+      is_lgbtq_therapist_preference: selectedValue === "yes" ? true : false,
     });
   };
 
@@ -53,8 +53,8 @@ const LGBTQPreferenceForm = () => {
   };
 
   return (
-    <Stack component="form" onSubmit={handleSubmit}>
-      <FormControl component={"fieldset"}>
+    <QuestionFormWrapper handleSubmit={handleSubmit}>
+      <FormControl component={"fieldset"} sx={{ gap: 2 }}>
         <RadioGroup
           name="lgbtqPreference"
           sx={{ gap: 2 }}
@@ -92,7 +92,7 @@ const LGBTQPreferenceForm = () => {
           }}
         />
       </FormControl>
-    </Stack>
+    </QuestionFormWrapper>
   );
 };
 

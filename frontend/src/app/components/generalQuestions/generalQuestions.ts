@@ -46,7 +46,7 @@ const GENERAL_QUESTIONS_COMPONENT_MAP: GeneralQuestionsComponentMap = {
     component: TherapyNeedsForm,
     title: "What led you to consider therapy today?",
     getNextStep: () => {
-      return "age";
+      return "lgbtq-preference";
     },
   },
 };

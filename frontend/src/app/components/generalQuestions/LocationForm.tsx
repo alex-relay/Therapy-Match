@@ -8,6 +8,7 @@ import { useContext, useState } from "react";
 import NavigationButtons from "../common/NavigationButtons";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import { NavContext } from "@/app/navigationContext";
+import QuestionFormWrapper from "./QuestionFormWrapper";
 
 const transformPostalCode = (postalCode: string) => {
   if (!postalCode) {
@@ -62,7 +63,7 @@ const LocationForm = () => {
     },
   });
 
-  const handleNextButtonClick = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const cleanPostalCode = transformPostalCode(postalCode);
     if (!validatePostalCode(cleanPostalCode, setError)) {
@@ -72,20 +73,8 @@ const LocationForm = () => {
   };
 
   return (
-    <Box
-      component="form"
-      width="100%"
-      display="flex"
-      onSubmit={handleNextButtonClick}
-      flexDirection="column"
-      justifyContent="center"
-      gap={2}
-    >
-      <Box
-        sx={{
-          margin: "auto",
-        }}
-      >
+    <QuestionFormWrapper handleSubmit={handleSubmit}>
+      <Box margin={"auto"}>
         <TextField
           type="text"
           variant="outlined"
@@ -121,7 +110,7 @@ const LocationForm = () => {
           width: "100%",
         }}
       />
-    </Box>
+    </QuestionFormWrapper>
   );
 };
 
