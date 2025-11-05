@@ -11,8 +11,8 @@ import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "../../api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import NavigationButtons from "../common/NavigationButtons";
-import Stack from "@mui/material/Stack";
 import { NavContext } from "@/app/navigationContext";
+import QuestionFormWrapper from "./QuestionFormWrapper";
 
 const OPTIONS_MAP = {
   male: "Male",
@@ -53,12 +53,7 @@ export default function GenderForm() {
   };
 
   return (
-    <Stack
-      component="form"
-      onSubmit={handleSubmit}
-      width="100%"
-      sx={{ gap: 2 }}
-    >
+    <QuestionFormWrapper handleSubmit={handleSubmit}>
       <FormControl
         id="gender-question-label"
         sx={{
@@ -105,6 +100,6 @@ export default function GenderForm() {
           router.push(`/questions/${previousStep}`);
         }}
       />
-    </Stack>
+    </QuestionFormWrapper>
   );
 }

@@ -11,8 +11,8 @@ import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "../../api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import NavigationButtons from "../common/NavigationButtons";
-import Stack from "@mui/material/Stack";
 import { NavContext } from "@/app/navigationContext";
+import QuestionFormWrapper from "./QuestionFormWrapper";
 
 export default function ReligiousPreferenceForm() {
   const [selectedValue, setSelectedValue] = useState<boolean | null>(null);
@@ -45,12 +45,7 @@ export default function ReligiousPreferenceForm() {
   };
 
   return (
-    <Stack
-      component="form"
-      onSubmit={handleSubmit}
-      width="100%"
-      sx={{ gap: 2 }}
-    >
+    <QuestionFormWrapper handleSubmit={handleSubmit}>
       <FormControl
         id="religious-preference-question-label"
         sx={{
@@ -99,6 +94,6 @@ export default function ReligiousPreferenceForm() {
           router.push(`/questions/${previousStep}`);
         }}
       />
-    </Stack>
+    </QuestionFormWrapper>
   );
 }

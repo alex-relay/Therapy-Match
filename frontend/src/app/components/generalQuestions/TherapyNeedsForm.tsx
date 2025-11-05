@@ -10,6 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "@/app/api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import { NavContext } from "@/app/navigationContext";
+import QuestionFormWrapper from "./QuestionFormWrapper";
 
 const TherapyNeedsOptionsMap = {
   anxiety: "Anxiety",
@@ -65,19 +66,13 @@ const TherapyNeeds = () => {
     });
   };
 
-  const handleNextButtonClick = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     answerMutate({ therapy_needs: therapyNeeds });
   };
 
   return (
-    <Box
-      display="flex"
-      gap={2}
-      sx={{ width: "100%", flexDirection: "column" }}
-      component="form"
-      onSubmit={handleNextButtonClick}
-    >
+    <QuestionFormWrapper handleSubmit={handleSubmit}>
       <FormGroup
         row
         sx={{
@@ -136,7 +131,7 @@ const TherapyNeeds = () => {
         isNextButtonDisabled={false}
         isPrevButtonDisabled={step === "gender"}
       />
-    </Box>
+    </QuestionFormWrapper>
   );
 };
 

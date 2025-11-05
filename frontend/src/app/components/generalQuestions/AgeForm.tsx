@@ -7,6 +7,7 @@ import Box from "@mui/material/Box";
 import NavigationButtons from "../common/NavigationButtons";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import { NavContext } from "@/app/navigationContext";
+import QuestionFormWrapper from "./QuestionFormWrapper";
 
 const validateAgeInput = (age: string, onError: (message: string) => void) => {
   const validAgeString = "Please enter a valid age between 18 and 120.";
@@ -58,15 +59,7 @@ export default function AgeForm() {
   };
 
   return (
-    <Box
-      component="form"
-      onSubmit={handleSubmit}
-      width="100%"
-      display="flex"
-      flexDirection={"column"}
-      justifyContent="center"
-      gap={2}
-    >
+    <QuestionFormWrapper handleSubmit={handleSubmit}>
       <Box margin="auto">
         <TextField
           type="text"
@@ -100,6 +93,6 @@ export default function AgeForm() {
         isNextButtonDisabled={!age}
         isPrevButtonDisabled={false}
       />
-    </Box>
+    </QuestionFormWrapper>
   );
 }
