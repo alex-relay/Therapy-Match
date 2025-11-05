@@ -1,16 +1,50 @@
+"use client";
+
 import RadioGroup from "@mui/material/RadioGroup";
 import FormControl from "@mui/material/FormControl";
 import {
   StyledFormControlLabel,
   StyledRadioButton,
 } from "../common/OptionsContainers";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import NavigationButtons from "../common/NavigationButtons";
+import { useParams, useRouter } from "next/navigation";
+import Stack from "@mui/material/Stack";
+import { usePatchQuestion } from "@/app/api/profile/profile";
+import { getNextStep, PageName } from "@/app/utils/utils";
+import { NavContext } from "@/app/navigationContext";
 
-type LGBTQPreferenceOptions = "yes" | "no" | "prefer_not_to_say";
+type LGBTQPreferenceOptions = "yes" | "no";
 
 const LGBTQPreferenceForm = () => {
   const [selectedValue, setSelectedValue] =
     useState<LGBTQPreferenceOptions | null>(null);
+
+  const router = useRouter();
+  const params = useParams();
+  const { stepHistory, setStepHistory } = useContext(NavContext);
+
+  const step = params.step as PageName;
+
+  const { mutate: answerMutate } = usePatchQuestion({
+    onSuccess: () => {
+      const nextStep = getNextStep(step);
+
+      if (stepHistory.indexOf(step) < 0) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
+
+      router.push(`/questions/${nextStep}`);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    answerMutate({
+      is_religious_therapist_preference: selectedValue === "yes" ? true : false,
+    });
+  };
 
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -19,32 +53,46 @@ const LGBTQPreferenceForm = () => {
   };
 
   return (
-    <FormControl component={"fieldset"}>
-      <RadioGroup
-        name="lgbtqPreference"
-        sx={{ gap: 2 }}
-        onChange={handleRadioButtonChange}
-      >
-        <StyledFormControlLabel
-          value={"yes"}
-          label={"Yes"}
-          control={<StyledRadioButton />}
-          checked={selectedValue === "yes"}
+    <Stack component="form" onSubmit={handleSubmit}>
+      <FormControl component={"fieldset"}>
+        <RadioGroup
+          name="lgbtqPreference"
+          sx={{ gap: 2 }}
+          onChange={handleRadioButtonChange}
+        >
+          <StyledFormControlLabel
+            value={"yes"}
+            label={"Yes"}
+            control={<StyledRadioButton />}
+            checked={selectedValue === "yes"}
+          />
+          <StyledFormControlLabel
+            value={"no"}
+            label={"No"}
+            control={<StyledRadioButton />}
+            checked={selectedValue === "no"}
+          />
+        </RadioGroup>
+        <NavigationButtons
+          isNextButtonDisabled={!selectedValue}
+          onPrevButtonClick={() => {
+            if (!history.length) {
+              router.push(`/`);
+              return;
+            }
+
+            const stepInHistory = stepHistory.indexOf(step);
+
+            const previousStep =
+              stepInHistory >= 0
+                ? stepHistory[stepInHistory - 1]
+                : stepHistory[stepHistory.length - 1];
+
+            router.push(`/questions/${previousStep}`);
+          }}
         />
-        <StyledFormControlLabel
-          value={"no"}
-          label={"No"}
-          control={<StyledRadioButton />}
-          checked={selectedValue === "yes"}
-        />
-        <StyledFormControlLabel
-          value={"prefer_not_to_say"}
-          label={"Prefer not to say"}
-          control={<StyledRadioButton />}
-          checked={selectedValue === "yes"}
-        />
-      </RadioGroup>
-    </FormControl>
+      </FormControl>
+    </Stack>
   );
 };
 

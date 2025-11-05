@@ -42,6 +42,7 @@ export default function Home() {
         <StyledCard
           onClick={() => {
             anonymousSessionMutate();
+            sessionStorage.setItem("stepHistory", JSON.stringify([]));
           }}
           variant="outlined"
           data-testid="myself-tile"

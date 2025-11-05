@@ -214,8 +214,8 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
 
 export type PageName =
   | "gender"
-  | "religion"
   | "religious-importance"
+  | "lgbtq-preference"
   | "age"
   | "location"
   | "therapy-needs"

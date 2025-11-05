@@ -23,7 +23,6 @@ from backend.routers.users.schemas import (
     AnonymousSessionCookie,
     AnonymousSessionPatientBase,
     AnonymousSessionPatientResponse,
-    LocationCoordinate,
 )
 
 from backend.core.logging import get_logger
@@ -272,6 +271,10 @@ def patch_anonymous_patient(
             age=updated_anonymous_session.age,
             gender=updated_anonymous_session.gender,
             description=updated_anonymous_session.description,
+            is_lgbtq_therapist_preference=updated_anonymous_session.is_lgbtq_therapist_preference,
+            is_religious_therapist_preference=(
+                updated_anonymous_session.is_religious_therapist_preference
+            ),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e

@@ -1,10 +1,12 @@
 "use client";
 import { usePatchQuestion } from "../../api/profile/profile";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import NavigationButtons from "../common/NavigationButtons";
+import { getNextStep, PageName } from "@/app/utils/utils";
+import { NavContext } from "@/app/navigationContext";
 
 const validateAgeInput = (age: string, onError: (message: string) => void) => {
   const validAgeString = "Please enter a valid age between 18 and 120.";
@@ -33,11 +35,17 @@ export default function AgeForm() {
   const [error, setError] = useState("");
   const router = useRouter();
   const params = useParams();
-  const step = params.step as string;
+  const { stepHistory, setStepHistory } = useContext(NavContext);
+  const step = params.step as PageName;
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      router.push(`/questions/${parseInt(step) + 1}`);
+      const nextStep = getNextStep(step);
+
+      if (stepHistory.indexOf(step) < 0) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
+      router.push(`/questions/${nextStep}`);
     },
   });
 
@@ -74,11 +82,23 @@ export default function AgeForm() {
         />
       </Box>
       <NavigationButtons
-        onPrevButtonClick={() =>
-          router.push(`/questions/${parseInt(step) - 1}`)
-        }
+        onPrevButtonClick={() => {
+          if (!history.length) {
+            router.push(`/`);
+            return;
+          }
+
+          const stepInHistory = stepHistory.indexOf(step);
+
+          const previousStep =
+            stepInHistory >= 0
+              ? stepHistory[stepInHistory - 1]
+              : stepHistory[stepHistory.length - 1];
+
+          router.push(`/questions/${previousStep}`);
+        }}
         isNextButtonDisabled={!age}
-        isPrevButtonDisabled={parseInt(step) === 1}
+        isPrevButtonDisabled={false}
       />
     </Box>
   );
