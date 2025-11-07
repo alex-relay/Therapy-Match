@@ -1,26 +1,27 @@
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
 import jwt
-from fastapi import status, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session, select, SQLModel
 from passlib.context import CryptContext
-from backend.core.database import SessionDep
 from backend.models.user import Therapist, Patient, User, AnonymousPatient
 from backend.core.logging import get_logger
-from backend.routers.users.schemas import (
+from backend.core.config import settings
+from .schemas import (
     TherapistCreate,
     TherapistRead,
     PatientRead,
     PatientCreate,
     UserCreate,
-    UserRead,
     AnonymousSessionPatientBase,
     AnonymousSessionPatientRead,
 )
-from backend.routers.users.location_service import get_coordinates_from_postal_code
-from backend.core.config import settings
+from .location_service import get_coordinates_from_postal_code
+from .exceptions import (
+    PatientNotFoundError,
+    InvalidPostalCodeError,
+    GeocodingServiceError,
+)
 
 logger = get_logger(__name__)
 
@@ -78,22 +79,29 @@ def create_anonymous_patient_session(
         session.refresh(patient)
     except Exception as e:
         session.rollback()
-        logger.exception("Failed to create anonymous patient: %s", e)
+        logger.exception("Failed to create anonymous patient")
         raise ValueError("Unable to create anonymous patient session") from e
 
     return patient
 
 
-def get_anonymous_patient(db_session: Session, session_id: str) -> AnonymousPatient:
-    """gets an anonymous patient by session id"""
+def _get_coordinates(postal_code: str | None) -> dict[str, float]:
+    if not postal_code:
+        raise InvalidPostalCodeError("Postal code is required.")
     try:
-        anonymous_patient = db_session.exec(
-            select(AnonymousPatient).where(AnonymousPatient.session_id == session_id)
-        ).first()
-        return anonymous_patient
+        location = get_coordinates_from_postal_code(postal_code)
     except Exception as e:
-        logger.exception("Unable to get anonymous patient: %s", e)
-        raise ValueError("Unable to find anonymous patient") from e
+        logger.exception("Unable to geocode a postal code")
+        raise GeocodingServiceError(
+            "Geocoding service is currently unavailable."
+        ) from e
+
+    if not location or location["latitude"] is None or location["longitude"] is None:
+        raise InvalidPostalCodeError(
+            f"Postal code '{postal_code}' is invalid or could not be geocoded."
+        )
+
+    return location
 
 
 def patch_anonymous_patient_session(
@@ -102,29 +110,24 @@ def patch_anonymous_patient_session(
     session: Session,
 ):
     """updates an anonymous patient session via session id and patch data"""
+
     if not patient:
-        raise Exception("Anonymous Patient with session_id not found.")
+        raise PatientNotFoundError("Anonymous Patient not found.")
+
+    patch_data_dict = data.model_dump(exclude_unset=True)
 
     if data.postal_code:
-        logger.info("fetching coordinate from postal code: %s", data.postal_code)
+        postal_code = data.postal_code
+        coordinates = _get_coordinates(postal_code)
 
-        try:
-            location = get_coordinates_from_postal_code(data.postal_code)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e)) from e
+        patch_data_dict["latitude"] = coordinates["latitude"]
+        patch_data_dict["longitude"] = coordinates["longitude"]
 
-        if (
-            not location
-            or location["latitude"] is None
-            or location["longitude"] is None
-        ):
-            raise HTTPException(status_code=404, detail="Invalid postal code")
+        del patch_data_dict["postal_code"]
 
-        logger.info("Updating patient with location: %s", location)
-        patient.sqlmodel_update(location)
-    else:
-        patient_data = data.model_dump(exclude_unset=True)
-        patient.sqlmodel_update(patient_data)
+    patient.sqlmodel_update(patch_data_dict)
+
+    logger.info("Committing changes to the DB")
 
     try:
         session.add(patient)
@@ -132,8 +135,10 @@ def patch_anonymous_patient_session(
         session.refresh(patient)
     except Exception as e:
         session.rollback()
-        logger.exception("unable to update patient: %s", e)
-        raise ValueError("Unable to update patient") from e
+        logger.exception("Database error while updating patient: %s", patient.id)
+        raise ValueError(
+            "Unable to update anonymous session record in database."
+        ) from e
 
     return patient
 
@@ -188,7 +193,7 @@ def create_patient(user_data: PatientCreate, user_id, session: Session) -> Patie
         )
     except Exception as e:
         session.rollback()
-        logger.exception("Failed to create patient: %s", e)
+        logger.exception("Failed to create patient")
         raise ValueError("Cannot create a patient") from e
 
 
@@ -247,43 +252,3 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
-
-
-async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)], session: SessionDep
-):
-    """gets the current user from the token"""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
-
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username)
-    except Exception as e:
-        raise e
-    try:
-        user = get_user_by_email(token_data.username, session)
-        return user
-    except Exception as e:
-        raise credentials_exception from e
-
-
-async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
-):
-    """gets the current active user"""
-    if not current_user:
-        raise HTTPException(status_code=400, detail="Inactive user")
-
-    return UserRead(
-        id=str(current_user.id),
-        first_name=current_user.first_name,
-        last_name=current_user.last_name,
-        email_address=current_user.email_address,
-    )

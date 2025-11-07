@@ -437,7 +437,7 @@ def test_patch_anonymous_patient_invalid_location_coordinates(
 def test_patch_anonymous_patient_no_location(
     client_fixture, session_fixture, mock_auth_headers, mocker
 ):
-    """test if the dataframe is empty from pgeocode"""
+    """Test that fetching a non-existent anonymous patient returns 404"""
     add_anonymous_patient(session_fixture)
 
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
@@ -459,7 +459,9 @@ def test_patch_anonymous_patient_no_location(
 
     data = response.json()
 
-    assert data == {"detail": "404: Invalid postal code"}
+    assert data == {
+        "detail": "Postal code 'L4J 6B6' is invalid or could not be geocoded."
+    }
 
 
 def test_patch_anonymous_patient_lgbtq_preference(
@@ -500,3 +502,39 @@ def test_patch_anonymous_patient_lgbtq_preference_invalid_value(
 
     assert response.status_code == 422
     assert data["detail"][0]["msg"] == "Input should be a valid boolean"
+
+
+def test_get_anonymous_patient(client_fixture, session_fixture, mock_auth_headers):
+    """Test to get an anonymous patient"""
+    add_anonymous_patient(session_fixture, {"gender": "male", "age": 29})
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
+    response = client_fixture.get(
+        "/anonymous-session",
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+    )
+
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["age"] == 29
+    assert data["gender"] == "male"
+
+
+def test_get_anonymous_patient_returns_404_nonexisting_patient(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """test if the dataframe is empty from pgeocode"""
+    add_anonymous_patient(session_fixture, {"session_id": "1234"})
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
+    response = client_fixture.get(
+        "/anonymous-session",
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+    )
+
+    data = response.json()["detail"]
+    assert response.status_code == 404
+    assert data == "Anonymous patient not found"

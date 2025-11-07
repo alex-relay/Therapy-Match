@@ -5,14 +5,13 @@ from uuid import uuid4
 from datetime import timedelta
 from typing import Optional
 from typing import Annotated
-import jwt
 from fastapi import APIRouter, status, Depends, HTTPException, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from sqlmodel import select
-from backend.core.config import settings
 from backend.core.database import SessionDep
-from backend.models.user import Patient, User, Therapist
+from backend.models.user import Patient, User, Therapist, AnonymousPatient
+from backend.core.logging import get_logger
 from backend.routers.users.schemas import (
     TherapistCreate,
     PatientRead,
@@ -20,12 +19,16 @@ from backend.routers.users.schemas import (
     TherapistRead,
     UserCreate,
     UserRead,
-    AnonymousSessionCookie,
     AnonymousSessionPatientBase,
     AnonymousSessionPatientResponse,
 )
+from .exceptions import (
+    PatientNotFoundError,
+    InvalidPostalCodeError,
+    GeocodingServiceError,
+)
 
-from backend.core.logging import get_logger
+from .dependencies import get_current_active_user, get_anonymous_patient
 from .service import (
     create_therapist,
     get_user_by_email,
@@ -33,13 +36,11 @@ from .service import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     authenticate_user,
     create_access_token,
-    get_current_active_user,
     Token,
     create_user,
     create_anonymous_patient_session,
     TokenUser,
     patch_anonymous_patient_session,
-    get_anonymous_patient,
 )
 
 router = APIRouter()
@@ -162,7 +163,7 @@ def register_therapist(
             select(Therapist).where(Therapist.user_id == current_user.id)
         ).first()
     except Exception as e:
-        logger.exception("error: %s", e)
+        logger.exception("Error in trying to get therapist")
         raise HTTPException(
             status_code=400, detail="Unable to find existing therapist"
         ) from e
@@ -231,50 +232,43 @@ def create_anonymous_session(
 @router.patch("/anonymous-session", response_model=AnonymousSessionPatientResponse)
 def patch_anonymous_patient(
     data: AnonymousSessionPatientBase,
-    cookie: Annotated[AnonymousSessionCookie, Cookie()],
+    anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)],
     db_session: SessionDep,
 ):
     """updates an anonymous patient session via session id from cookie and patch data"""
-    anonymous_session = jwt.decode(
-        cookie.anonymous_session, settings.secret_key, algorithms=["HS256"]
-    )
-
-    session_id = anonymous_session.get("sub")
-
-    if not session_id:
-        raise HTTPException(
-            status_code=401,
-            detail="Anonymous session does not exist",
-        )
-
-    try:
-        anonymous_patient = get_anonymous_patient(db_session, session_id)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
 
     if not anonymous_patient:
         raise HTTPException(status_code=404, detail="Anonymous patient not found")
 
     try:
+        logger.info("Creating the anonymous session")
+
         updated_anonymous_session = patch_anonymous_patient_session(
             anonymous_patient, data, db_session
         )
 
-        latitude = updated_anonymous_session.latitude
-        longitude = updated_anonymous_session.longitude
-
         return AnonymousSessionPatientResponse(
-            id=updated_anonymous_session.id,
-            therapy_needs=updated_anonymous_session.therapy_needs,
-            latitude=latitude,
-            longitude=longitude,
-            age=updated_anonymous_session.age,
-            gender=updated_anonymous_session.gender,
-            description=updated_anonymous_session.description,
-            is_lgbtq_therapist_preference=updated_anonymous_session.is_lgbtq_therapist_preference,
-            is_religious_therapist_preference=(
-                updated_anonymous_session.is_religious_therapist_preference
-            ),
+            **updated_anonymous_session.model_dump(exclude={"session_id"})
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+
+    except (PatientNotFoundError, InvalidPostalCodeError) as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    except GeocodingServiceError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+
+    except ValueError as e:
+        logger.exception("Patch failed due to unexpected error")
+        raise HTTPException(status_code=500, detail="An internal error occurred") from e
+
+
+@router.get("/anonymous-session", response_model=AnonymousSessionPatientResponse)
+def get_anonymous_patient_data(
+    anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)]
+):
+    if not anonymous_patient:
+        raise HTTPException(status_code=404, detail="Anonymous patient not found")
+
+    return AnonymousSessionPatientResponse(
+        **anonymous_patient.model_dump(exclude={"session_id"})
+    )
