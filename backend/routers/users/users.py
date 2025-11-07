@@ -28,7 +28,10 @@ from .exceptions import (
     GeocodingServiceError,
 )
 
-from .dependencies import get_current_active_user, get_anonymous_patient
+from .dependencies import (
+    get_current_active_user,
+    get_anonymous_patient,
+)
 from .service import (
     create_therapist,
     get_user_by_email,
@@ -198,10 +201,11 @@ def create_anonymous_session(
         return JSONResponse({"messsage": "Cookie has already been created"})
 
     content = {"message": "Anonymous patient session created successfully"}
+    session_id = str(uuid4())
+
     try:
         logger.info("Creating the access token")
 
-        session_id = str(uuid4())
         access_token = create_access_token({"sub": session_id}, timedelta(minutes=60))
 
         logger.info("Creating the anonymous session")
@@ -222,7 +226,7 @@ def create_anonymous_session(
         return response
 
     except Exception as e:
-        logger.exception("error: %s", e)
+        logger.exception("Unable to create an anonymous session")
         raise HTTPException(
             status_code=500,
             detail=str(e),
@@ -236,9 +240,6 @@ def patch_anonymous_patient(
     db_session: SessionDep,
 ):
     """updates an anonymous patient session via session id from cookie and patch data"""
-
-    if not anonymous_patient:
-        raise HTTPException(status_code=404, detail="Anonymous patient not found")
 
     try:
         logger.info("Creating the anonymous session")
@@ -266,8 +267,8 @@ def patch_anonymous_patient(
 def get_anonymous_patient_data(
     anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)]
 ):
-    if not anonymous_patient:
-        raise HTTPException(status_code=404, detail="Anonymous patient not found")
+    """retrive an anonymous session"""
+    logger.info("retrieving the anonymous patient")
 
     return AnonymousSessionPatientResponse(
         **anonymous_patient.model_dump(exclude={"session_id"})
