@@ -23,7 +23,7 @@ const GENERAL_QUESTIONS_COMPONENT_MAP: GeneralQuestionsComponentMap = {
   },
   "lgbtq-preference": {
     component: LGBTQPreferenceForm,
-    title: "Do you prefer a therapist who is LGBTG+ informed?",
+    title: "Do you prefer a therapist who is LGBTQ+ informed?",
     getNextStep: () => {
       return "religious-importance";
     },
