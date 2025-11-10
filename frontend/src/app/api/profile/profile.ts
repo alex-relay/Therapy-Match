@@ -1,4 +1,8 @@
-import { useMutation, UseMutationOptions } from "@tanstack/react-query";
+import {
+  useMutation,
+  UseMutationOptions,
+  useQuery,
+} from "@tanstack/react-query";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -60,5 +64,32 @@ export const usePatchQuestion = (
   return useMutation({
     mutationFn: patchQuestion,
     ...options,
+  });
+};
+
+const getAnonymousPatientSession =
+  async (): Promise<PatientProfileResponse> => {
+    const response = await fetch(`${API_URL}/anonymous-session`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      const resp = await response.json();
+      throw new Error(resp.detail);
+    }
+
+    return response.json();
+  };
+
+export const useGetAnonymousPatientSession = ({
+  queryKey,
+}: {
+  queryKey: string[];
+}) => {
+  return useQuery({
+    queryKey,
+    queryFn: getAnonymousPatientSession,
   });
 };

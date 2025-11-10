@@ -13,6 +13,8 @@ import { getNextStep, PageName } from "@/app/utils/utils";
 import NavigationButtons from "../common/NavigationButtons";
 import { NavContext } from "@/app/navigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
+import { useQueryClient } from "@tanstack/react-query";
+import { AnonymousPatientContext } from "./anonymousPatientContext";
 
 const OPTIONS_MAP = {
   male: "Male",
@@ -25,11 +27,14 @@ const OPTIONS_MAP = {
 type GenderFormValues = keyof typeof OPTIONS_MAP | "";
 
 export default function GenderForm() {
-  const [selectedValue, setSelectedValue] = useState<GenderFormValues>("");
   const router = useRouter();
   const params = useParams();
   const step = params.step as PageName;
   const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { anonymousPatient } = useContext(AnonymousPatientContext);
+  const gender = anonymousPatient?.gender ?? null;
+  const queryClient = useQueryClient();
+  const [selectedValue, setSelectedValue] = useState<string | null>(gender);
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
@@ -37,6 +42,7 @@ export default function GenderForm() {
       if (stepHistory.indexOf(step) < 0) {
         setStepHistory((prevState) => [...prevState, step]);
       }
+      queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] });
       router.push(`/questions/${nextStep}`);
     },
   });
@@ -49,7 +55,30 @@ export default function GenderForm() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // if (selectedValue !== anonymousPatient?.gender) {
     answerMutate({ gender: selectedValue });
+    // }
+
+    // const nextStep = getNextStep(step);
+
+    // if (stepHistory.indexOf(step) < 0) {
+    //   setStepHistory((prevState) => [...prevState, step]);
+    // }
+
+    // router.push(`/questions/${nextStep}`);
+  };
+
+  const handleIsChecked = (key: string) => {
+    if (selectedValue) {
+      return selectedValue === key;
+    }
+
+    if (!selectedValue && anonymousPatient?.gender) {
+      return key === anonymousPatient?.gender;
+    }
+
+    return false;
   };
 
   return (
@@ -74,13 +103,13 @@ export default function GenderForm() {
               label={value}
               value={key}
               control={<StyledRadioButton />}
-              checked={selectedValue === key}
+              checked={handleIsChecked(key)}
             />
           ))}
         </RadioGroup>
       </FormControl>
       <NavigationButtons
-        isNextButtonDisabled={!selectedValue}
+        isNextButtonDisabled={!selectedValue && !gender}
         isPrevButtonDisabled={
           !stepHistory.length || stepHistory.indexOf(step) === 0
         }

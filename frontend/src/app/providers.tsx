@@ -6,7 +6,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import theme from "./theme";
 import { SessionProvider } from "next-auth/react";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
-import NavigationContext from "./navigationContext";
+import NavigationContextProvider from "./navigationContext";
 
 export default function Providers({
   children,
@@ -20,7 +20,7 @@ export default function Providers({
       <SessionProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider theme={theme}>
-            <NavigationContext>{children}</NavigationContext>
+            <NavigationContextProvider>{children}</NavigationContextProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </SessionProvider>

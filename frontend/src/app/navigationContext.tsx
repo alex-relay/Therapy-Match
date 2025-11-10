@@ -18,7 +18,11 @@ export const NavContext = createContext<NavContextType>({
   setStepHistory: () => {},
 });
 
-const NavigationContext = ({ children }: { children: React.ReactNode }) => {
+const NavigationContextProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [stepHistory, setStepHistory] = useState<string[]>([]);
 
   useEffect(() => {
@@ -29,12 +33,12 @@ const NavigationContext = ({ children }: { children: React.ReactNode }) => {
       const savedHistory = window.sessionStorage.getItem("stepHistory");
       if (savedHistory && !currentPathIsHomepage) {
         try {
-          const parsed = JSON.parse(savedHistory);
+          const parsedSavedHistory = JSON.parse(savedHistory);
           if (
-            Array.isArray(parsed) &&
-            parsed.every((item) => typeof item === "string")
+            Array.isArray(parsedSavedHistory) &&
+            parsedSavedHistory.every((item) => typeof item === "string")
           ) {
-            setStepHistory(parsed);
+            setStepHistory(parsedSavedHistory);
           }
         } catch (error) {
           console.error(
@@ -64,4 +68,4 @@ const NavigationContext = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default NavigationContext;
+export default NavigationContextProvider;
