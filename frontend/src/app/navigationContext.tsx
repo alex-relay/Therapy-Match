@@ -18,37 +18,43 @@ export const NavContext = createContext<NavContextType>({
   setStepHistory: () => {},
 });
 
-const NavigationContextProvider = ({
+const getInitialHistory = (): string[] => {
+  if (typeof window === "undefined" || !("sessionStorage" in window)) {
+    return [];
+  }
+
+  const currentPath = window.location.pathname;
+  const currentPathIsHomepage = currentPath === "/";
+
+  if (currentPathIsHomepage) {
+    window.sessionStorage.removeItem("stepHistory"); // Clear storage on homepage
+    return [];
+  }
+
+  const savedHistory = window.sessionStorage.getItem("stepHistory");
+  if (savedHistory) {
+    try {
+      const parsedSavedHistory = JSON.parse(savedHistory);
+      if (
+        Array.isArray(parsedSavedHistory) &&
+        parsedSavedHistory.every((item) => typeof item === "string")
+      ) {
+        return parsedSavedHistory;
+      }
+    } catch (error) {
+      console.error("Failed to parse stepHistory from sessionStorage:", error);
+    }
+  }
+
+  return [];
+};
+
+export const NavigationContextProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const [stepHistory, setStepHistory] = useState<string[]>([]);
-
-  useEffect(() => {
-    const currentPath = window.location.pathname;
-    const currentPathIsHomepage = currentPath === "/";
-
-    if (typeof window !== "undefined" && "sessionStorage" in window) {
-      const savedHistory = window.sessionStorage.getItem("stepHistory");
-      if (savedHistory && !currentPathIsHomepage) {
-        try {
-          const parsedSavedHistory = JSON.parse(savedHistory);
-          if (
-            Array.isArray(parsedSavedHistory) &&
-            parsedSavedHistory.every((item) => typeof item === "string")
-          ) {
-            setStepHistory(parsedSavedHistory);
-          }
-        } catch (error) {
-          console.error(
-            "Failed to parse stepHistory from sessionStorage:",
-            error,
-          );
-        }
-      }
-    }
-  }, []);
+  const [stepHistory, setStepHistory] = useState<string[]>(getInitialHistory);
 
   useEffect(() => {
     const currentPath = window.location.pathname;

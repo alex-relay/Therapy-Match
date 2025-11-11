@@ -18,13 +18,12 @@ const AnonymousPatientProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { data, isLoading } = useGetAnonymousPatientSession({
-    queryKey: ["anonymousPatientSession"],
-  });
+  const { data, isLoading } = useGetAnonymousPatientSession();
 
   if (isLoading) {
     return <p> Loading... </p>;
   }
+
   return (
     <AnonymousPatientContext value={{ anonymousPatient: data ?? null }}>
       {children}

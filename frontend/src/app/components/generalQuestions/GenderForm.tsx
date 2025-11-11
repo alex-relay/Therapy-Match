@@ -14,7 +14,7 @@ import NavigationButtons from "../common/NavigationButtons";
 import { NavContext } from "@/app/navigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { useQueryClient } from "@tanstack/react-query";
-import { AnonymousPatientContext } from "./anonymousPatientContext";
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
 const OPTIONS_MAP = {
   male: "Male",
@@ -56,17 +56,17 @@ export default function GenderForm() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // if (selectedValue !== anonymousPatient?.gender) {
-    answerMutate({ gender: selectedValue });
-    // }
+    if (selectedValue !== anonymousPatient?.gender) {
+      answerMutate({ gender: selectedValue });
+    } else {
+      const nextStep = getNextStep(step);
 
-    // const nextStep = getNextStep(step);
+      if (stepHistory.indexOf(step) < 0) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
 
-    // if (stepHistory.indexOf(step) < 0) {
-    //   setStepHistory((prevState) => [...prevState, step]);
-    // }
-
-    // router.push(`/questions/${nextStep}`);
+      router.push(`/questions/${nextStep}`);
+    }
   };
 
   const handleIsChecked = (key: string) => {

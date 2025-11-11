@@ -13,12 +13,23 @@ import { getNextStep, PageName } from "@/app/utils/utils";
 import NavigationButtons from "../common/NavigationButtons";
 import { NavContext } from "@/app/navigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function ReligiousPreferenceForm() {
-  const [selectedValue, setSelectedValue] = useState<boolean | null>(null);
   const router = useRouter();
   const params = useParams();
   const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { anonymousPatient } = useContext(AnonymousPatientContext);
+  const queryClient = useQueryClient();
+
+  const religiousPreferenceValue =
+    anonymousPatient?.is_religious_therapist_preference ?? null;
+
+  const [selectedValue, setSelectedValue] = useState<boolean | null>(
+    religiousPreferenceValue,
+  );
+
   const step = params.step as PageName;
 
   const { mutate: answerMutate } = usePatchQuestion({
@@ -28,6 +39,7 @@ export default function ReligiousPreferenceForm() {
       if (stepHistory.indexOf(step) < 0) {
         setStepHistory((prevState) => [...prevState, step]);
       }
+      queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] });
       router.push(`/questions/${nextStep}`);
     },
   });
@@ -41,7 +53,17 @@ export default function ReligiousPreferenceForm() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    answerMutate({ is_religious_therapist_preference: selectedValue });
+    if (selectedValue !== anonymousPatient?.is_religious_therapist_preference) {
+      answerMutate({ is_religious_therapist_preference: selectedValue });
+    } else {
+      const nextStep = getNextStep(step);
+
+      if (stepHistory.indexOf(step) < 0) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
+
+      router.push(`/questions/${nextStep}`);
+    }
   };
 
   return (
@@ -65,7 +87,7 @@ export default function ReligiousPreferenceForm() {
             value="yes"
             label="Yes"
             control={<StyledRadioButton />}
-            checked={!!selectedValue}
+            checked={selectedValue === true}
           />
           <StyledFormControlLabel
             key="no"

@@ -13,16 +13,22 @@ import { usePatchQuestion } from "@/app/api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import { NavContext } from "@/app/navigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
-
-type LGBTQPreferenceOptions = "yes" | "no";
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 const LGBTQPreferenceForm = () => {
-  const [selectedValue, setSelectedValue] =
-    useState<LGBTQPreferenceOptions | null>(null);
-
   const router = useRouter();
   const params = useParams();
   const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { anonymousPatient } = useContext(AnonymousPatientContext);
+  const queryClient = useQueryClient();
+
+  const lgbtqPreferenceValue =
+    anonymousPatient?.is_lgbtq_therapist_preference ?? null;
+
+  const [selectedValue, setSelectedValue] = useState<boolean | null>(
+    lgbtqPreferenceValue,
+  );
 
   const step = params.step as PageName;
 
@@ -34,6 +40,7 @@ const LGBTQPreferenceForm = () => {
         setStepHistory((prevState) => [...prevState, step]);
       }
 
+      queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] });
       router.push(`/questions/${nextStep}`);
     },
   });
@@ -41,15 +48,25 @@ const LGBTQPreferenceForm = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    answerMutate({
-      is_lgbtq_therapist_preference: selectedValue === "yes" ? true : false,
-    });
+    if (selectedValue !== anonymousPatient?.is_lgbtq_therapist_preference) {
+      answerMutate({
+        is_lgbtq_therapist_preference: selectedValue,
+      });
+    } else {
+      const nextStep = getNextStep(step);
+
+      if (stepHistory.indexOf(step) < 0) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
+
+      router.push(`/questions/${nextStep}`);
+    }
   };
 
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    setSelectedValue(event.target.value as LGBTQPreferenceOptions);
+    setSelectedValue(event.target.value === "yes" ? true : false);
   };
 
   return (
@@ -64,13 +81,13 @@ const LGBTQPreferenceForm = () => {
             value={"yes"}
             label={"Yes"}
             control={<StyledRadioButton />}
-            checked={selectedValue === "yes"}
+            checked={selectedValue === true}
           />
           <StyledFormControlLabel
             value={"no"}
             label={"No"}
             control={<StyledRadioButton />}
-            checked={selectedValue === "no"}
+            checked={selectedValue === false}
           />
         </RadioGroup>
         <NavigationButtons

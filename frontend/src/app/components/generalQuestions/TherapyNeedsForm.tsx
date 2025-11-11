@@ -7,39 +7,27 @@ import Checkbox from "@mui/material/Checkbox";
 import { StyledFormControlLabel } from "../common/OptionsContainers";
 import NavigationButtons from "../common/NavigationButtons";
 import { useParams, useRouter } from "next/navigation";
-import { usePatchQuestion } from "@/app/api/profile/profile";
+import {
+  TherapyNeedsOptions,
+  TherapyNeedsOptionsMap,
+  usePatchQuestion,
+} from "@/app/api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import { NavContext } from "@/app/navigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
-
-const TherapyNeedsOptionsMap = {
-  anxiety: "Anxiety",
-  depression: "Depression",
-  trauma_ptsd: "Trauma and PTSD",
-  relationships: "Relationship problems",
-  life_transitions: "Major life transitions",
-  grief: "Grief and loss",
-  substance_abuse: "Substance abuse and addiction",
-  self_esteem: "Low self-esteem",
-  stress: "Stress",
-  coping_mechanisms: "Unhealthy coping mechanisms",
-  eating_disorders: "Eating disorder",
-  anger_management: "Anger management",
-  adhd: "ADHD",
-  insomnia: "Insomnia",
-  mood_disorders: "Depression/Mood disorders",
-  personality_disorders: "Personality Disorders",
-  attention_focus: "Attention and focus issues",
-} as const;
-
-type TherapyNeedsOptions = keyof typeof TherapyNeedsOptionsMap;
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
 const TherapyNeeds = () => {
-  const [therapyNeeds, setTherapyNeeds] = useState<TherapyNeedsOptions[]>([]);
   const router = useRouter();
   const params = useParams();
   const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { anonymousPatient } = useContext(AnonymousPatientContext);
   const step = params.step as PageName;
+
+  const therapyNeedsValue = anonymousPatient?.therapy_needs ?? [];
+
+  const [therapyNeeds, setTherapyNeeds] =
+    useState<TherapyNeedsOptions[]>(therapyNeedsValue);
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
@@ -68,7 +56,22 @@ const TherapyNeeds = () => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    answerMutate({ therapy_needs: therapyNeeds });
+
+    const isStateMatchingSavedNeeds = therapyNeeds?.every(
+      (need) => anonymousPatient?.therapy_needs?.includes(need),
+    );
+
+    if (!isStateMatchingSavedNeeds) {
+      answerMutate({ therapy_needs: therapyNeeds });
+    } else {
+      const nextStep = getNextStep(step);
+
+      if (stepHistory.includes(step)) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
+
+      router.push(`/questions/${nextStep}`);
+    }
   };
 
   return (

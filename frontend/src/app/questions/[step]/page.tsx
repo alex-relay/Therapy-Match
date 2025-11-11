@@ -1,14 +1,11 @@
 "use client";
 
-import PageContainer from "../../components/common/PageContainer";
-import StyledStack from "../../components/common/PageStyledStack";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Card from "@mui/material/Card";
 import { useParams } from "next/navigation";
 import GENERAL_QUESTIONS_COMPONENT_MAP from "../../components/generalQuestions/generalQuestions";
 import { PageName } from "@/app/utils/utils";
-import AnonymousPatientProvider from "@/app/components/generalQuestions/anonymousPatientContext";
 
 const Questions = () => {
   const params = useParams();
@@ -23,26 +20,20 @@ const Questions = () => {
   const headerTitle = step && GENERAL_QUESTIONS_COMPONENT_MAP[step]?.title;
 
   return (
-    <AnonymousPatientProvider>
-      <PageContainer>
-        <StyledStack>
-          <Card variant="outlined" sx={{ width: "100%", maxWidth: "800px" }}>
-            <CardHeader title={headerTitle} sx={{ textAlign: "center" }} />
-            <CardContent
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <FormComponent />
-            </CardContent>
-          </Card>
-        </StyledStack>
-      </PageContainer>
-    </AnonymousPatientProvider>
+    <Card variant="outlined" sx={{ width: "100%", maxWidth: "800px" }}>
+      <CardHeader title={headerTitle} sx={{ textAlign: "center" }} />
+      <CardContent
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+        }}
+      >
+        <FormComponent />
+      </CardContent>
+    </Card>
   );
 };
 

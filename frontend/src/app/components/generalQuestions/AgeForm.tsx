@@ -8,8 +8,13 @@ import NavigationButtons from "../common/NavigationButtons";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import { NavContext } from "@/app/navigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
+import { useQueryClient } from "@tanstack/react-query";
 
-const validateAgeInput = (age: string, onError: (message: string) => void) => {
+const validateAgeInput = (
+  age: string | null,
+  onError: (message: string) => void,
+) => {
   const validAgeString = "Please enter a valid age between 18 and 120.";
   if (!age) {
     onError("Please enter your age.");
@@ -32,11 +37,19 @@ const validateAgeInput = (age: string, onError: (message: string) => void) => {
 };
 
 export default function AgeForm() {
-  const [age, setAge] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
   const params = useParams();
   const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { anonymousPatient } = useContext(AnonymousPatientContext);
+  const queryClient = useQueryClient();
+
+  const anonymousPatientAge = anonymousPatient?.age
+    ? String(anonymousPatient?.age)
+    : null;
+
+  const [age, setAge] = useState<string | null>(anonymousPatientAge);
+
   const step = params.step as PageName;
 
   const { mutate: answerMutate } = usePatchQuestion({
@@ -46,16 +59,30 @@ export default function AgeForm() {
       if (stepHistory.indexOf(step) < 0) {
         setStepHistory((prevState) => [...prevState, step]);
       }
+
+      queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] });
       router.push(`/questions/${nextStep}`);
     },
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     if (!validateAgeInput(age, setError)) {
       return;
     }
-    answerMutate({ age: Number(age) });
+
+    if (age !== anonymousPatientAge) {
+      answerMutate({ age: Number(age) });
+    } else {
+      const nextStep = getNextStep(step);
+
+      if (stepHistory.indexOf(step) < 0) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
+
+      router.push(`/questions/${nextStep}`);
+    }
   };
 
   return (
