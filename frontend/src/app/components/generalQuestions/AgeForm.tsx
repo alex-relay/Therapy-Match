@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import NavigationButtons from "../common/NavigationButtons";
 import { getNextStep, PageName } from "@/app/utils/utils";
-import { NavContext } from "@/app/navigationContext";
+import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -40,13 +40,13 @@ export default function AgeForm() {
   const [error, setError] = useState("");
   const router = useRouter();
   const params = useParams();
-  const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
   const queryClient = useQueryClient();
 
   const anonymousPatientAge = anonymousPatient?.age
     ? String(anonymousPatient?.age)
-    : null;
+    : "";
 
   const [age, setAge] = useState<string | null>(anonymousPatientAge);
 
@@ -102,21 +102,7 @@ export default function AgeForm() {
         />
       </Box>
       <NavigationButtons
-        onPrevButtonClick={() => {
-          if (!history.length) {
-            router.push(`/`);
-            return;
-          }
-
-          const stepInHistory = stepHistory.indexOf(step);
-
-          const previousStep =
-            stepInHistory >= 0
-              ? stepHistory[stepInHistory - 1]
-              : stepHistory[stepHistory.length - 1];
-
-          router.push(`/questions/${previousStep}`);
-        }}
+        onPrevButtonClick={() => goToPreviousStep(step)}
         isNextButtonDisabled={!age}
         isPrevButtonDisabled={false}
       />

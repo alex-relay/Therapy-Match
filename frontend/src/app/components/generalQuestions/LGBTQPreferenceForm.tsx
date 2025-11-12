@@ -11,7 +11,7 @@ import NavigationButtons from "../common/NavigationButtons";
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "@/app/api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
-import { NavContext } from "@/app/navigationContext";
+import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,7 +19,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const LGBTQPreferenceForm = () => {
   const router = useRouter();
   const params = useParams();
-  const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
   const queryClient = useQueryClient();
 
@@ -36,7 +36,7 @@ const LGBTQPreferenceForm = () => {
     onSuccess: () => {
       const nextStep = getNextStep(step);
 
-      if (stepHistory.indexOf(step) < 0) {
+      if (!stepHistory.includes(step)) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 
@@ -91,22 +91,8 @@ const LGBTQPreferenceForm = () => {
           />
         </RadioGroup>
         <NavigationButtons
-          isNextButtonDisabled={!selectedValue}
-          onPrevButtonClick={() => {
-            if (!history.length) {
-              router.push(`/`);
-              return;
-            }
-
-            const stepInHistory = stepHistory.indexOf(step);
-
-            const previousStep =
-              stepInHistory >= 0
-                ? stepHistory[stepInHistory - 1]
-                : stepHistory[stepHistory.length - 1];
-
-            router.push(`/questions/${previousStep}`);
-          }}
+          isNextButtonDisabled={selectedValue === null}
+          onPrevButtonClick={() => goToPreviousStep(step)}
         />
       </FormControl>
     </QuestionFormWrapper>

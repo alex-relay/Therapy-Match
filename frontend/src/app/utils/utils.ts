@@ -218,8 +218,7 @@ export type PageName =
   | "lgbtq-preference"
   | "age"
   | "location"
-  | "therapy-needs"
-  | "religious-importance";
+  | "therapy-needs";
 
 type StepInfo = {
   component: React.ComponentType;

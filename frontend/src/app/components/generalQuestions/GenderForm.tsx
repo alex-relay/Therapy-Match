@@ -11,7 +11,7 @@ import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "../../api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import NavigationButtons from "../common/NavigationButtons";
-import { NavContext } from "@/app/navigationContext";
+import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
@@ -30,7 +30,7 @@ export default function GenderForm() {
   const router = useRouter();
   const params = useParams();
   const step = params.step as PageName;
-  const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
   const gender = anonymousPatient?.gender ?? null;
   const queryClient = useQueryClient();
@@ -113,21 +113,7 @@ export default function GenderForm() {
         isPrevButtonDisabled={
           !stepHistory.length || stepHistory.indexOf(step) === 0
         }
-        onPrevButtonClick={() => {
-          if (!history.length) {
-            router.push(`/`);
-            return;
-          }
-
-          const stepInHistory = stepHistory.indexOf(step);
-
-          const previousStep =
-            stepInHistory >= 0
-              ? stepHistory[stepInHistory - 1]
-              : stepHistory[stepHistory.length - 1];
-
-          router.push(`/questions/${previousStep}`);
-        }}
+        onPrevButtonClick={() => goToPreviousStep(step)}
       />
     </QuestionFormWrapper>
   );

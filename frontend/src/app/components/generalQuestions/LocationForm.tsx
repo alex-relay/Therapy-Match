@@ -4,10 +4,10 @@ import { usePatchQuestion } from "@/app/api/profile/profile";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import NavigationButtons from "../common/NavigationButtons";
 import { getNextStep, PageName } from "@/app/utils/utils";
-import { NavContext } from "@/app/navigationContext";
+import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 
 const transformPostalCode = (postalCode: string) => {
@@ -51,7 +51,7 @@ const LocationForm = () => {
   const [error, setError] = useState("");
   const params = useParams();
   const router = useRouter();
-  const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { setStepHistory, goToPreviousStep } = useNavContext();
 
   const step = params.step as PageName;
 
@@ -91,21 +91,7 @@ const LocationForm = () => {
       <NavigationButtons
         isPrevButtonDisabled={step === "gender"}
         isNextButtonDisabled={!postalCode}
-        onPrevButtonClick={() => {
-          if (!history.length) {
-            router.push(`/`);
-            return;
-          }
-
-          const stepInHistory = stepHistory.indexOf(step);
-
-          const previousStep =
-            stepInHistory >= 0
-              ? stepHistory[stepInHistory - 1]
-              : stepHistory[stepHistory.length - 1];
-
-          router.push(`/questions/${previousStep}`);
-        }}
+        onPrevButtonClick={() => goToPreviousStep(step)}
         sx={{
           width: "100%",
         }}

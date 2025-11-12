@@ -13,15 +13,17 @@ import {
   usePatchQuestion,
 } from "@/app/api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
-import { NavContext } from "@/app/navigationContext";
+import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 const TherapyNeeds = () => {
   const router = useRouter();
   const params = useParams();
-  const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
+  const queryClient = useQueryClient();
   const step = params.step as PageName;
 
   const therapyNeedsValue = anonymousPatient?.therapy_needs ?? [];
@@ -36,6 +38,7 @@ const TherapyNeeds = () => {
       if (stepHistory.indexOf(step) < 0) {
         setStepHistory((prevState) => [...prevState, step]);
       }
+      queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] });
       router.push(`/questions/${nextStep}`);
     },
   });
@@ -61,7 +64,10 @@ const TherapyNeeds = () => {
       (need) => anonymousPatient?.therapy_needs?.includes(need),
     );
 
-    if (!isStateMatchingSavedNeeds) {
+    if (
+      !isStateMatchingSavedNeeds ||
+      therapyNeeds.length !== therapyNeedsValue.length
+    ) {
       answerMutate({ therapy_needs: therapyNeeds });
     } else {
       const nextStep = getNextStep(step);
@@ -116,21 +122,7 @@ const TherapyNeeds = () => {
         })}
       </FormGroup>
       <NavigationButtons
-        onPrevButtonClick={() => {
-          if (!history.length) {
-            router.push(`/`);
-            return;
-          }
-
-          const stepInHistory = stepHistory.indexOf(step);
-
-          const previousStep =
-            stepInHistory >= 0
-              ? stepHistory[stepInHistory - 1]
-              : stepHistory[stepHistory.length - 1];
-
-          router.push(`/questions/${previousStep}`);
-        }}
+        onPrevButtonClick={() => goToPreviousStep(step)}
         isNextButtonDisabled={false}
         isPrevButtonDisabled={step === "gender"}
       />
