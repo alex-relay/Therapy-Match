@@ -9,10 +9,11 @@ import {
 } from "../common/OptionsContainers";
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "../../api/profile/profile";
-import { getNextStep, PageName } from "@/app/utils/utils";
+import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
 import NavigationButtons from "../common/NavigationButtons";
-import { NavContext } from "@/app/navigationContext";
+import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
 const OPTIONS_MAP = {
   male: "Male",
@@ -25,11 +26,13 @@ const OPTIONS_MAP = {
 type GenderFormValues = keyof typeof OPTIONS_MAP | "";
 
 export default function GenderForm() {
-  const [selectedValue, setSelectedValue] = useState<GenderFormValues>("");
   const router = useRouter();
   const params = useParams();
   const step = params.step as PageName;
-  const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { stepHistory, setStepHistory } = useNavContext();
+  const { anonymousPatient } = useContext(AnonymousPatientContext);
+  const gender = anonymousPatient?.gender ?? null;
+  const [selectedValue, setSelectedValue] = useState<string | null>(gender);
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
@@ -37,6 +40,7 @@ export default function GenderForm() {
       if (stepHistory.indexOf(step) < 0) {
         setStepHistory((prevState) => [...prevState, step]);
       }
+
       router.push(`/questions/${nextStep}`);
     },
   });
@@ -49,7 +53,30 @@ export default function GenderForm() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    answerMutate({ gender: selectedValue });
+
+    if (selectedValue !== anonymousPatient?.gender) {
+      answerMutate({ gender: selectedValue });
+    } else {
+      const nextStep = getNextStep(step);
+
+      if (stepHistory.indexOf(step) < 0) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
+
+      router.push(`/questions/${nextStep}`);
+    }
+  };
+
+  const handleIsChecked = (key: string) => {
+    if (selectedValue) {
+      return selectedValue === key;
+    }
+
+    if (!selectedValue && anonymousPatient?.gender) {
+      return key === anonymousPatient?.gender;
+    }
+
+    return false;
   };
 
   return (
@@ -74,30 +101,19 @@ export default function GenderForm() {
               label={value}
               value={key}
               control={<StyledRadioButton />}
-              checked={selectedValue === key}
+              checked={handleIsChecked(key)}
             />
           ))}
         </RadioGroup>
       </FormControl>
       <NavigationButtons
-        isNextButtonDisabled={!selectedValue}
+        isNextButtonDisabled={!selectedValue && !gender}
         isPrevButtonDisabled={
           !stepHistory.length || stepHistory.indexOf(step) === 0
         }
         onPrevButtonClick={() => {
-          if (!history.length) {
-            router.push(`/`);
-            return;
-          }
-
-          const stepInHistory = stepHistory.indexOf(step);
-
-          const previousStep =
-            stepInHistory >= 0
-              ? stepHistory[stepInHistory - 1]
-              : stepHistory[stepHistory.length - 1];
-
-          router.push(`/questions/${previousStep}`);
+          const previousStep = getPreviousStep(step, stepHistory);
+          router.push(previousStep);
         }}
       />
     </QuestionFormWrapper>

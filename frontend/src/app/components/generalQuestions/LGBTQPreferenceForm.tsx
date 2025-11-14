@@ -10,19 +10,23 @@ import { useState, useContext } from "react";
 import NavigationButtons from "../common/NavigationButtons";
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "@/app/api/profile/profile";
-import { getNextStep, PageName } from "@/app/utils/utils";
-import { NavContext } from "@/app/navigationContext";
+import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
+import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
-
-type LGBTQPreferenceOptions = "yes" | "no";
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
 const LGBTQPreferenceForm = () => {
-  const [selectedValue, setSelectedValue] =
-    useState<LGBTQPreferenceOptions | null>(null);
-
   const router = useRouter();
   const params = useParams();
-  const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { stepHistory, setStepHistory } = useNavContext();
+  const { anonymousPatient } = useContext(AnonymousPatientContext);
+
+  const lgbtqPreferenceValue =
+    anonymousPatient?.is_lgbtq_therapist_preference ?? null;
+
+  const [selectedValue, setSelectedValue] = useState<boolean | null>(
+    lgbtqPreferenceValue,
+  );
 
   const step = params.step as PageName;
 
@@ -30,7 +34,7 @@ const LGBTQPreferenceForm = () => {
     onSuccess: () => {
       const nextStep = getNextStep(step);
 
-      if (stepHistory.indexOf(step) < 0) {
+      if (!stepHistory.includes(step)) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 
@@ -41,15 +45,25 @@ const LGBTQPreferenceForm = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    answerMutate({
-      is_lgbtq_therapist_preference: selectedValue === "yes" ? true : false,
-    });
+    if (selectedValue !== anonymousPatient?.is_lgbtq_therapist_preference) {
+      answerMutate({
+        is_lgbtq_therapist_preference: selectedValue,
+      });
+    } else {
+      const nextStep = getNextStep(step);
+
+      if (stepHistory.indexOf(step) < 0) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
+
+      router.push(`/questions/${nextStep}`);
+    }
   };
 
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    setSelectedValue(event.target.value as LGBTQPreferenceOptions);
+    setSelectedValue(event.target.value === "yes" ? true : false);
   };
 
   return (
@@ -64,31 +78,20 @@ const LGBTQPreferenceForm = () => {
             value={"yes"}
             label={"Yes"}
             control={<StyledRadioButton />}
-            checked={selectedValue === "yes"}
+            checked={selectedValue === true}
           />
           <StyledFormControlLabel
             value={"no"}
             label={"No"}
             control={<StyledRadioButton />}
-            checked={selectedValue === "no"}
+            checked={selectedValue === false}
           />
         </RadioGroup>
         <NavigationButtons
-          isNextButtonDisabled={!selectedValue}
+          isNextButtonDisabled={selectedValue === null}
           onPrevButtonClick={() => {
-            if (!history.length) {
-              router.push(`/`);
-              return;
-            }
-
-            const stepInHistory = stepHistory.indexOf(step);
-
-            const previousStep =
-              stepInHistory >= 0
-                ? stepHistory[stepInHistory - 1]
-                : stepHistory[stepHistory.length - 1];
-
-            router.push(`/questions/${previousStep}`);
+            const previousStep = getPreviousStep(step, stepHistory);
+            router.push(previousStep);
           }}
         />
       </FormControl>

@@ -9,16 +9,25 @@ import {
 } from "../common/OptionsContainers";
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "../../api/profile/profile";
-import { getNextStep, PageName } from "@/app/utils/utils";
+import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
 import NavigationButtons from "../common/NavigationButtons";
-import { NavContext } from "@/app/navigationContext";
+import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
 export default function ReligiousPreferenceForm() {
-  const [selectedValue, setSelectedValue] = useState<boolean | null>(null);
   const router = useRouter();
   const params = useParams();
-  const { stepHistory, setStepHistory } = useContext(NavContext);
+  const { stepHistory, setStepHistory } = useNavContext();
+  const { anonymousPatient } = useContext(AnonymousPatientContext);
+
+  const religiousPreferenceValue =
+    anonymousPatient?.is_religious_therapist_preference ?? null;
+
+  const [selectedValue, setSelectedValue] = useState<boolean | null>(
+    religiousPreferenceValue,
+  );
+
   const step = params.step as PageName;
 
   const { mutate: answerMutate } = usePatchQuestion({
@@ -28,6 +37,7 @@ export default function ReligiousPreferenceForm() {
       if (stepHistory.indexOf(step) < 0) {
         setStepHistory((prevState) => [...prevState, step]);
       }
+
       router.push(`/questions/${nextStep}`);
     },
   });
@@ -41,7 +51,17 @@ export default function ReligiousPreferenceForm() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    answerMutate({ is_religious_therapist_preference: selectedValue });
+    if (selectedValue !== anonymousPatient?.is_religious_therapist_preference) {
+      answerMutate({ is_religious_therapist_preference: selectedValue });
+    } else {
+      const nextStep = getNextStep(step);
+
+      if (stepHistory.indexOf(step) < 0) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
+
+      router.push(`/questions/${nextStep}`);
+    }
   };
 
   return (
@@ -65,7 +85,7 @@ export default function ReligiousPreferenceForm() {
             value="yes"
             label="Yes"
             control={<StyledRadioButton />}
-            checked={!!selectedValue}
+            checked={selectedValue === true}
           />
           <StyledFormControlLabel
             key="no"
@@ -79,19 +99,10 @@ export default function ReligiousPreferenceForm() {
       <NavigationButtons
         isNextButtonDisabled={selectedValue === null}
         onPrevButtonClick={() => {
-          if (!history.length) {
-            router.push(`/`);
-            return;
+          const previousStep = getPreviousStep(step, stepHistory);
+          if (previousStep) {
+            router.push(previousStep);
           }
-
-          const stepInHistory = stepHistory.indexOf(step);
-
-          const previousStep =
-            stepInHistory >= 0
-              ? stepHistory[stepInHistory - 1]
-              : stepHistory[stepHistory.length - 1];
-
-          router.push(`/questions/${previousStep}`);
         }}
       />
     </QuestionFormWrapper>

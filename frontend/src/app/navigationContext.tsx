@@ -6,45 +6,66 @@ import {
   Dispatch,
   SetStateAction,
   useEffect,
+  useContext,
 } from "react";
+import { PageName } from "./utils/utils";
 
 type NavContextType = {
-  stepHistory: string[];
-  setStepHistory: Dispatch<SetStateAction<string[]>>;
+  stepHistory: PageName[];
+  setStepHistory: Dispatch<SetStateAction<PageName[]>>;
 };
 
-export const NavContext = createContext<NavContextType>({
-  stepHistory: [],
-  setStepHistory: () => {},
-});
+export const NavContext = createContext<NavContextType | null>(null);
 
-const NavigationContext = ({ children }: { children: React.ReactNode }) => {
-  const [stepHistory, setStepHistory] = useState<string[]>([]);
+export const useNavContext = () => {
+  const currentNavContext = useContext(NavContext);
 
-  useEffect(() => {
-    const currentPath = window.location.pathname;
-    const currentPathIsHomepage = currentPath === "/";
+  if (!currentNavContext) {
+    throw new Error(
+      "useNavContext has to be used within <NavContext.Provider>",
+    );
+  }
 
-    if (typeof window !== "undefined" && "sessionStorage" in window) {
-      const savedHistory = window.sessionStorage.getItem("stepHistory");
-      if (savedHistory && !currentPathIsHomepage) {
-        try {
-          const parsed = JSON.parse(savedHistory);
-          if (
-            Array.isArray(parsed) &&
-            parsed.every((item) => typeof item === "string")
-          ) {
-            setStepHistory(parsed);
-          }
-        } catch (error) {
-          console.error(
-            "Failed to parse stepHistory from sessionStorage:",
-            error,
-          );
-        }
+  return currentNavContext;
+};
+
+const getInitialHistory = (): PageName[] => {
+  if (typeof window === "undefined" || !("sessionStorage" in window)) {
+    return [];
+  }
+
+  const currentPath = window.location.pathname;
+  const currentPathIsHomepage = currentPath === "/";
+
+  if (currentPathIsHomepage) {
+    window.sessionStorage.removeItem("stepHistory"); // Clear storage on homepage
+    return [];
+  }
+
+  const savedHistory = window.sessionStorage.getItem("stepHistory");
+  if (savedHistory) {
+    try {
+      const parsedSavedHistory: PageName[] = JSON.parse(savedHistory);
+      if (
+        Array.isArray(parsedSavedHistory) &&
+        parsedSavedHistory.every((item) => typeof item === "string")
+      ) {
+        return parsedSavedHistory;
       }
+    } catch (error) {
+      console.error("Failed to parse stepHistory from sessionStorage:", error);
     }
-  }, []);
+  }
+
+  return [];
+};
+
+export const NavigationContextProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const [stepHistory, setStepHistory] = useState<PageName[]>(getInitialHistory);
 
   useEffect(() => {
     const currentPath = window.location.pathname;
@@ -60,8 +81,10 @@ const NavigationContext = ({ children }: { children: React.ReactNode }) => {
   }, [stepHistory]);
 
   return (
-    <NavContext value={{ stepHistory, setStepHistory }}>{children}</NavContext>
+    <NavContext.Provider value={{ stepHistory, setStepHistory }}>
+      {children}
+    </NavContext.Provider>
   );
 };
 
-export default NavigationContext;
+export default NavigationContextProvider;
