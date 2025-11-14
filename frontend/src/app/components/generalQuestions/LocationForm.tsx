@@ -6,7 +6,7 @@ import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import NavigationButtons from "../common/NavigationButtons";
-import { getNextStep, PageName } from "@/app/utils/utils";
+import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 
@@ -51,7 +51,7 @@ const LocationForm = () => {
   const [error, setError] = useState("");
   const params = useParams();
   const router = useRouter();
-  const { setStepHistory, goToPreviousStep } = useNavContext();
+  const { stepHistory, setStepHistory } = useNavContext();
 
   const step = params.step as PageName;
 
@@ -91,7 +91,10 @@ const LocationForm = () => {
       <NavigationButtons
         isPrevButtonDisabled={step === "gender"}
         isNextButtonDisabled={!postalCode}
-        onPrevButtonClick={() => goToPreviousStep(step)}
+        onPrevButtonClick={() => {
+          const previousStep = getPreviousStep(step, stepHistory);
+          router.push(previousStep);
+        }}
         sx={{
           width: "100%",
         }}

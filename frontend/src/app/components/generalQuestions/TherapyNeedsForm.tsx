@@ -12,7 +12,7 @@ import {
   TherapyNeedsOptionsMap,
   usePatchQuestion,
 } from "@/app/api/profile/profile";
-import { getNextStep, PageName } from "@/app/utils/utils";
+import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
@@ -20,7 +20,7 @@ import { AnonymousPatientContext } from "./AnonymousPatientContext";
 const TherapyNeeds = () => {
   const router = useRouter();
   const params = useParams();
-  const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
+  const { stepHistory, setStepHistory } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
   const step = params.step as PageName;
 
@@ -43,12 +43,12 @@ const TherapyNeeds = () => {
 
   const handleOptionClick = (
     event: React.ChangeEvent<HTMLInputElement>,
-    checked: boolean,
+    isChecked: boolean,
   ) => {
     const option = event.target.value;
 
     setTherapyNeeds((prevState) => {
-      if (checked) {
+      if (isChecked) {
         return prevState.filter((type) => type !== option);
       }
       return [...prevState, option as TherapyNeedsOptions];
@@ -70,7 +70,7 @@ const TherapyNeeds = () => {
     } else {
       const nextStep = getNextStep(step);
 
-      if (stepHistory.includes(step)) {
+      if (!stepHistory.includes(step)) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 
@@ -120,7 +120,10 @@ const TherapyNeeds = () => {
         })}
       </FormGroup>
       <NavigationButtons
-        onPrevButtonClick={() => goToPreviousStep(step)}
+        onPrevButtonClick={() => {
+          const previousStep = getPreviousStep(step, stepHistory);
+          router.push(previousStep);
+        }}
         isNextButtonDisabled={false}
         isPrevButtonDisabled={step === "gender"}
       />

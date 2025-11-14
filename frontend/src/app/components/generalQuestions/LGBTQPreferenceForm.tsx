@@ -10,7 +10,7 @@ import { useState, useContext } from "react";
 import NavigationButtons from "../common/NavigationButtons";
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "@/app/api/profile/profile";
-import { getNextStep, PageName } from "@/app/utils/utils";
+import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
@@ -18,7 +18,7 @@ import { AnonymousPatientContext } from "./AnonymousPatientContext";
 const LGBTQPreferenceForm = () => {
   const router = useRouter();
   const params = useParams();
-  const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
+  const { stepHistory, setStepHistory } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
 
   const lgbtqPreferenceValue =
@@ -89,7 +89,10 @@ const LGBTQPreferenceForm = () => {
         </RadioGroup>
         <NavigationButtons
           isNextButtonDisabled={selectedValue === null}
-          onPrevButtonClick={() => goToPreviousStep(step)}
+          onPrevButtonClick={() => {
+            const previousStep = getPreviousStep(step, stepHistory);
+            router.push(previousStep);
+          }}
         />
       </FormControl>
     </QuestionFormWrapper>

@@ -242,4 +242,24 @@ const getNextStep = (
   return "gender";
 };
 
-export { PERSONALITY_TEST_QUESTIONS, getNextStep };
+const getPreviousStep = (currentStep: string, stepHistory: string[]) => {
+  if (!currentStep || !stepHistory.length) {
+    return "/";
+  }
+
+  const currentStepIndex = stepHistory.indexOf(currentStep);
+
+  if (currentStepIndex < 0) {
+    return `/questions/${stepHistory[stepHistory.length - 1]}`;
+  }
+
+  if (currentStepIndex === 0) {
+    return "/";
+  }
+
+  const previousStep = stepHistory[currentStepIndex - 1];
+
+  return `/questions/${previousStep}`;
+};
+
+export { PERSONALITY_TEST_QUESTIONS, getNextStep, getPreviousStep };

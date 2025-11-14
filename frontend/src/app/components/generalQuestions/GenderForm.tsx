@@ -9,7 +9,7 @@ import {
 } from "../common/OptionsContainers";
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "../../api/profile/profile";
-import { getNextStep, PageName } from "@/app/utils/utils";
+import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
 import NavigationButtons from "../common/NavigationButtons";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
@@ -29,7 +29,7 @@ export default function GenderForm() {
   const router = useRouter();
   const params = useParams();
   const step = params.step as PageName;
-  const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
+  const { stepHistory, setStepHistory } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
   const gender = anonymousPatient?.gender ?? null;
   const [selectedValue, setSelectedValue] = useState<string | null>(gender);
@@ -111,7 +111,10 @@ export default function GenderForm() {
         isPrevButtonDisabled={
           !stepHistory.length || stepHistory.indexOf(step) === 0
         }
-        onPrevButtonClick={() => goToPreviousStep(step)}
+        onPrevButtonClick={() => {
+          const previousStep = getPreviousStep(step, stepHistory);
+          router.push(previousStep);
+        }}
       />
     </QuestionFormWrapper>
   );

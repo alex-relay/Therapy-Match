@@ -5,7 +5,7 @@ import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import NavigationButtons from "../common/NavigationButtons";
-import { getNextStep, PageName } from "@/app/utils/utils";
+import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
@@ -39,7 +39,7 @@ export default function AgeForm() {
   const [error, setError] = useState("");
   const router = useRouter();
   const params = useParams();
-  const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
+  const { stepHistory, setStepHistory } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
 
   const anonymousPatientAge = anonymousPatient?.age
@@ -99,7 +99,10 @@ export default function AgeForm() {
         />
       </Box>
       <NavigationButtons
-        onPrevButtonClick={() => goToPreviousStep(step)}
+        onPrevButtonClick={() => {
+          const previousStep = getPreviousStep(step, stepHistory);
+          router.push(previousStep);
+        }}
         isNextButtonDisabled={!age}
         isPrevButtonDisabled={false}
       />

@@ -9,12 +9,10 @@ import {
   useContext,
 } from "react";
 import { PageName } from "./utils/utils";
-import { useRouter } from "next/navigation";
 
 type NavContextType = {
   stepHistory: PageName[];
   setStepHistory: Dispatch<SetStateAction<PageName[]>>;
-  goToPreviousStep: (currentStep: PageName) => void;
 };
 
 export const NavContext = createContext<NavContextType | null>(null);
@@ -68,29 +66,6 @@ export const NavigationContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [stepHistory, setStepHistory] = useState<PageName[]>(getInitialHistory);
-  const router = useRouter();
-  const goToPreviousStep = (currentStep: PageName): void => {
-    if (!currentStep || !stepHistory.length) {
-      router.push("/");
-      return;
-    }
-
-    const currentStepIndex = stepHistory.indexOf(currentStep);
-
-    if (currentStepIndex < 0) {
-      router.push(`/questions/${stepHistory[stepHistory.length - 1]}`);
-      return;
-    }
-
-    if (currentStepIndex === 0) {
-      router.push("/");
-      return;
-    }
-
-    const previousStep = stepHistory[currentStepIndex - 1];
-
-    router.push(`/questions/${previousStep}`);
-  };
 
   useEffect(() => {
     const currentPath = window.location.pathname;
@@ -106,9 +81,7 @@ export const NavigationContextProvider = ({
   }, [stepHistory]);
 
   return (
-    <NavContext.Provider
-      value={{ stepHistory, setStepHistory, goToPreviousStep }}
-    >
+    <NavContext.Provider value={{ stepHistory, setStepHistory }}>
       {children}
     </NavContext.Provider>
   );
