@@ -14,14 +14,12 @@ import NavigationButtons from "../common/NavigationButtons";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function ReligiousPreferenceForm() {
   const router = useRouter();
   const params = useParams();
   const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
-  const queryClient = useQueryClient();
 
   const religiousPreferenceValue =
     anonymousPatient?.is_religious_therapist_preference ?? null;
@@ -39,7 +37,7 @@ export default function ReligiousPreferenceForm() {
       if (stepHistory.indexOf(step) < 0) {
         setStepHistory((prevState) => [...prevState, step]);
       }
-      queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] });
+
       router.push(`/questions/${nextStep}`);
     },
   });

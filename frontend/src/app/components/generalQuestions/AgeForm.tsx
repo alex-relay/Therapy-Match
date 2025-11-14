@@ -9,7 +9,6 @@ import { getNextStep, PageName } from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
-import { useQueryClient } from "@tanstack/react-query";
 
 const validateAgeInput = (
   age: string | null,
@@ -42,7 +41,6 @@ export default function AgeForm() {
   const params = useParams();
   const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
-  const queryClient = useQueryClient();
 
   const anonymousPatientAge = anonymousPatient?.age
     ? String(anonymousPatient?.age)
@@ -60,7 +58,6 @@ export default function AgeForm() {
         setStepHistory((prevState) => [...prevState, step]);
       }
 
-      queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] });
       router.push(`/questions/${nextStep}`);
     },
   });

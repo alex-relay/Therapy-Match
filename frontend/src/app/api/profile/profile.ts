@@ -2,6 +2,7 @@ import {
   useMutation,
   UseMutationOptions,
   useQuery,
+  useQueryClient,
   UseQueryOptions,
 } from "@tanstack/react-query";
 
@@ -86,8 +87,31 @@ export const usePatchQuestion = (
     PatchQuestionProps
   >,
 ) => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: patchQuestion,
+    onMutate: async (sessionUpdate) => {
+      await queryClient.cancelQueries({
+        queryKey: ["anonymousPatientSession"],
+      });
+
+      const currentAnonymousSession = queryClient.getQueryData([
+        "anonymousPatientSession",
+      ]);
+
+      queryClient.setQueryData(
+        ["anonymousPatientSession"],
+        (oldSession: PatientProfileResponse) => ({
+          ...oldSession,
+          ...sessionUpdate,
+        }),
+      );
+
+      return { currentAnonymousSession };
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] }),
     ...options,
   });
 };

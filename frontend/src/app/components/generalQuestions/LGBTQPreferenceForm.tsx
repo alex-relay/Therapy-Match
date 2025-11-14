@@ -14,14 +14,12 @@ import { getNextStep, PageName } from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
-import { useQueryClient } from "@tanstack/react-query";
 
 const LGBTQPreferenceForm = () => {
   const router = useRouter();
   const params = useParams();
   const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
-  const queryClient = useQueryClient();
 
   const lgbtqPreferenceValue =
     anonymousPatient?.is_lgbtq_therapist_preference ?? null;
@@ -40,7 +38,6 @@ const LGBTQPreferenceForm = () => {
         setStepHistory((prevState) => [...prevState, step]);
       }
 
-      queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] });
       router.push(`/questions/${nextStep}`);
     },
   });

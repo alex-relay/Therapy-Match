@@ -13,7 +13,6 @@ import { getNextStep, PageName } from "@/app/utils/utils";
 import NavigationButtons from "../common/NavigationButtons";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
-import { useQueryClient } from "@tanstack/react-query";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
 const OPTIONS_MAP = {
@@ -33,7 +32,6 @@ export default function GenderForm() {
   const { stepHistory, setStepHistory, goToPreviousStep } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
   const gender = anonymousPatient?.gender ?? null;
-  const queryClient = useQueryClient();
   const [selectedValue, setSelectedValue] = useState<string | null>(gender);
 
   const { mutate: answerMutate } = usePatchQuestion({
@@ -42,7 +40,7 @@ export default function GenderForm() {
       if (stepHistory.indexOf(step) < 0) {
         setStepHistory((prevState) => [...prevState, step]);
       }
-      queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] });
+
       router.push(`/questions/${nextStep}`);
     },
   });
