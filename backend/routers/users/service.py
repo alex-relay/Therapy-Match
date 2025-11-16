@@ -62,7 +62,7 @@ def create_user(user_data: UserCreate, session: Session) -> User:
         session.refresh(user)
     except Exception as e:
         session.rollback()
-        logger.exception("Failed to create anonymous patient %s", e)
+        logger.exception("Failed to create anonymous patient")
         raise ValueError("Failed to create anonymous patient") from e
     return user
 

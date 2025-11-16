@@ -31,7 +31,7 @@ const handlers = [
   http.post("api/auth/callback/credentials", async () => {
     return HttpResponse.json({ url: "http://localhost:4000/profile" });
   }),
-  http.post("/anonymous-session", async () => {
+  http.post("/anonymous-sessions", async () => {
     return HttpResponse.json(
       { message: "Anonymous patient session created successfully" },
       {
@@ -41,7 +41,7 @@ const handlers = [
       },
     );
   }),
-  http.patch("/anonymous-session", async ({ request }) => {
+  http.patch("/anonymous-sessions", async ({ request }) => {
     const body = (await request.json()) as Partial<PatientProfile>;
 
     const anonPatient = {

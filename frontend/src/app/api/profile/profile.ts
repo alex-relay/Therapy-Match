@@ -65,7 +65,7 @@ export type PatchQuestionProps = Partial<PatientProfilePatchRequest>;
 export const patchQuestion = async ({
   ...profileData
 }: PatchQuestionProps): Promise<PatientProfileResponse> => {
-  const response = await fetch(`${API_URL}/anonymous-session`, {
+  const response = await fetch(`${API_URL}/anonymous-sessions`, {
     method: "PATCH",
     body: JSON.stringify(profileData),
     credentials: "include",
@@ -118,7 +118,7 @@ export const usePatchQuestion = (
 
 const getAnonymousPatientSession =
   async (): Promise<PatientProfileResponse> => {
-    const response = await fetch(`${API_URL}/anonymous-session`, {
+    const response = await fetch(`${API_URL}/anonymous-sessions`, {
       method: "GET",
       credentials: "include",
       headers: { "Content-Type": "application/json" },

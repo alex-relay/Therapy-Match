@@ -183,7 +183,7 @@ def test_create_therapist(client_fixture, session_fixture, mock_auth_headers):
 def test_create_anonymous_session(client_fixture, session_fixture):
     """create anonymous session"""
     response = client_fixture.post(
-        "/anonymous-session",
+        "/anonymous-sessions",
     )
 
     set_cookie_header = response.headers.get("set-cookie")
@@ -315,7 +315,7 @@ def test_patch_anonyomous_patient_updates(
     add_anonymous_patient(session_fixture)
 
     response = client_fixture.patch(
-        "/anonymous-session",
+        "/anonymous-sessions",
         json={
             "age": 30,
         },
@@ -338,7 +338,7 @@ def test_patch_anonyomous_patient_does_not_affect_older_data(
     add_anonymous_patient(session_fixture, mock_overrides)
 
     response = client_fixture.patch(
-        "/anonymous-session",
+        "/anonymous-sessions",
         json={
             "age": 30,
         },
@@ -368,7 +368,7 @@ def test_patch_anonymous_patient_overwrites_previous_patch(
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
     response = client_fixture.patch(
-        "/anonymous-session",
+        "/anonymous-sessions",
         json={
             "age": 30,
         },
@@ -399,7 +399,7 @@ def test_patch_anonymous_patient_saves_location_coordinates(
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
     response = client_fixture.patch(
-        "/anonymous-session",
+        "/anonymous-sessions",
         json={"postal_code": "M5A 4L1"},
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
@@ -421,7 +421,7 @@ def test_patch_anonymous_patient_invalid_location_coordinates(
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
     response = client_fixture.patch(
-        "/anonymous-session",
+        "/anonymous-sessions",
         json={"postal_code": "123 456"},
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
@@ -452,7 +452,7 @@ def test_patch_anonymous_patient_no_location(
     mocker.patch("pgeocode.Nominatim.query_postal_code", return_value=mock_location)
 
     response = client_fixture.patch(
-        "/anonymous-session",
+        "/anonymous-sessions",
         json={"postal_code": "L4J 6B6"},
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
@@ -473,7 +473,7 @@ def test_patch_anonymous_patient_lgbtq_preference(
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
     response = client_fixture.patch(
-        "/anonymous-session",
+        "/anonymous-sessions",
         json={"is_lgbtq_therapist_preference": True},
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
@@ -493,7 +493,7 @@ def test_patch_anonymous_patient_lgbtq_preference_invalid_value(
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
     response = client_fixture.patch(
-        "/anonymous-session",
+        "/anonymous-sessions",
         json={"is_lgbtq_therapist_preference": 1},
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
@@ -511,7 +511,7 @@ def test_get_anonymous_patient(client_fixture, session_fixture, mock_auth_header
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
     response = client_fixture.get(
-        "/anonymous-session",
+        "/anonymous-sessions",
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
 
@@ -531,7 +531,7 @@ def test_get_anonymous_patient_returns_404_nonexisting_patient(
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
     response = client_fixture.get(
-        "/anonymous-session",
+        "/anonymous-sessions",
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
 
