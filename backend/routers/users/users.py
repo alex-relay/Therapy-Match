@@ -161,6 +161,7 @@ def register_therapist(
 ):
     """Register a new therapist."""
 
+    # refactor getting an existing therapist into a dependency.
     try:
         existing_therapist = session.exec(
             select(Therapist).where(Therapist.user_id == current_user.id)
@@ -186,13 +187,7 @@ def register_therapist(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.get("/users", tags=["users"])
-async def read_users():
-    """Retrieve a list of users. For demonstration purposes only."""
-    return [{"username": "Rick"}, {"username": "Morty"}]
-
-
-@router.post("/anonymous-session")
+@router.post("/anonymous-sessions")
 def create_anonymous_session(
     session: SessionDep,
     anonymous_session: Optional[str] = Cookie(None, alias="anonymous_session"),
@@ -229,11 +224,11 @@ def create_anonymous_session(
         logger.exception("Unable to create an anonymous session")
         raise HTTPException(
             status_code=500,
-            detail=str(e),
+            detail=str("An internal error occurred"),
         ) from e
 
 
-@router.patch("/anonymous-session", response_model=AnonymousSessionPatientResponse)
+@router.patch("/anonymous-sessions", response_model=AnonymousSessionPatientResponse)
 def patch_anonymous_patient(
     data: AnonymousSessionPatientBase,
     anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)],
@@ -263,7 +258,7 @@ def patch_anonymous_patient(
         raise HTTPException(status_code=500, detail="An internal error occurred") from e
 
 
-@router.get("/anonymous-session", response_model=AnonymousSessionPatientResponse)
+@router.get("/anonymous-sessions", response_model=AnonymousSessionPatientResponse)
 def get_anonymous_patient_data(
     anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)]
 ):
