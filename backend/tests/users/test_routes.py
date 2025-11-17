@@ -409,6 +409,7 @@ def test_patch_anonymous_patient_saves_location_coordinates(
     data = response.json()
     assert data["longitude"] == -79.3626
     assert data["latitude"] == 43.6555
+    assert data["postal_code"] == "M5A 4L1"
 
 
 def test_patch_anonymous_patient_invalid_location_coordinates(
