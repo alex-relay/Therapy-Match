@@ -109,13 +109,13 @@ class AnonymousSessionPatientBase(SQLModel):
 
     @field_validator("postal_code")
     @classmethod
-    def validate_postal_code(cls, v):
+    def validate_postal_code(cls, value):
         """Validates the canadian postal code format"""
-        if v is None:
-            return v
-        if not POSTAL_CODE_REGEX.match(v):
+        if value is None:
+            return value
+        if not POSTAL_CODE_REGEX.match(value):
             raise ValueError("Invalid Canadian postal code format")
-        return v
+        return value
 
 
 class AnonymousSessionPatientRead(AnonymousSessionPatientBase):

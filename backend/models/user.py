@@ -30,6 +30,7 @@ class AnonymousPatient(SQLModel, table=True):
     session_id: str = Field(index=True, unique=True)
     latitude: float | None = Field(default=None)
     longitude: float | None = Field(default=None)
+    postal_code: str | None = Field(default=None)
     description: str | None = Field(default=None)
     therapy_needs: List[str] = Field(
         default_factory=list, sa_column=Column(ARRAY(String))

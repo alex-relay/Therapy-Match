@@ -123,8 +123,6 @@ def patch_anonymous_patient_session(
         patch_data_dict["latitude"] = coordinates["latitude"]
         patch_data_dict["longitude"] = coordinates["longitude"]
 
-        del patch_data_dict["postal_code"]
-
     patient.sqlmodel_update(patch_data_dict)
 
     logger.info("Committing changes to the DB")
