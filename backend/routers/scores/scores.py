@@ -1,9 +1,11 @@
 """Router for calculating and storing personality test scores."""
 
 from dataclasses import asdict
-from fastapi import APIRouter, status, HTTPException
+from typing import Annotated
+from fastapi import APIRouter, status, HTTPException, Depends
 from backend.core.database import SessionDep
-from backend.models.user import PersonalityTestScore
+from backend.models.user import PersonalityTestScore, AnonymousPatient
+from backend.routers.users.dependencies import get_anonymous_patient
 from backend.routers.scores.schemas import (
     UserPersonalityTestCreate,
     UserPersonalityTestRead,
@@ -11,6 +13,7 @@ from backend.routers.scores.schemas import (
 )
 from backend.services.scores import (
     calculate_test_scores,
+    create_anonymous_session_test_score,
 )
 
 from backend.core.logging import get_logger
@@ -78,6 +81,37 @@ def create_therapist_test_scores(
 
 
 @router.post(
+    "/anonymous-sessions/personality-tests",
+    status_code=status.HTTP_201_CREATED,
+    response_model=UserPersonalityTestCreate,
+)
+def create_anonymous_session_test_scores(
+    anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)],
+    session: SessionDep,
+):
+    """Create a test score for an anonymous session."""
+    if anonymous_patient.personality_test:
+        logger.exception("Anonymous patient already has personality test scores")
+        raise HTTPException(
+            status_code=400,
+            detail="Anonymous patient already has personality test scores",
+        )
+
+    try:
+        logger.info("Creating anonymous session test score to db")
+        test_score = create_anonymous_session_test_score(anonymous_patient, session)
+
+        return UserPersonalityTestCreate(**test_score.model_dump())
+
+    except Exception as e:
+        logger.exception("Failed to create anonymous session test scores")
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        ) from e
+
+
+@router.post(
     "/patients/{patient_id}/personality-scores",
     status_code=status.HTTP_201_CREATED,
     response_model=UserPersonalityTestRead,
@@ -111,7 +145,7 @@ def create_patient_test_scores(
         session.refresh(personality_test_score)
     except Exception as e:
         session.rollback()
-        logger.error("Failed to save patient test scores %s", e)
+        logger.exception("Failed to save patient test scores")
         raise e
 
     logger.info("Saving test score completed")

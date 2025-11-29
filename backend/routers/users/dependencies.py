@@ -94,16 +94,17 @@ def get_anonymous_patient(
             select(AnonymousPatient).where(AnonymousPatient.session_id == session_id)
         ).first()
 
+        if not anonymous_patient:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Anonymous patient not found",
+            )
+
+        return anonymous_patient
+
     except Exception as e:
         logger.exception("Unable to get anonymous patient")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error retrieving patient data.",
         ) from e
-
-    if not anonymous_patient:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Anonymous patient not found"
-        )
-
-    return anonymous_patient

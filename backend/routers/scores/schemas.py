@@ -5,11 +5,22 @@ from sqlmodel import SQLModel
 class UserPersonalityTestCreate(SQLModel):
     """User Personality Test Create"""
 
-    extroversion: list[float]
-    conscientiousness: list[float]
-    openness: list[float]
-    neuroticism: list[float]
-    agreeableness: list[float]
+    extroversion: list[int]
+    conscientiousness: list[int]
+    openness: list[int]
+    neuroticism: list[int]
+    agreeableness: list[int]
+
+
+class AggregateUserPersonalityTestRead(SQLModel):
+    """Aggregate User Personality Test Read"""
+
+    id: str
+    extroversion: list[int]
+    conscientiousness: list[int]
+    openness: list[int]
+    neuroticism: list[int]
+    agreeableness: list[int]
 
 
 class UserPersonalityTestRead(SQLModel):

@@ -4,11 +4,12 @@ import { usePatchQuestion } from "@/app/api/profile/profile";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import NavigationButtons from "../common/NavigationButtons";
 import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
 const transformPostalCode = (postalCode: string) => {
   if (!postalCode) {
@@ -47,7 +48,6 @@ const validatePostalCode = (
 };
 
 const LocationForm = () => {
-  const [postalCode, setPostalCode] = useState("");
   const [error, setError] = useState("");
   const params = useParams();
   const router = useRouter();
@@ -63,13 +63,26 @@ const LocationForm = () => {
     },
   });
 
+  const { anonymousPatient } = useContext(AnonymousPatientContext);
+
+  const [postalCode, setPostalCode] = useState(
+    anonymousPatient?.postal_code ?? "",
+  );
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const cleanPostalCode = transformPostalCode(postalCode);
+    const cleanPostalCode = transformPostalCode(postalCode ?? "");
     if (!validatePostalCode(cleanPostalCode, setError)) {
       return;
     }
-    answerMutate({ postal_code: cleanPostalCode });
+
+    if (cleanPostalCode !== anonymousPatient?.postal_code) {
+      answerMutate({ postal_code: cleanPostalCode });
+    } else {
+      const nextStep = getNextStep(step);
+      setStepHistory((prevState) => [...prevState, step]);
+      router.push(`/questions/${nextStep}`);
+    }
   };
 
   return (
