@@ -1,6 +1,13 @@
 """utility functions for creating users, therapists and patients for testing"""
 
-from backend.models.user import Patient, Therapist, User, GenderOption, AnonymousPatient
+from backend.models.user import (
+    Patient,
+    Therapist,
+    User,
+    GenderOption,
+    AnonymousPatient,
+    AnonymousPersonalityTestScore,
+)
 
 USER_ID = "c658ffce-d810-4341-a8ef-2d3651489daf"
 
@@ -75,3 +82,14 @@ def add_anonymous_patient(session_fixture, mock_overrides=None):
     session_fixture.add(patient)
     session_fixture.commit()
     session_fixture.refresh(patient)
+
+    return patient
+
+
+def add_personality_test_score(session_fixture, mock_overrides=None):
+    if not mock_overrides:
+        mock_overrides = {}
+    test_score = AnonymousPersonalityTestScore(**{**mock_overrides})
+    session_fixture.add(test_score)
+    session_fixture.commit()
+    session_fixture.refresh(test_score)

@@ -56,6 +56,7 @@ export interface PatientProfileResponse {
   gender: string | null;
   latitude: number | null;
   longitude: number | null;
+  postal_code: string | null;
   is_religious_therapist_preference: boolean | null;
   is_lgbtq_therapist_preference: boolean | null;
 }

@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 from typing import Optional, List
 from decimal import Decimal
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, Integer
 from pydantic import EmailStr
 from sqlalchemy.dialects.postgresql import ARRAY, ENUM as PG_ENUM
 from sqlmodel import Field, SQLModel, Relationship
@@ -54,7 +54,7 @@ class Therapist(SQLModel, table=True):
     __tablename__ = "therapists"
 
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID | None = Field(default=None, foreign_key="users.id")
+    user_id: UUID | None = Field(default=None, foreign_key="users.id", unique=True)
     description: str | None = Field(default=None)
     location: str
     therapist_type: str
@@ -74,7 +74,7 @@ class Patient(SQLModel, table=True):
     __tablename__ = "patients"
 
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID | None = Field(default=None, foreign_key="users.id")
+    user_id: UUID | None = Field(default=None, foreign_key="users.id", unique=True)
     location: str
     description: str | None = Field(default=None)
     therapy_needs: List[str] = Field(sa_column=Column(ARRAY(String)))
@@ -95,13 +95,22 @@ class AnonymousPersonalityTestScore(SQLModel, table=True):
     __tablename__ = "anonymous_personality_test_scores"
 
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
-    neuroticism: Decimal = Field(default=0, max_digits=5, decimal_places=3)
-    openness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
-    extroversion: Decimal = Field(default=0, max_digits=5, decimal_places=3)
-    conscientiousness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
-    agreeableness: Decimal = Field(default=0, max_digits=5, decimal_places=3)
+    neuroticism: list[int] = Field(
+        sa_column=Column(ARRAY(Integer)), default_factory=list
+    )
+    openness: list[int] = Field(sa_column=Column(ARRAY(Integer)), default_factory=list)
+    extroversion: list[int] = Field(
+        sa_column=Column(ARRAY(Integer)), default_factory=list
+    )
+    conscientiousness: list[int] = Field(
+        sa_column=Column(ARRAY(Integer)), default_factory=list
+    )
+    agreeableness: list[int] = Field(
+        sa_column=Column(ARRAY(Integer)), default_factory=list
+    )
 
-    patient_id: UUID = Field(foreign_key="anonymous_patients.id", unique=True)
+    anonymous_patient_id: UUID = Field(foreign_key="anonymous_patients.id", unique=True)
+
     anonymous_patient: AnonymousPatient = Relationship(
         back_populates="personality_test",
     )
