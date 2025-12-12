@@ -1,15 +1,14 @@
 "use client";
+
 import {
   PERSONALITY_TEST_QUESTIONS,
   PersonalityTestQuestionAndAnswers,
 } from "@/app/utils/utils";
 import { useState } from "react";
 import PersonalityTestQuestion from "./PersonalityTestQuestion";
-import PageContainer from "../common/PageContainer";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import { styled } from "@mui/material/styles";
-import StyledStack from "../common/PageStyledStack";
 
 const QuestionPageContainer = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -75,36 +74,34 @@ const QuestionPageContainer = () => {
     questionAnswers.length === currentQuestion;
 
   return (
-    <PageContainer>
-      <StyledStack>
-        <PersonalityTestQuestion
-          question={question}
-          index={currentQuestion}
-          onAnswer={handleOptionClick}
-        />
-        <StyledBox>
-          <Button
-            disabled={currentQuestion === 0}
-            onClick={handlePreviousQuestionClick}
-            sx={{ minWidth: "100px", backgroundColor: "white" }}
-          >
-            {" "}
-            Previous{" "}
-          </Button>
-          <Button
-            disabled={isNextButtonDisabled}
-            onClick={handleNextQuestionClick}
-            sx={{
-              backgroundColor: "white",
-              minWidth: "100px",
-            }}
-          >
-            {" "}
-            Next{" "}
-          </Button>
-        </StyledBox>
-      </StyledStack>
-    </PageContainer>
+    <>
+      <PersonalityTestQuestion
+        question={question}
+        index={currentQuestion}
+        onAnswer={handleOptionClick}
+      />
+      <StyledBox>
+        <Button
+          disabled={currentQuestion === 0}
+          onClick={handlePreviousQuestionClick}
+          sx={{ minWidth: "100px", backgroundColor: "white" }}
+        >
+          {" "}
+          Previous{" "}
+        </Button>
+        <Button
+          disabled={isNextButtonDisabled}
+          onClick={handleNextQuestionClick}
+          sx={{
+            backgroundColor: "white",
+            minWidth: "100px",
+          }}
+        >
+          {" "}
+          Next{" "}
+        </Button>
+      </StyledBox>
+    </>
   );
 };
 

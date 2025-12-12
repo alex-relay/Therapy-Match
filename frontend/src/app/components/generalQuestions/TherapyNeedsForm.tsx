@@ -12,7 +12,7 @@ import {
   TherapyNeedsOptionsMap,
   usePatchQuestion,
 } from "@/app/api/profile/profile";
-import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
+import { getPreviousStep, PageName } from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
@@ -31,13 +31,11 @@ const TherapyNeeds = () => {
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      const nextStep = getNextStep(step);
-
-      if (stepHistory.indexOf(step) < 0) {
+      if (!stepHistory.includes(step)) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 
-      router.push(`/questions/${nextStep}`);
+      router.push("/personality-tests/introduction");
     },
   });
 
@@ -68,13 +66,10 @@ const TherapyNeeds = () => {
     ) {
       answerMutate({ therapy_needs: therapyNeeds });
     } else {
-      const nextStep = getNextStep(step);
-
       if (!stepHistory.includes(step)) {
         setStepHistory((prevState) => [...prevState, step]);
       }
-
-      router.push(`/questions/${nextStep}`);
+      router.push("/personality-tests/introduction");
     }
   };
 
