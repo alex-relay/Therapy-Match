@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
 import AppBar from "./components/AppBar";
+import PageContainer from "./components/common/PageContainer";
+import StyledStack from "./components/common/PageStyledStack";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -18,7 +20,11 @@ export default function RootLayout({
       <body>
         <Providers>
           <AppBar />
-          <main> {children} </main>
+          <main>
+            <PageContainer>
+              <StyledStack>{children}</StyledStack>
+            </PageContainer>
+          </main>
         </Providers>
       </body>
     </html>

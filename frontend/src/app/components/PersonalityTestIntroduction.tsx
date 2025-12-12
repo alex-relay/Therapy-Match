@@ -1,29 +1,20 @@
 "use client";
+
 import Typography from "@mui/material/Typography";
 import CardHeader from "@mui/material/CardHeader";
 import CardMedia from "@mui/material/CardMedia";
+import StyledCard from "@/app/components/common/StyledCard";
 import { useRouter } from "next/navigation";
-import { useCreateAnonymousSession } from "../app/api/users/users";
-import StyledCard from "./components/common/StyledCard";
 
-export default function Home() {
+const PersonalityTestIntroduction = () => {
   const router = useRouter();
-
-  const { mutate: anonymousSessionMutate } = useCreateAnonymousSession({
-    onSuccess: () => {
-      router.push("/questions/gender");
-    },
-  });
-
   return (
     <>
-      <Typography variant="h3">
-        What type of therapy are you looking for?
-      </Typography>
+      <Typography variant="h3">Personality Test Start</Typography>
       <StyledCard
         onClick={() => {
-          anonymousSessionMutate();
-          sessionStorage.setItem("stepHistory", JSON.stringify([]));
+          console.log("clicked");
+          router.push("/personality-tests");
         }}
         variant="outlined"
         data-testid="myself-tile"
@@ -38,4 +29,6 @@ export default function Home() {
       </StyledCard>
     </>
   );
-}
+};
+
+export default PersonalityTestIntroduction;
