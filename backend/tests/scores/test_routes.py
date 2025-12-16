@@ -143,6 +143,7 @@ def test_create_anonymous_session_scores(
     assert response.status_code == 201
     data = response.json()
     assert data == {
+        "id": data["id"],
         "agreeableness": [],
         "conscientiousness": [],
         "extroversion": [],

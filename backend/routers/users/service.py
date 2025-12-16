@@ -14,7 +14,6 @@ from .schemas import (
     PatientCreate,
     UserCreate,
     AnonymousSessionPatientBase,
-    AnonymousSessionPatientRead,
 )
 from .location_service import get_coordinates_from_postal_code
 from .exceptions import (
@@ -34,16 +33,26 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 class TokenUser(SQLModel):
+    """Docstring for TokenUser"""
+
     email_address: str
 
 
 class Token(SQLModel):
+    """Docstring for Token"""
+
     access_token: str
     token_type: str
     user: TokenUser
 
 
 class TokenData(SQLModel):
+    """Represents decoded JWT token data.
+
+    Attributes:
+        username: The username extracted from the token, if present.
+    """
+
     username: str | None = None
 
 
@@ -105,7 +114,7 @@ def _get_coordinates(postal_code: str | None) -> dict[str, float]:
 
 
 def patch_anonymous_patient_session(
-    patient: AnonymousSessionPatientRead,
+    patient: AnonymousPatient,
     data: AnonymousSessionPatientBase,
     session: Session,
 ):
