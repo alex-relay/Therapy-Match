@@ -10,6 +10,8 @@ from backend.routers.scores.schemas import (
     UserPersonalityTestCreate,
     UserPersonalityTestRead,
     AggregateScores,
+    AggregateUserPersonalityTestRead,
+    AnonymousPersonalityTestRead,
 )
 from backend.services.scores import (
     calculate_test_scores,
@@ -83,7 +85,7 @@ def create_therapist_test_scores(
 @router.post(
     "/anonymous-sessions/personality-tests",
     status_code=status.HTTP_201_CREATED,
-    response_model=UserPersonalityTestCreate,
+    response_model=AnonymousPersonalityTestRead,
 )
 def create_anonymous_session_test_scores(
     anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)],
@@ -91,7 +93,7 @@ def create_anonymous_session_test_scores(
 ):
     """Create a test score for an anonymous session."""
     if anonymous_patient.personality_test:
-        logger.exception("Anonymous patient already has personality test scores")
+        logger.warning("Anonymous patient already has personality test scores")
         raise HTTPException(
             status_code=400,
             detail="Anonymous patient already has personality test scores",
@@ -100,15 +102,36 @@ def create_anonymous_session_test_scores(
     try:
         logger.info("Creating anonymous session test score to db")
         test_score = create_anonymous_session_test_score(anonymous_patient, session)
+        logger.info("Anonymous test score created")
 
-        return UserPersonalityTestCreate(**test_score.model_dump())
+        return test_score
 
     except Exception as e:
         logger.exception("Failed to create anonymous session test scores")
         raise HTTPException(
             status_code=500,
-            detail=str(e),
+            detail=str("Unable to save new anonymous patient test scores"),
         ) from e
+
+
+@router.get(
+    "/anonymous-sessions/personality-tests",
+    status_code=status.HTTP_200_OK,
+    response_model=AggregateUserPersonalityTestRead,
+)
+def get_anonymous_session_personality_test(
+    anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)],
+):
+    personality_test = anonymous_patient.personality_test
+
+    if not personality_test:
+        logger.warning("Personality test not found on the anonymous patient")
+        raise HTTPException(
+            status_code=404,
+            detail="Personality test not found on the anonymous patient",
+        )
+
+    return personality_test
 
 
 @router.post(

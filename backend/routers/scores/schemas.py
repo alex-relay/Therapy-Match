@@ -1,5 +1,29 @@
 from dataclasses import dataclass
+from uuid import UUID
 from sqlmodel import SQLModel
+
+
+class PersonalityTestQuestion(SQLModel):
+    """Docstring for PersonalityTestQuestion"""
+
+    id: str
+    score: int
+
+
+class PersonalityTestBase(SQLModel):
+    """Base model for the anonymous personality test"""
+
+    extroversion: list[PersonalityTestQuestion]
+    conscientiousness: list[PersonalityTestQuestion]
+    openness: list[PersonalityTestQuestion]
+    neuroticism: list[PersonalityTestQuestion]
+    agreeableness: list[PersonalityTestQuestion]
+
+
+class AnonymousPersonalityTestRead(PersonalityTestBase):
+    """Docstring for AnonymousPersonalityTestRead"""
+
+    id: UUID
 
 
 class UserPersonalityTestCreate(SQLModel):
@@ -15,7 +39,7 @@ class UserPersonalityTestCreate(SQLModel):
 class AggregateUserPersonalityTestRead(SQLModel):
     """Aggregate User Personality Test Read"""
 
-    id: str
+    id: UUID
     extroversion: list[int]
     conscientiousness: list[int]
     openness: list[int]

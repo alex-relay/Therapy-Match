@@ -14,6 +14,8 @@ logger = get_logger(__name__)
 
 
 class TokenData(SQLModel):
+    """Docstring for TokenData"""
+
     username: str | None = None
 
 
@@ -50,7 +52,7 @@ def get_current_active_user(
         raise HTTPException(status_code=400, detail="Inactive user")
 
     return UserRead(
-        id=str(current_user.id),
+        id=current_user.id,
         first_name=current_user.first_name,
         last_name=current_user.last_name,
         email_address=current_user.email_address,

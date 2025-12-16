@@ -1,11 +1,12 @@
 from uuid import UUID, uuid4
 from typing import Optional, List
 from decimal import Decimal
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String
 from pydantic import EmailStr
-from sqlalchemy.dialects.postgresql import ARRAY, ENUM as PG_ENUM
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM as PG_ENUM, JSON
 from sqlmodel import Field, SQLModel, Relationship
 from backend.routers.users.user_types import GenderOption
+from backend.routers.scores.schemas import PersonalityTestQuestion
 
 
 class User(SQLModel, table=True):
@@ -89,27 +90,32 @@ class Patient(SQLModel, table=True):
     )
 
 
-class AnonymousPersonalityTestScore(SQLModel, table=True):
+class PersonalityTestScoreBaseMixin(SQLModel):
+    neuroticism: list[PersonalityTestQuestion] = Field(
+        sa_type=JSON, default_factory=list
+    )
+    openness: list[PersonalityTestQuestion] = Field(sa_type=JSON, default_factory=list)
+    extroversion: list[PersonalityTestQuestion] = Field(
+        sa_type=JSON, default_factory=list
+    )
+    conscientiousness: list[PersonalityTestQuestion] = Field(
+        sa_type=JSON, default_factory=list
+    )
+    agreeableness: list[PersonalityTestQuestion] = Field(
+        sa_type=JSON, default_factory=list
+    )
+
+
+class AnonymousPersonalityTestScore(PersonalityTestScoreBaseMixin, table=True):
     """Anonymous personality test scores for patient model"""
 
     __tablename__ = "anonymous_personality_test_scores"
 
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
-    neuroticism: list[int] = Field(
-        sa_column=Column(ARRAY(Integer)), default_factory=list
-    )
-    openness: list[int] = Field(sa_column=Column(ARRAY(Integer)), default_factory=list)
-    extroversion: list[int] = Field(
-        sa_column=Column(ARRAY(Integer)), default_factory=list
-    )
-    conscientiousness: list[int] = Field(
-        sa_column=Column(ARRAY(Integer)), default_factory=list
-    )
-    agreeableness: list[int] = Field(
-        sa_column=Column(ARRAY(Integer)), default_factory=list
-    )
 
-    anonymous_patient_id: UUID = Field(foreign_key="anonymous_patients.id", unique=True)
+    anonymous_patient_id: UUID = Field(
+        foreign_key="anonymous_patients.id", unique=True, ondelete="CASCADE"
+    )
 
     anonymous_patient: AnonymousPatient = Relationship(
         back_populates="personality_test",
