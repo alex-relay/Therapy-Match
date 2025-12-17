@@ -127,6 +127,48 @@ def test_create_personality_test_score_invalid_scores(client_fixture, session_fi
     )
 
 
+def test_get_anonymous_personality_test_score(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test for retrieving a personality test"""
+    patient = add_anonymous_patient(session_fixture, {"anonymous_patient_id": USER_ID})
+    add_personality_test_score(session_fixture, {"anonymous_patient_id": patient.id})
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
+    response = client_fixture.get(
+        "/anonymous-sessions/personality-tests",
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data == {
+        "agreeableness": [],
+        "conscientiousness": [],
+        "extroversion": [],
+        "id": data["id"],
+        "neuroticism": [],
+        "openness": [],
+    }
+
+
+def test_get_undefined_test_score(client_fixture, session_fixture, mock_auth_headers):
+    """Test for retrieving a non-existent personality test"""
+    add_anonymous_patient(session_fixture, {"anonymous_patient_id": USER_ID})
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
+    response = client_fixture.get(
+        "/anonymous-sessions/personality-tests",
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+    )
+
+    assert response.status_code == 404
+    data = response.json()
+    assert data == {"detail": "Personality test not found on the anonymous patient"}
+
+
 def test_create_anonymous_session_scores(
     client_fixture, session_fixture, mock_auth_headers
 ):
