@@ -6,7 +6,7 @@ from pydantic import EmailStr
 from sqlalchemy.dialects.postgresql import ARRAY, ENUM as PG_ENUM, JSON
 from sqlmodel import Field, SQLModel, Relationship
 from backend.routers.users.user_types import GenderOption
-from backend.routers.scores.schemas import PersonalityTestQuestion
+from backend.schemas.scores import PersonalityTestQuestion
 
 
 class User(SQLModel, table=True):

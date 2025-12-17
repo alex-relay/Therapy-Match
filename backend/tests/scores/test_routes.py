@@ -13,7 +13,7 @@ from backend.tests.test_utils import (
     USER_ID,
     add_personality_test_score,
 )
-from backend.routers.users.service import create_access_token
+from backend.services.users import create_access_token
 
 
 def test_create_therapist_personality_test_score(client_fixture, session_fixture):

@@ -60,6 +60,8 @@ class UserPersonalityTestRead(SQLModel):
 
 @dataclass
 class Scores:
+    """docstring for calculated individual personality scores"""
+
     extroversion: float
     conscientiousness: float
     openness: float
@@ -69,6 +71,8 @@ class Scores:
 
 @dataclass
 class AggregateScores:
+    """docstring for aggregated individual personality scores"""
+
     extroversion: list[float]
     conscientiousness: list[float]
     openness: list[float]

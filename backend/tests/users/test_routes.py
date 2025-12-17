@@ -10,7 +10,7 @@ from backend.tests.test_utils import (
     USER_ID,
 )
 from backend.models.user import GenderOption, AnonymousPatient
-from backend.routers.users.service import create_access_token
+from backend.services.users import create_access_token
 
 
 def test_read_main(client_fixture):
