@@ -1,7 +1,9 @@
 from fastapi import HTTPException
 from sqlmodel import Session
+from sqlalchemy.exc import SQLAlchemyError
 from backend.models.user import AnonymousPersonalityTestScore, AnonymousPatient
-from backend.routers.scores.schemas import Scores, AggregateScores
+from backend.schemas.scores import Scores, AggregateScores
+from backend.routers.scores.exceptions import TestScoreCreationError
 
 ScoresType = list[float]
 
@@ -174,6 +176,6 @@ def create_anonymous_session_test_score(
         session.refresh(personality_test_score)
 
         return personality_test_score
-    except Exception as e:
+    except SQLAlchemyError as e:
         session.rollback()
-        raise Exception("Failed to create test score") from e
+        raise TestScoreCreationError("Failed to create test score") from e

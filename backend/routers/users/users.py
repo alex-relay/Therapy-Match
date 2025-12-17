@@ -12,7 +12,7 @@ from sqlmodel import select
 from backend.core.database import SessionDep
 from backend.models.user import Patient, User, Therapist, AnonymousPatient
 from backend.core.logging import get_logger
-from backend.routers.users.schemas import (
+from backend.schemas.users import (
     TherapistCreate,
     PatientRead,
     PatientCreate,
@@ -32,7 +32,7 @@ from .dependencies import (
     get_current_active_user,
     get_anonymous_patient,
 )
-from .service import (
+from ...services.users import (
     create_therapist,
     get_user_by_email,
     create_patient,

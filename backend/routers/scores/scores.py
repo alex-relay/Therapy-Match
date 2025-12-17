@@ -6,7 +6,8 @@ from fastapi import APIRouter, status, HTTPException, Depends
 from backend.core.database import SessionDep
 from backend.models.user import PersonalityTestScore, AnonymousPatient
 from backend.routers.users.dependencies import get_anonymous_patient
-from backend.routers.scores.schemas import (
+from backend.routers.scores.exceptions import TestScoreCreationError
+from backend.schemas.scores import (
     UserPersonalityTestCreate,
     UserPersonalityTestRead,
     AggregateScores,
@@ -106,11 +107,11 @@ def create_anonymous_session_test_scores(
 
         return test_score
 
-    except Exception as e:
+    except TestScoreCreationError as e:
         logger.exception("Failed to create anonymous session test scores")
         raise HTTPException(
             status_code=500,
-            detail=str("Unable to save new anonymous patient test scores"),
+            detail=e,
         ) from e
 
 

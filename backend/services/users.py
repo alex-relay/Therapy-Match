@@ -7,7 +7,7 @@ from passlib.context import CryptContext
 from backend.models.user import Therapist, Patient, User, AnonymousPatient
 from backend.core.logging import get_logger
 from backend.core.config import settings
-from .schemas import (
+from ..schemas.users import (
     TherapistCreate,
     TherapistRead,
     PatientRead,
@@ -16,7 +16,7 @@ from .schemas import (
     AnonymousSessionPatientBase,
 )
 from .location_service import get_coordinates_from_postal_code
-from .exceptions import (
+from ..routers.users.exceptions import (
     PatientNotFoundError,
     InvalidPostalCodeError,
     GeocodingServiceError,

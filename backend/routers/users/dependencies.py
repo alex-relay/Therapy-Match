@@ -6,8 +6,8 @@ from sqlmodel import SQLModel, select
 from backend.core.database import SessionDep
 from backend.models.user import User, AnonymousPatient
 from backend.core.logging import get_logger
-from .schemas import UserRead, AnonymousSessionCookie
-from .service import get_user_by_email, SECRET_KEY, ALGORITHM
+from ...schemas.users import UserRead, AnonymousSessionCookie
+from ...services.users import get_user_by_email, SECRET_KEY, ALGORITHM
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 logger = get_logger(__name__)
