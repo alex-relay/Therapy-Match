@@ -1,8 +1,8 @@
-"""update anonymous personality test table
+"""update anonymous personality test table for category enum
 
-Revision ID: 1a7f14b7e46a
+Revision ID: 8958d3318246
 Revises: 792da156a99e
-Create Date: 2025-12-16 01:06:23.002727+00:00
+Create Date: 2025-12-18 20:22:17.180180+00:00
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "1a7f14b7e46a"
+revision: str = "8958d3318246"
 down_revision: Union[str, Sequence[str], None] = "792da156a99e"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
