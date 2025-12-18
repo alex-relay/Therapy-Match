@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 from uuid import UUID
 from sqlmodel import SQLModel
+from backend.types.scores_types import PersonalityTestCategory
 
 
 class PersonalityTestQuestion(SQLModel):
     """Docstring for PersonalityTestQuestion"""
 
     id: str
+    category: PersonalityTestCategory
     score: int
 
 
