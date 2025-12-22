@@ -7,11 +7,13 @@ import Box from "@mui/material/Box";
 import CardHeader from "@mui/material/CardHeader";
 import { styled } from "@mui/material/styles";
 import Button from "@mui/material/Button";
+import { CardActions } from "@mui/material";
 
 type QuestionProps = {
   question: string;
   onAnswer: (index: number, value: number) => void;
   index: number;
+  actions: React.ReactNode;
 };
 
 const OPTIONS: { option: string; value: number }[] = [
@@ -40,7 +42,7 @@ const StyledOptionsBox = styled(Box)(({ theme }) => ({
   },
 }));
 
-const Question = ({ question, index, onAnswer }: QuestionProps) => (
+const Question = ({ question, index, onAnswer, actions }: QuestionProps) => (
   <Card sx={{ width: "100%" }} variant="outlined">
     <Box
       sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
@@ -59,17 +61,16 @@ const Question = ({ question, index, onAnswer }: QuestionProps) => (
         {OPTIONS.map(({ option, value }) => (
           <StyledOptionButton
             size="small"
-            onClick={() => {
-              onAnswer(index, value);
-            }}
+            onClick={() => onAnswer(index, value)}
             key={option}
             value={value}
           >
-            <Typography> {option}</Typography>
+            <Typography> {option} </Typography>
           </StyledOptionButton>
         ))}
       </StyledOptionsBox>
     </CardContent>
+    <CardActions>{actions}</CardActions>
   </Card>
 );
 
