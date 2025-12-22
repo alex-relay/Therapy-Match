@@ -228,7 +228,11 @@ def create_anonymous_session(
         ) from e
 
 
-@router.patch("/anonymous-sessions", response_model=AnonymousSessionPatientResponse)
+@router.patch(
+    "/anonymous-sessions",
+    status_code=status.HTTP_200_OK,
+    response_model=AnonymousSessionPatientResponse,
+)
 def patch_anonymous_patient(
     data: AnonymousSessionPatientBase,
     anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)],

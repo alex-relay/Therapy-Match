@@ -71,7 +71,7 @@ def mock_jwt_decode(monkeypatch):
             "exp": 9999999999,
         }
 
-    monkeypatch.setattr("backend.routers.users.service.jwt.decode", fake_decode)
+    monkeypatch.setattr("backend.services.users.jwt.decode", fake_decode)
     yield
 
 

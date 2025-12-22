@@ -3,6 +3,7 @@
 from dataclasses import asdict
 from typing import Annotated
 from fastapi import APIRouter, status, HTTPException, Depends
+from sqlalchemy.exc import SQLAlchemyError
 from backend.core.database import SessionDep
 from backend.models.user import PersonalityTestScore, AnonymousPatient
 from backend.routers.users.dependencies import get_anonymous_patient
@@ -13,10 +14,13 @@ from backend.schemas.scores import (
     AggregateScores,
     AggregateUserPersonalityTestRead,
     AnonymousPersonalityTestRead,
+    PersonalityTestQuestion,
 )
 from backend.services.scores import (
     calculate_test_scores,
     create_anonymous_session_test_score,
+    update_anonymous_session_test_score_category,
+    patch_anonymous_test_score_category,
 )
 
 from backend.core.logging import get_logger
@@ -133,6 +137,47 @@ def get_anonymous_session_personality_test(
         )
 
     return personality_test
+
+
+@router.patch(
+    "/anonymous-sessions/personality-tests",
+    status_code=status.HTTP_200_OK,
+    response_model=AnonymousPersonalityTestRead,
+)
+def patch_personality_test(
+    data: PersonalityTestQuestion,
+    anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)],
+    session: SessionDep,
+):
+    """patch route to update the answers of the personality test"""
+    personality_test = anonymous_patient.personality_test
+
+    if not personality_test:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Personality test not found"
+        )
+
+    try:
+        updated_personality_test_object = update_anonymous_session_test_score_category(
+            data, personality_test
+        )
+        patch_anonymous_test_score_persist = patch_anonymous_test_score_category(
+            updated_personality_test_object, personality_test, session
+        )
+        return patch_anonymous_test_score_persist
+
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
+    except Exception as e:
+        logger.exception("Error on personality test patch")
+        raise HTTPException(
+            status_code=500, detail="Error on personality test patch"
+        ) from e
 
 
 @router.post(

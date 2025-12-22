@@ -12,6 +12,10 @@ class PersonalityTestQuestion(SQLModel):
     score: int
 
 
+class PersonalityTestQuestionList(SQLModel):
+    category: list[PersonalityTestQuestion]
+
+
 class PersonalityTestBase(SQLModel):
     """Base model for the anonymous personality test"""
 

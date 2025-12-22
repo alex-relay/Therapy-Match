@@ -2,8 +2,14 @@ from fastapi import HTTPException
 from sqlmodel import Session
 from sqlalchemy.exc import SQLAlchemyError
 from backend.models.user import AnonymousPersonalityTestScore, AnonymousPatient
-from backend.schemas.scores import Scores, AggregateScores
-from backend.routers.scores.exceptions import TestScoreCreationError
+from backend.schemas.scores import Scores, AggregateScores, PersonalityTestQuestion
+from backend.routers.scores.exceptions import (
+    TestScoreCreationError,
+    TestScoreUpdateError,
+)
+from backend.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 ScoresType = list[float]
 
@@ -179,3 +185,63 @@ def create_anonymous_session_test_score(
     except SQLAlchemyError as e:
         session.rollback()
         raise TestScoreCreationError("Failed to create test score") from e
+
+
+def update_anonymous_session_test_score_category(
+    data: PersonalityTestQuestion, personality_test: AnonymousPersonalityTestScore
+) -> dict:
+    """Update a category of an anonymous session test score."""
+    if not personality_test:
+        raise ValueError("Personality test id not found")
+
+    if not data:
+        raise ValueError("Updated data is not present")
+
+    personality_test_obj = personality_test.model_dump()
+    category_answers = personality_test_obj.get(data.category)
+
+    if category_answers is None:
+        raise ValueError("Invalid category index")
+
+    personality_test_answer = data.model_dump()
+
+    is_answered_previously = False
+
+    for idx, answer in enumerate(category_answers):
+        if answer["id"] == data.id:
+            category_answers[idx] = personality_test_answer
+            is_answered_previously = True
+            break
+
+    if not is_answered_previously:
+        category_answers.append(personality_test_answer)
+
+    return {data.category: category_answers}
+
+
+def patch_anonymous_test_score_category(
+    data: dict[str, list[PersonalityTestQuestion]],
+    personality_test: AnonymousPersonalityTestScore,
+    session: Session,
+) -> AnonymousPersonalityTestScore:
+    """Persist a category update of an personality test"""
+    if not data:
+        raise ValueError("Updated data is not provided")
+
+    if not personality_test:
+        raise ValueError("Anonymous patient is not provided")
+
+    personality_test.sqlmodel_update(data)
+
+    try:
+        session.add(personality_test)
+        session.commit()
+        session.refresh(personality_test)
+
+        return personality_test
+    except SQLAlchemyError as e:
+        session.rollback()
+        logger.exception(
+            "Unable to persist the update anonymous personality test score"
+        )
+        raise TestScoreUpdateError("Failed to save the updated test score") from e
