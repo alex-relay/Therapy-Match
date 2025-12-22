@@ -5,6 +5,7 @@ from backend.models.user import (
     Therapist,
     PersonalityTestScore,
 )
+from backend.types.scores_types import PersonalityTestCategory
 from backend.tests.test_utils import (
     add_test_patient,
     add_test_therapist,
@@ -211,3 +212,149 @@ def test_create_anonymous_session_scores_existing_score(
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "Anonymous patient already has personality test scores"
+
+
+def test_patch_anonymous_session_test_score_existing_data(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """test if the existing data is updated"""
+    patient = add_anonymous_patient(session_fixture)
+    add_personality_test_score(
+        session_fixture,
+        {
+            "anonymous_patient_id": patient.id,
+            "agreeableness": [
+                {
+                    "id": "1",
+                    "category": PersonalityTestCategory.AGREEABLENESS,
+                    "score": 3,
+                },
+                {
+                    "id": "2",
+                    "category": PersonalityTestCategory.AGREEABLENESS,
+                    "score": 2,
+                },
+                {
+                    "id": "3",
+                    "category": PersonalityTestCategory.AGREEABLENESS,
+                    "score": 1,
+                },
+            ],
+        },
+    )
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
+    response = client_fixture.patch(
+        "/anonymous-sessions/personality-tests",
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        json={"id": "1", "category": "agreeableness", "score": 5},
+    )
+
+    data = response.json()
+    assert response.status_code == 200
+    assert data == {
+        "extroversion": [],
+        "conscientiousness": [],
+        "openness": [],
+        "neuroticism": [],
+        "agreeableness": [
+            {"id": "1", "category": PersonalityTestCategory.AGREEABLENESS, "score": 5},
+            {"id": "2", "category": PersonalityTestCategory.AGREEABLENESS, "score": 2},
+            {"id": "3", "category": PersonalityTestCategory.AGREEABLENESS, "score": 1},
+        ],
+        "id": data["id"],
+    }
+
+
+def test_patch_anonymous_session_test_score_non_existing_data(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """test if the dataframe is empty from pgeocode"""
+    patient = add_anonymous_patient(session_fixture)
+    add_personality_test_score(
+        session_fixture,
+        {
+            "anonymous_patient_id": patient.id,
+        },
+    )
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
+    response = client_fixture.patch(
+        "/anonymous-sessions/personality-tests",
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        json={"id": "1", "category": "agreeableness", "score": 5},
+    )
+
+    data = response.json()
+    assert response.status_code == 200
+    assert data == {
+        "extroversion": [],
+        "conscientiousness": [],
+        "openness": [],
+        "neuroticism": [],
+        "agreeableness": [
+            {"id": "1", "category": PersonalityTestCategory.AGREEABLENESS, "score": 5},
+        ],
+        "id": data["id"],
+    }
+
+
+def test_patch_anonymous_session_test_score_existing_data_with_new_entry(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """test if the dataframe is empty from pgeocode"""
+    patient = add_anonymous_patient(session_fixture)
+    add_personality_test_score(
+        session_fixture,
+        {
+            "anonymous_patient_id": patient.id,
+            "agreeableness": [
+                {
+                    "id": "1",
+                    "category": PersonalityTestCategory.AGREEABLENESS,
+                    "score": 3,
+                },
+                {
+                    "id": "2",
+                    "category": PersonalityTestCategory.AGREEABLENESS,
+                    "score": 2,
+                },
+                {
+                    "id": "3",
+                    "category": PersonalityTestCategory.AGREEABLENESS,
+                    "score": 1,
+                },
+            ],
+            "openness": [
+                {"id": "1", "category": PersonalityTestCategory.OPENNESS, "score": 3},
+            ],
+        },
+    )
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
+    response = client_fixture.patch(
+        "/anonymous-sessions/personality-tests",
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        json={"id": "4", "category": "agreeableness", "score": 4},
+    )
+
+    data = response.json()
+    assert response.status_code == 200
+    assert data == {
+        "extroversion": [],
+        "conscientiousness": [],
+        "openness": [
+            {"id": "1", "category": "openness", "score": 3},
+        ],
+        "neuroticism": [],
+        "agreeableness": [
+            {"id": "1", "category": PersonalityTestCategory.AGREEABLENESS, "score": 3},
+            {"id": "2", "category": PersonalityTestCategory.AGREEABLENESS, "score": 2},
+            {"id": "3", "category": PersonalityTestCategory.AGREEABLENESS, "score": 1},
+            {"id": "4", "category": PersonalityTestCategory.AGREEABLENESS, "score": 4},
+        ],
+        "id": data["id"],
+    }
