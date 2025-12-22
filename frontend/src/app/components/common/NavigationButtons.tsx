@@ -7,16 +7,23 @@ type NavigationButtonsProps = {
   isNextButtonDisabled?: boolean;
   isPrevButtonDisabled?: boolean;
   sx?: SxProps;
+  onNextButtonClick?: () => void;
 };
 
 const NavigationButtons = ({
   onPrevButtonClick,
+  onNextButtonClick,
   isNextButtonDisabled = false,
   isPrevButtonDisabled = false,
   sx = {},
 }: NavigationButtonsProps) => {
   return (
-    <Stack direction="row" justifyContent="space-between" sx={{ ...sx }}>
+    <Stack
+      direction="row"
+      width="100%"
+      justifyContent="space-between"
+      sx={{ ...sx }}
+    >
       <Button
         onClick={onPrevButtonClick}
         disabled={isPrevButtonDisabled}
@@ -35,6 +42,7 @@ const NavigationButtons = ({
         sx={{
           width: "100px",
         }}
+        onClick={onNextButtonClick}
       >
         Next
       </Button>

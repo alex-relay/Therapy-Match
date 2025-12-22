@@ -1,4 +1,4 @@
-import QuestionPageContainer from "../components/personalityTestQuestions/QuestionPage";
+import QuestionPageContainer from "../components/personalityTestQuestions/QuestionPageContainer";
 
 export default function Page() {
   return <QuestionPageContainer />;
