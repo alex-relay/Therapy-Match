@@ -1,17 +1,22 @@
 "use client";
 
-import {
-  PERSONALITY_TEST_QUESTIONS,
-  PersonalityTestQuestionAndAnswers,
-} from "@/app/utils/utils";
+import { PERSONALITY_TEST_QUESTIONS } from "@/app/utils/utils";
 import { useState } from "react";
 import QuestionPage from "./QuestionPage";
+import {
+  useGetPersonalityTestScores,
+  usePatchPersonalityTestQuestion,
+} from "@/app/api/scores/scores";
 
 const QuestionPageContainer = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [questionAnswers, setQuestionAnswers] = useState<
-    PersonalityTestQuestionAndAnswers[]
-  >([]);
+
+  const { mutate: patchPersonalityTestQuestion } =
+    usePatchPersonalityTestQuestion();
+
+  const { data: personalityTestScores } = useGetPersonalityTestScores();
+
+  console.log("Personality Test Scores:", personalityTestScores);
 
   const handlePreviousQuestionClick = () => {
     setCurrentQuestion((prevState) => prevState - 1);
@@ -22,32 +27,14 @@ const QuestionPageContainer = () => {
   };
 
   const handleOptionClick = (index: number, value: number) => {
-    setQuestionAnswers((prevState) => {
-      const questionAndAnswer = PERSONALITY_TEST_QUESTIONS[index];
-      const isAnswerExists = !!prevState.find(
-        (prevQuestion) => prevQuestion.question === question,
-      );
+    const questionAndAnswer = PERSONALITY_TEST_QUESTIONS[index];
 
-      if (isAnswerExists) {
-        const otherAnswers = prevState.filter(
-          (prevQuestion) => prevQuestion.question !== question,
-        );
-        return [
-          ...otherAnswers,
-          {
-            ...questionAndAnswer,
-            answer: value,
-          },
-        ];
-      }
-      return [
-        ...prevState,
-        {
-          ...questionAndAnswer,
-          answer: value,
-        },
-      ];
+    patchPersonalityTestQuestion({
+      id: questionAndAnswer.backendId,
+      category: questionAndAnswer.category,
+      score: value,
     });
+
     if (currentQuestion < PERSONALITY_TEST_QUESTIONS.length - 1) {
       setCurrentQuestion((prevState) => prevState + 1);
     }
@@ -56,8 +43,7 @@ const QuestionPageContainer = () => {
   const { question } = PERSONALITY_TEST_QUESTIONS[currentQuestion];
 
   const isNextButtonDisabled =
-    currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 2 ||
-    questionAnswers.length === currentQuestion;
+    currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 2;
 
   return (
     <QuestionPage

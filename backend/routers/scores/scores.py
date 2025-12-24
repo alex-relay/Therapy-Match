@@ -12,7 +12,6 @@ from backend.schemas.scores import (
     UserPersonalityTestCreate,
     UserPersonalityTestRead,
     AggregateScores,
-    AggregateUserPersonalityTestRead,
     AnonymousPersonalityTestRead,
     PersonalityTestQuestion,
 )
@@ -122,7 +121,7 @@ def create_anonymous_session_test_scores(
 @router.get(
     "/anonymous-sessions/personality-tests",
     status_code=status.HTTP_200_OK,
-    response_model=AggregateUserPersonalityTestRead,
+    response_model=AnonymousPersonalityTestRead,
 )
 def get_anonymous_session_personality_test(
     anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)],
