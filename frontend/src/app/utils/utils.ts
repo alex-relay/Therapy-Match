@@ -1,3 +1,4 @@
+import { CategoryType } from "../api/scores/scores";
 import GENERAL_QUESTIONS_COMPONENT_MAP from "../components/generalQuestions/generalQuestions";
 
 export type QuestionOptions = {
@@ -11,7 +12,7 @@ export type QuestionOptions = {
 export type PersonalityTestQuestionAndAnswers = {
   question: string;
   backendId: string;
-  category: string;
+  category: CategoryType;
   id: string;
 };
 
@@ -303,7 +304,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
     id: "conscientiousness_10",
     backendId: "10",
     question: "I am exacting in my work.",
-    category: "conscientiousnes",
+    category: "conscientiousness",
   },
   {
     id: "neuroticism_10",

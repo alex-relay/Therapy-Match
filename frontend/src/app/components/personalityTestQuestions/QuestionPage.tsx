@@ -5,6 +5,7 @@ type QuestionPageProps = {
   question: string;
   currentQuestion: number;
   isNextButtonDisabled: boolean;
+  selectedAnswer: number | undefined;
   onOptionClick: (index: number, value: number) => void;
   onPreviousQuestionClick: () => void;
   onNextQuestionClick: () => void;
@@ -14,6 +15,7 @@ const QuestionPage = ({
   question,
   currentQuestion,
   isNextButtonDisabled,
+  selectedAnswer,
   onOptionClick,
   onPreviousQuestionClick,
   onNextQuestionClick,
@@ -22,6 +24,7 @@ const QuestionPage = ({
     question={question}
     index={currentQuestion}
     onAnswer={onOptionClick}
+    selectedAnswer={selectedAnswer}
     actions={
       <NavigationButtons
         onPrevButtonClick={onPreviousQuestionClick}
