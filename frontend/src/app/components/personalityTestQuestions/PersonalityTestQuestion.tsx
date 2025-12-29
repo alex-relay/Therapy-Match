@@ -1,13 +1,10 @@
 "use client";
 
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
+import QuestionForm from "../common/Question";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import CardHeader from "@mui/material/CardHeader";
 import { styled } from "@mui/material/styles";
 import Button from "@mui/material/Button";
-import { CardActions } from "@mui/material";
 
 type QuestionProps = {
   question: string;
@@ -43,13 +40,13 @@ const StyledOptionsBox = styled(Box)(({ theme }) => ({
 }));
 
 const Question = ({ question, index, onAnswer, actions }: QuestionProps) => (
-  <Card sx={{ width: "100%" }} variant="outlined">
+  <QuestionForm.Card sx={{ width: "100%" }} variant="outlined">
     <Box
       sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
     >
-      <CardHeader title={question} />
+      <QuestionForm.Header title={question} />
     </Box>
-    <CardContent
+    <QuestionForm.Content
       sx={{
         display: "flex",
         margin: "auto",
@@ -69,9 +66,9 @@ const Question = ({ question, index, onAnswer, actions }: QuestionProps) => (
           </StyledOptionButton>
         ))}
       </StyledOptionsBox>
-    </CardContent>
-    <CardActions>{actions}</CardActions>
-  </Card>
+    </QuestionForm.Content>
+    <QuestionForm.Actions>{actions}</QuestionForm.Actions>
+  </QuestionForm.Card>
 );
 
 export default Question;
