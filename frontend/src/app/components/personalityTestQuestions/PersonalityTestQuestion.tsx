@@ -10,6 +10,7 @@ type QuestionProps = {
   question: string;
   onAnswer: (index: number, value: number) => void;
   index: number;
+  selectedAnswer: number | undefined;
   actions: React.ReactNode;
 };
 
@@ -24,6 +25,7 @@ const OPTIONS: { option: string; value: number }[] = [
 const StyledOptionButton = styled(Button)(({ theme }) => ({
   cursor: "pointer",
   ":hover": { backgroundColor: theme.palette.action.hover },
+  boxShadow: "none",
   border: "1px solid",
   [theme.breakpoints.down("sm")]: {
     width: "100%",
@@ -39,7 +41,13 @@ const StyledOptionsBox = styled(Box)(({ theme }) => ({
   },
 }));
 
-const Question = ({ question, index, onAnswer, actions }: QuestionProps) => (
+const Question = ({
+  question,
+  index,
+  onAnswer,
+  actions,
+  selectedAnswer,
+}: QuestionProps) => (
   <QuestionForm.Card sx={{ width: "100%" }} variant="outlined">
     <Box
       sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
@@ -61,6 +69,11 @@ const Question = ({ question, index, onAnswer, actions }: QuestionProps) => (
             onClick={() => onAnswer(index, value)}
             key={option}
             value={value}
+            variant={
+              !!selectedAnswer && selectedAnswer === value
+                ? "contained"
+                : "outlined"
+            }
           >
             <Typography> {option} </Typography>
           </StyledOptionButton>

@@ -7,9 +7,16 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-type PersonalityTestQuestionAndScore = {
+export type CategoryType =
+  | "extroversion"
+  | "agreeableness"
+  | "conscientiousness"
+  | "neuroticism"
+  | "openness";
+
+export type PersonalityTestQuestionAndScore = {
   score: number;
-  category: string;
+  category: CategoryType;
   id: string;
 };
 
@@ -22,6 +29,15 @@ type PersonalityTestAggregateScores = {
 };
 
 type PersonalityTestPatchResponse = {
+  id: string;
+  extroversion: PersonalityTestQuestionAndScore[];
+  conscientiousness: PersonalityTestQuestionAndScore[];
+  openness: PersonalityTestQuestionAndScore[];
+  neuroticism: PersonalityTestQuestionAndScore[];
+  agreeableness: PersonalityTestQuestionAndScore[];
+};
+
+type PersonalityTestGetResponse = {
   id: string;
   extroversion: PersonalityTestQuestionAndScore[];
   conscientiousness: PersonalityTestQuestionAndScore[];
@@ -67,34 +83,35 @@ const useCreatePersonalityTest = (
   });
 };
 
-const getPersonalityTestScores = async () => {
-  const response = await fetch(
-    `${API_URL}/anonymous-sessions/personality-tests`,
-    {
-      method: "GET",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-    },
-  );
+const getPersonalityTestScores =
+  async (): Promise<PersonalityTestGetResponse> => {
+    const response = await fetch(
+      `${API_URL}/anonymous-sessions/personality-tests`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      },
+    );
 
-  if (!response.ok) {
-    let errorMessage = `Error: ${response.status}`;
+    if (!response.ok) {
+      let errorMessage = `Error: ${response.status}`;
 
-    try {
-      const errorData = await response.json();
-      if (errorData?.detail) {
-        errorMessage = errorData?.detail;
+      try {
+        const errorData = await response.json();
+        if (errorData?.detail) {
+          errorMessage = errorData?.detail;
+        }
+      } catch (error) {
+        console.warn(`Non-JSON error response received: ${error}`);
       }
-    } catch (error) {
-      console.warn(`Non-JSON error response received: ${error}`);
+      throw new Error(errorMessage);
     }
-    throw new Error(errorMessage);
-  }
 
-  const data = response.json();
+    const data = response.json();
 
-  return data;
-};
+    return data;
+  };
 
 const useGetPersonalityTestScores = () => {
   return useQuery({
