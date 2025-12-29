@@ -1,8 +1,6 @@
 "use client";
 
-import CardContent from "@mui/material/CardContent";
-import CardHeader from "@mui/material/CardHeader";
-import Card from "@mui/material/Card";
+import QuestionForm from "@/app/components/common/Question";
 import { useParams } from "next/navigation";
 import GENERAL_QUESTIONS_COMPONENT_MAP from "../../components/generalQuestions/generalQuestions";
 import { PageName } from "@/app/utils/utils";
@@ -20,9 +18,12 @@ const Questions = () => {
   const headerTitle = step && GENERAL_QUESTIONS_COMPONENT_MAP[step]?.title;
 
   return (
-    <Card variant="outlined" sx={{ width: "100%", maxWidth: "800px" }}>
-      <CardHeader title={headerTitle} sx={{ textAlign: "center" }} />
-      <CardContent
+    <QuestionForm.Card
+      variant="outlined"
+      sx={{ width: "100%", maxWidth: "800px" }}
+    >
+      <QuestionForm.Header title={headerTitle} sx={{ textAlign: "center" }} />
+      <QuestionForm.Content
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -32,8 +33,8 @@ const Questions = () => {
         }}
       >
         <FormComponent />
-      </CardContent>
-    </Card>
+      </QuestionForm.Content>
+    </QuestionForm.Card>
   );
 };
 
