@@ -49,13 +49,14 @@ const QuestionPageContainer = () => {
   const { question, backendId, category } =
     PERSONALITY_TEST_QUESTIONS[currentQuestion];
 
-  const isNextButtonDisabled =
-    currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 2;
-
   const selectedAnswer = getIsQuestionAnswered(
     personalityTestScores ? personalityTestScores[category] : [],
     backendId,
   );
+
+  const isNextButtonDisabled =
+    currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 2 ||
+    !selectedAnswer;
 
   return (
     <QuestionPage
