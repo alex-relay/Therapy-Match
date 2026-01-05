@@ -1,74 +1,19 @@
 "use client";
 
-import { PERSONALITY_TEST_QUESTIONS } from "@/app/utils/utils";
-import { useState } from "react";
 import QuestionPage from "./QuestionPage";
-import {
-  PersonalityTestQuestionAndScore,
-  useGetPersonalityTestScores,
-  usePatchPersonalityTestQuestion,
-} from "@/app/api/scores/scores";
-
-const getIsQuestionAnswered = (
-  answers: PersonalityTestQuestionAndScore[],
-  questionId: string,
-) => {
-  return answers.find((answer) => answer.id === questionId);
-};
+import { useGetPersonalityTestScores } from "@/app/api/scores/scores";
 
 const QuestionPageContainer = () => {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const {
+    data: personalityTestScores,
+    isLoading: isPersonalityTestScoresLoading,
+  } = useGetPersonalityTestScores();
 
-  const { mutate: patchPersonalityTestQuestion } =
-    usePatchPersonalityTestQuestion();
+  if (isPersonalityTestScoresLoading) {
+    return <div>Loading...</div>;
+  }
 
-  const { data: personalityTestScores } = useGetPersonalityTestScores();
-
-  const handlePreviousQuestionClick = () => {
-    setCurrentQuestion((prevState) => prevState - 1);
-  };
-
-  const handleNextQuestionClick = () => {
-    setCurrentQuestion((prevState) => prevState + 1);
-  };
-
-  const handleOptionClick = (index: number, value: number) => {
-    const questionAndAnswer = PERSONALITY_TEST_QUESTIONS[index];
-
-    patchPersonalityTestQuestion({
-      id: questionAndAnswer.backendId,
-      category: questionAndAnswer.category,
-      score: value,
-    });
-
-    if (currentQuestion < PERSONALITY_TEST_QUESTIONS.length - 1) {
-      setCurrentQuestion((prevState) => prevState + 1);
-    }
-  };
-
-  const { question, backendId, category } =
-    PERSONALITY_TEST_QUESTIONS[currentQuestion];
-
-  const selectedAnswer = getIsQuestionAnswered(
-    personalityTestScores ? personalityTestScores[category] : [],
-    backendId,
-  );
-
-  const isNextButtonDisabled =
-    currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 2 ||
-    !selectedAnswer;
-
-  return (
-    <QuestionPage
-      question={question}
-      currentQuestion={currentQuestion}
-      isNextButtonDisabled={isNextButtonDisabled}
-      selectedAnswer={selectedAnswer?.score}
-      onOptionClick={handleOptionClick}
-      onPreviousQuestionClick={handlePreviousQuestionClick}
-      onNextQuestionClick={handleNextQuestionClick}
-    />
-  );
+  return <QuestionPage personalityTestScores={personalityTestScores} />;
 };
 
 export default QuestionPageContainer;

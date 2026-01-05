@@ -14,7 +14,14 @@ type QuestionProps = {
   actions: React.ReactNode;
 };
 
-const OPTIONS: { option: string; value: number }[] = [
+type Option =
+  | "disagree"
+  | "slightly disagree"
+  | "neutral"
+  | "slightly agree"
+  | "agree";
+
+const OPTIONS: { option: Option; value: number }[] = [
   { option: "disagree", value: 1 },
   { option: "slightly disagree", value: 2 },
   { option: "neutral", value: 3 },
