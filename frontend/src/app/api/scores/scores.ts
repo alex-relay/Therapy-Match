@@ -37,7 +37,7 @@ type PersonalityTestPatchResponse = {
   agreeableness: PersonalityTestQuestionAndScore[];
 };
 
-type PersonalityTestGetResponse = {
+export type PersonalityTestGetResponse = {
   id: string;
   extroversion: PersonalityTestQuestionAndScore[];
   conscientiousness: PersonalityTestQuestionAndScore[];

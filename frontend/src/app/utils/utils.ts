@@ -109,7 +109,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   },
   {
     id: "extroversion_4",
-    backendId: "3",
+    backendId: "4",
     question: "I keep in the background.",
     category: "extroversion",
   },
