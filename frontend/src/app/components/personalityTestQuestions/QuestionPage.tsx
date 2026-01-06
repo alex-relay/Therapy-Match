@@ -7,18 +7,27 @@ import {
   PersonalityTestQuestionAndScore,
   usePatchPersonalityTestQuestion,
 } from "@/app/api/scores/scores";
+import { useRouter } from "next/navigation";
 
 type QuestionPageProps = {
   personalityTestScores: PersonalityTestGetResponse | undefined;
 };
 
-const getTotalQuestionsAnswered = (
+const getLatestQuestionIndex = (
   personalityTestScores: PersonalityTestGetResponse | undefined,
 ) => {
-  return Object.entries(personalityTestScores ?? {}).flatMap((entry) =>
-    Array.isArray(entry[1]) ? entry[1] : [],
-  ).length;
+  const personalityTestScoreValues = Object.values(personalityTestScores ?? {})
+    .filter((val) => Array.isArray(val))
+    .flat();
+
+  if (personalityTestScoreValues.length === 0) {
+    return 0;
+  }
+
+  return personalityTestScoreValues.length - 1;
 };
+
+const COMPLETED_SCORE_QUESTION_COUNT = 50;
 
 const getIsQuestionAnswered = (
   answers: PersonalityTestQuestionAndScore[],
@@ -31,12 +40,19 @@ const QuestionPage = ({ personalityTestScores }: QuestionPageProps) => {
   const { mutate: patchPersonalityTestQuestion } =
     usePatchPersonalityTestQuestion();
 
-  const [currentQuestion, setCurrentQuestion] = useState(
-    getTotalQuestionsAnswered(personalityTestScores),
+  const [currentQuestion, setCurrentQuestion] = useState(() =>
+    getLatestQuestionIndex(personalityTestScores),
   );
+
+  const router = useRouter();
 
   const handleOptionClick = (index: number, value: number) => {
     const questionAndAnswer = PERSONALITY_TEST_QUESTIONS[index];
+
+    const isPersonalityTestCompleted =
+      Object.values(personalityTestScores ?? {}).flatMap((entry) =>
+        Array.isArray(entry) ? entry : [],
+      ).length === COMPLETED_SCORE_QUESTION_COUNT;
 
     patchPersonalityTestQuestion({
       id: questionAndAnswer.backendId,
@@ -44,6 +60,10 @@ const QuestionPage = ({ personalityTestScores }: QuestionPageProps) => {
       score: value,
     });
 
+    if (isPersonalityTestCompleted) {
+      router.push("/register");
+      return;
+    }
     if (index < PERSONALITY_TEST_QUESTIONS.length - 1) {
       setCurrentQuestion((prevState) => prevState + 1);
     }
