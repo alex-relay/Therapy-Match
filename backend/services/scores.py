@@ -22,6 +22,7 @@ ScoresType = list[float]
 
 
 def _calculate_extroversion_score(scores: ScoresType) -> float | None:
+    """Calculates the decimal score for extroversion"""
     if not scores or len(scores) < 10:
         return None
 
@@ -42,6 +43,7 @@ def _calculate_extroversion_score(scores: ScoresType) -> float | None:
 
 
 def _calculate_agreeableness_score(scores: ScoresType) -> float | None:
+    """Calculates the decimal score for agreeableness"""
     if not scores or len(scores) < 10:
         return None
 
@@ -62,6 +64,7 @@ def _calculate_agreeableness_score(scores: ScoresType) -> float | None:
 
 
 def _calculate_openness_score(scores: ScoresType) -> float | None:
+    """Calculates the decimal score for openness"""
     if not scores or len(scores) < 10:
         return None
 
@@ -82,6 +85,8 @@ def _calculate_openness_score(scores: ScoresType) -> float | None:
 
 
 def _calculate_neuroticism_score(scores: ScoresType) -> float | None:
+    """Calculates the decimal score for neuroticism"""
+
     if not scores or len(scores) < 10:
         return None
 
@@ -101,7 +106,8 @@ def _calculate_neuroticism_score(scores: ScoresType) -> float | None:
     return scores_sum / 10
 
 
-def _calculate_concientiousness_score(scores: ScoresType) -> float | None:
+def _calculate_conscientiousness_score(scores: ScoresType) -> float | None:
+    """Calculates the decimal score for conscientiousness"""
     if not scores or len(scores) < 10:
         return None
 
@@ -124,6 +130,7 @@ def _calculate_concientiousness_score(scores: ScoresType) -> float | None:
 def format_personality_test(
     anonymous_personality_test: AnonymousPersonalityTestScore | None,
 ) -> Scores:
+    """Filters for the scores in each of the personality test categries"""
     if not anonymous_personality_test:
         raise ValueError("Anonymous Personality Test not provided")
 
@@ -158,7 +165,7 @@ def format_personality_test(
 def create_patient_personality_test_score(
     patient: Patient, scores: Scores, session: Session
 ):
-
+    """create a personality test score record for a patient"""
     if not patient:
         raise ValueError("Patient not provided")
 
@@ -190,6 +197,7 @@ def create_patient_personality_test_score(
 
 
 def calculate_test_scores(scores: AggregateScores) -> Scores:
+    """Calculate each category's decimal score from all of the personality test answers"""
     if not scores:
         return None
 
@@ -205,7 +213,7 @@ def calculate_test_scores(scores: AggregateScores) -> Scores:
     openness_score = _calculate_openness_score(scores.openness)
     agreeableness_score = _calculate_agreeableness_score(scores.agreeableness)
     neuroticism_score = _calculate_neuroticism_score(scores.neuroticism)
-    conscientiousness_score = _calculate_concientiousness_score(
+    conscientiousness_score = _calculate_conscientiousness_score(
         scores.conscientiousness
     )
 
@@ -278,7 +286,7 @@ def get_anonymous_test_score(
 
 def update_anonymous_session_test_score_category(
     data: PersonalityTestQuestion, personality_test: AnonymousPersonalityTestScore
-) -> dict:
+) -> dict[str, list[PersonalityTestQuestion]]:
     """Update a category of an anonymous session test score."""
     if not personality_test:
         raise ValueError("Personality test id not found")

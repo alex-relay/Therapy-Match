@@ -1,8 +1,8 @@
 from uuid import UUID, uuid4
 from typing import Optional, List
 from decimal import Decimal
+from pydantic import EmailStr, ConfigDict, field_validator, ValidationError
 from sqlalchemy import Column, String
-from pydantic import EmailStr
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlmodel import Field, SQLModel, Relationship
 from backend.routers.users.user_types import GenderOption
@@ -86,19 +86,25 @@ class Patient(ProfileMixin, table=True):
 
 
 class PersonalityTestScoreBaseMixin(SQLModel):
-    neuroticism: list[PersonalityTestQuestion] = Field(
-        sa_type=JSON, default_factory=list
+    neuroticism: list[dict] = Field(sa_type=JSON, default_factory=list)
+    openness: list[dict] = Field(sa_type=JSON, default_factory=list)
+    extroversion: list[dict] = Field(sa_type=JSON, default_factory=list)
+    conscientiousness: list[dict] = Field(sa_type=JSON, default_factory=list)
+    agreeableness: list[dict] = Field(sa_type=JSON, default_factory=list)
+
+    model_config = ConfigDict(validate_assignment=True)  # type: ignore
+
+    @field_validator(
+        "neuroticism", "openness", "extroversion", "conscientiousness", "agreeableness"
     )
-    openness: list[PersonalityTestQuestion] = Field(sa_type=JSON, default_factory=list)
-    extroversion: list[PersonalityTestQuestion] = Field(
-        sa_type=JSON, default_factory=list
-    )
-    conscientiousness: list[PersonalityTestQuestion] = Field(
-        sa_type=JSON, default_factory=list
-    )
-    agreeableness: list[PersonalityTestQuestion] = Field(
-        sa_type=JSON, default_factory=list
-    )
+    @classmethod
+    def validate_questions(cls, v: list[dict]):
+        for item in v:
+            try:
+                PersonalityTestQuestion(**item)
+            except ValidationError as e:
+                raise ValueError(f"Invalid question format: {e}") from e
+        return v
 
 
 class AnonymousPersonalityTestScore(PersonalityTestScoreBaseMixin, table=True):

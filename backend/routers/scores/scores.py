@@ -126,6 +126,7 @@ def create_anonymous_session_test_scores(
 def get_anonymous_session_personality_test(
     anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)],
 ):
+    """Get answers to a personality test"""
     personality_test = anonymous_patient.personality_test
 
     if not personality_test:
