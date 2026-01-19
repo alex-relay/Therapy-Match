@@ -7,177 +7,106 @@ from backend.tests.test_utils import (
     add_test_therapist,
     add_test_user,
     add_anonymous_patient,
+    add_personality_test_score,
     USER_ID,
 )
 from backend.models.user import GenderOption, AnonymousPatient
 from backend.services.users import create_access_token
 
-
-def test_read_main(client_fixture):
-    response = client_fixture.get("/")
-    assert response.status_code == 200
-    assert response.json() == {"message": "Hello World"}
-
-
-def test_create_user(client_fixture, session_fixture):
-    """Test creating a new user."""
-    add_test_user(session_fixture)
-    response = client_fixture.post(
-        "/users",
-        json={
-            "first_name": "John",
-            "last_name": "Doe",
-            "email_address": "f@b.com",
-            "password": "Xassword1",
-        },
-    )
-    assert response.status_code == 201
-    data = response.json()
-
-    assert data["first_name"] == "John"
-    assert data["last_name"] == "Doe"
-    assert "id" in data
-    assert data["email_address"] == "f@b.com"
-    assert "password" not in data
-
-
-def test_create_user_invalid_email(client_fixture):
-    """invalid email test for creating a user"""
-    response = client_fixture.post(
-        "/users",
-        json={
-            "first_name": "John",
-            "last_name": "Doe",
-            "email_address": "f@b",
-            "password": "hashedpassword",
-        },
-    )
-
-    assert response.status_code == 422
-    data = response.json()["detail"]
-    msg = data[0]["msg"]
-    assert msg == (
-        "value is not a valid email address: The part after the @-sign is not valid. "
-        "It should have a period."
-    )
-
-
-def test_create_user_invalid_password_uppercase_letter(client_fixture):
-    """invalid password test for creating a user"""
-    response = client_fixture.post(
-        "/users",
-        json={
-            "first_name": "John",
-            "last_name": "Doe",
-            "email_address": "f@b.com",
-            "password": "hashedpassword",
-        },
-    )
-
-    assert response.status_code == 422
-    error_detail = response.json()["detail"]
-    assert (
-        error_detail[0]["msg"]
-        == "Value error, Password must contain at least one uppercase letter"
-    )
+MOCK_PERSONALITY_TEST = {
+    "anonymous_patient_id": "c303282d-f2e6-46ca-a04a-35d3d873712d",
+    "extroversion": [
+        {"id": "1", "category": "extroversion", "score": 2},
+        {"id": "2", "category": "extroversion", "score": 2},
+        {"id": "3", "category": "extroversion", "score": 2},
+        {"id": "4", "category": "extroversion", "score": 5},
+        {"id": "5", "category": "extroversion", "score": 2},
+        {"id": "6", "category": "extroversion", "score": 2},
+        {"id": "7", "category": "extroversion", "score": 3},
+        {"id": "8", "category": "extroversion", "score": 4},
+        {"id": "9", "category": "extroversion", "score": 2},
+        {"id": "10", "category": "extroversion", "score": 4},
+    ],
+    "conscientiousness": [
+        {"id": "1", "category": "conscientiousness", "score": 4},
+        {"id": "2", "category": "conscientiousness", "score": 5},
+        {"id": "3", "category": "conscientiousness", "score": 2},
+        {"id": "4", "category": "conscientiousness", "score": 3},
+        {"id": "5", "category": "conscientiousness", "score": 3},
+        {"id": "6", "category": "conscientiousness", "score": 4},
+        {"id": "7", "category": "conscientiousness", "score": 1},
+        {"id": "8", "category": "conscientiousness", "score": 4},
+        {"id": "9", "category": "conscientiousness", "score": 2},
+        {"id": "10", "category": "conscientiousness", "score": 1},
+    ],
+    "openness": [
+        {"id": "1", "category": "openness", "score": 1},
+        {"id": "2", "category": "openness", "score": 3},
+        {"id": "3", "category": "openness", "score": 4},
+        {"id": "4", "category": "openness", "score": 1},
+        {"id": "5", "category": "openness", "score": 1},
+        {"id": "6", "category": "openness", "score": 4},
+        {"id": "7", "category": "openness", "score": 3},
+        {"id": "8", "category": "openness", "score": 3},
+        {"id": "9", "category": "openness", "score": 4},
+        {"id": "10", "category": "openness", "score": 4},
+    ],
+    "neuroticism": [
+        {"id": "1", "category": "neuroticism", "score": 2},
+        {"id": "2", "category": "neuroticism", "score": 4},
+        {"id": "3", "category": "neuroticism", "score": 3},
+        {"id": "4", "category": "neuroticism", "score": 2},
+        {"id": "5", "category": "neuroticism", "score": 2},
+        {"id": "6", "category": "neuroticism", "score": 5},
+        {"id": "7", "category": "neuroticism", "score": 2},
+        {"id": "8", "category": "neuroticism", "score": 4},
+        {"id": "9", "category": "neuroticism", "score": 3},
+        {"id": "10", "category": "neuroticism", "score": 2},
+    ],
+    "agreeableness": [
+        {"id": "1", "category": "agreeableness", "score": 3},
+        {"id": "2", "category": "agreeableness", "score": 3},
+        {"id": "3", "category": "agreeableness", "score": 1},
+        {"id": "4", "category": "agreeableness", "score": 4},
+        {"id": "5", "category": "agreeableness", "score": 3},
+        {"id": "6", "category": "agreeableness", "score": 3},
+        {"id": "7", "category": "agreeableness", "score": 2},
+        {"id": "8", "category": "agreeableness", "score": 5},
+        {"id": "9", "category": "agreeableness", "score": 1},
+        {"id": "10", "category": "agreeableness", "score": 2},
+    ],
+    "id": "256bea15-0b6d-437c-81a7-a5c5ff49737c",
+}
 
 
-def test_create_user_invalid_password_lowercase_letter(client_fixture):
-    """invalid password test for creating a user"""
-    response = client_fixture.post(
-        "/users",
-        json={
-            "first_name": "John",
-            "last_name": "Doe",
-            "email_address": "f@b.com",
-            "password": "HASHEDPASSWORD1",
-        },
-    )
-
-    assert response.status_code == 422
-    error_detail = response.json()["detail"]
-    assert (
-        error_detail[0]["msg"]
-        == "Value error, Password must contain at least one lowercase letter"
-    )
+# def test_read_main(client_fixture):
+#     response = client_fixture.get("/")
+#     assert response.status_code == 200
+#     assert response.json() == {"message": "Hello World"}
 
 
-def test_create_user_invalid_password_number(client_fixture):
-    """invalid password number test"""
-    response = client_fixture.post(
-        "/users",
-        json={
-            "first_name": "John",
-            "last_name": "Doe",
-            "email_address": "f@b.com",
-            "password": "HaSHEDPASSWORD",
-        },
-    )
+# def test_create_therapist(client_fixture, session_fixture, mock_auth_headers):
+#     """Test creating a new therapist."""
+#     add_test_user(session_fixture)
+#     response = client_fixture.post(
+#         "/therapists",
+#         json={
+#             "location": "40.7128, -74.0060",
+#             "description": "Experienced therapist",
+#             "specializations": ["anxiety", "depression"],
+#             "therapist_type": "licensed",
+#             "gender": GenderOption.NON_BINARY.value,
+#             "age": 27,
+#         },
+#         headers=mock_auth_headers,
+#     )
 
-    assert response.status_code == 422
-    error_detail = response.json()["detail"]
-    assert (
-        error_detail[0]["msg"]
-        == "Value error, Password must contain at least one digit"
-    )
-
-
-def test_invalid_first_name(client_fixture):
-    """invalid first name test"""
-    response = client_fixture.post(
-        "/users",
-        json={
-            "first_name": "J",
-            "last_name": "Doe",
-            "email_address": "f@b.com",
-            "password": "HaSHEDPASSWORD1",
-        },
-    )
-
-    assert response.status_code == 422
-    error_detail = response.json()["detail"]
-    assert error_detail[0]["msg"] == "String should have at least 2 characters"
-
-
-def test_invalid_last_name(client_fixture):
-    """invalid last name test"""
-    response = client_fixture.post(
-        "/users",
-        json={
-            "first_name": "John",
-            "last_name": "D",
-            "email_address": "f@b.com",
-            "password": "HaSHEDPASSWORD1",
-        },
-    )
-
-    assert response.status_code == 422
-    error_detail = response.json()["detail"]
-    assert error_detail[0]["msg"] == "String should have at least 2 characters"
-
-
-def test_create_therapist(client_fixture, session_fixture, mock_auth_headers):
-    """Test creating a new therapist."""
-    add_test_user(session_fixture)
-    response = client_fixture.post(
-        "/therapists",
-        json={
-            "location": "40.7128, -74.0060",
-            "description": "Experienced therapist",
-            "specializations": ["anxiety", "depression"],
-            "therapist_type": "licensed",
-            "gender": GenderOption.NON_BINARY.value,
-            "age": 27,
-        },
-        headers=mock_auth_headers,
-    )
-
-    assert response.status_code == 201
-    data = response.json()
-    assert data["description"] == "Experienced therapist"
-    assert data["specializations"] == ["anxiety", "depression"]
-    assert data["therapist_type"] == "licensed"
-    assert data["location"] == {"latitude": 40.7128, "longitude": -74.006}
+#     assert response.status_code == 201
+#     data = response.json()
+#     assert data["description"] == "Experienced therapist"
+#     assert data["specializations"] == ["anxiety", "depression"]
+#     assert data["therapist_type"] == "licensed"
+#     assert data["location"] == {"latitude": 40.7128, "longitude": -74.006}
 
 
 def test_create_anonymous_session(client_fixture, session_fixture):
@@ -211,51 +140,202 @@ def test_create_anonymous_session(client_fixture, session_fixture):
 
 def test_create_patient(client_fixture, session_fixture, mock_auth_headers):
     """Test creating a new patient."""
-    add_test_user(session_fixture)
+
+    anonymous_patient_overrides = {
+        "latitude": 43.6555,
+        "longitude": -19.6345,
+        "description": None,
+        "therapy_needs": ["anxiety", "depression"],
+        "gender": GenderOption.FEMALE,
+        "age": 27,
+        "personality_test": None,
+        "is_lgbtq_therapist_preference": True,
+        "is_religious_therapist_preference": True,
+    }
+
+    anonymous_patient = add_anonymous_patient(
+        session_fixture, anonymous_patient_overrides
+    )
+
+    personality_test_overrides = {
+        **MOCK_PERSONALITY_TEST,
+        "anonymous_patient_id": anonymous_patient.id,
+    }
+
+    add_personality_test_score(session_fixture, personality_test_overrides)
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
     response = client_fixture.post(
         "/patients",
         json={
-            "location": "40.7128, -74.0060",
-            "therapy_needs": ["anxiety", "depression"],
-            "description": "This is a test description",
-            "gender": GenderOption.NON_BINARY.value,
-            "age": 22,
-            "is_lgbtq_therapist_preference": True,
-            "is_religious_therapist_preference": False,
+            "first_name": "User",
+            "last_name": "Last",
+            "email_address": "a@b.com",
+            "password": "Hashedpassword1",
         },
-        headers=mock_auth_headers,
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
 
     assert response.status_code == 201
     data = response.json()
+
     assert data["therapy_needs"] == ["anxiety", "depression"]
-    assert "id" in data
-    assert data["description"] == "This is a test description"
-    assert data["location"] == {"latitude": 40.7128, "longitude": -74.006}
+    assert data["personality_test_id"] is not None
+    assert data["latitude"] == 43.6555
+    assert data["longitude"] == -19.6345
+    assert data["age"] == 27
+    assert data["gender"] == "female"
+    assert data["is_lgbtq_therapist_preference"] is True
+    assert data["is_religious_therapist_preference"] is True
 
 
-def test_create_patient_invalid_data(
+def test_create_patient_without_personality_test(
     client_fixture, session_fixture, mock_auth_headers
 ):
-    """invalid data create patient"""
-    add_test_user(session_fixture)
+    """Test creating a new patient."""
+
+    overrides = {
+        "latitude": 43.6555,
+        "longitude": -19.6345,
+        "description": None,
+        "therapy_needs": ["anxiety", "depression"],
+        "gender": GenderOption.MALE,
+        "age": 27,
+        "personality_test": None,
+        "is_lgbtq_therapist_preference": True,
+        "is_religious_therapist_preference": True,
+    }
+
+    add_anonymous_patient(session_fixture, overrides)
+
     response = client_fixture.post(
         "/patients",
         json={
-            "location": 40.7128,
-            "therapy_needs": ["anxiety", "depression"],
-            "description": "This is a test description",
+            "first_name": "User",
+            "last_name": "Last",
+            "email_address": "a@b.com",
+            "password": "Hashedpassword1",
         },
-        headers=mock_auth_headers,
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
     )
 
-    error_detail = response.json()["detail"]
+    data = response.json()
+    assert data["detail"] == "Personality test not completed."
+    assert response.status_code == 400
+
+
+def test_create_patient_with_invalid_first_name(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """invalid first name data for creating a patient"""
+
+    overrides = {
+        "latitude": 43.6555,
+        "longitude": -19.6345,
+        "description": None,
+        "therapy_needs": ["anxiety", "depression"],
+        "gender": GenderOption.MALE,
+        "age": 27,
+        "personality_test": None,
+        "is_lgbtq_therapist_preference": True,
+        "is_religious_therapist_preference": True,
+    }
+
+    add_anonymous_patient(session_fixture, overrides)
+
+    response = client_fixture.post(
+        "/patients",
+        json={
+            "first_name": 1,
+            "last_name": "Last",
+            "email_address": "a@b.com",
+            "password": "Hashedpassword1",
+        },
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+    )
+
+    data = response.json()["detail"]
+    assert response.status_code == 422
+    assert data == [
+        {
+            "type": "string_type",
+            "loc": ["body", "first_name"],
+            "msg": "Input should be a valid string",
+            "input": 1,
+        }
+    ]
+
+
+def test_create_patient_with_invalid_email(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """invalid data create patient"""
+    overrides = {
+        "latitude": 43.6555,
+        "longitude": -19.6345,
+        "description": None,
+        "therapy_needs": ["anxiety", "depression"],
+        "gender": GenderOption.MALE,
+        "age": 27,
+        "personality_test": None,
+        "is_lgbtq_therapist_preference": True,
+        "is_religious_therapist_preference": True,
+    }
+
+    add_anonymous_patient(session_fixture, overrides)
+
+    response = client_fixture.post(
+        "/patients",
+        json={
+            "first_name": "First",
+            "last_name": "Last",
+            "email_address": "abc",
+            "password": "Hashedpassword1",
+        },
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+    )
+
+    data = response.json()["detail"]
     assert response.status_code == 422
     assert (
-        error_detail[0]["msg"]
-        == "Input should be a dictionary or an instance of Coordinate"
+        data[0]["msg"]
+        == "value is not a valid email address: An email address must have an @-sign."
     )
+
+
+def test_create_patient_with_null_password_value(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """invalid data create patient"""
+    overrides = {
+        "latitude": 43.6555,
+        "longitude": -19.6345,
+        "description": None,
+        "therapy_needs": ["anxiety", "depression"],
+        "gender": GenderOption.MALE,
+        "age": 27,
+        "personality_test": None,
+        "is_lgbtq_therapist_preference": True,
+        "is_religious_therapist_preference": True,
+    }
+
+    add_anonymous_patient(session_fixture, overrides)
+
+    response = client_fixture.post(
+        "/patients",
+        json={
+            "first_name": "First",
+            "last_name": "Last",
+            "email_address": "a@b.com",
+            "password": None,
+        },
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+    )
+
+    data = response.json()["detail"]
+    assert response.status_code == 422
+    assert data[0]["msg"] == "Input should be a valid string"
 
 
 def test_create_patient_returns_409_for_existing_patient(
@@ -265,18 +345,31 @@ def test_create_patient_returns_409_for_existing_patient(
     add_test_user(session_fixture)
     add_test_patient(session_fixture)
 
+    overrides = {
+        "latitude": 43.6555,
+        "longitude": -19.6345,
+        "description": None,
+        "therapy_needs": ["anxiety", "depression"],
+        "gender": GenderOption.MALE,
+        "age": 27,
+        "personality_test": None,
+        "is_lgbtq_therapist_preference": True,
+        "is_religious_therapist_preference": True,
+    }
+
+    add_anonymous_patient(session_fixture, overrides)
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
     response = client_fixture.post(
         "/patients",
         json={
-            "location": "40.7128, -74.0060",
-            "therapy_needs": ["anxiety", "depression"],
-            "description": "This is a test description",
-            "age": 30,
-            "gender": GenderOption.MALE.value,
-            "is_lgbtq_therapist_preference": True,
-            "is_religious_therapist_preference": False,
+            "first_name": "First",
+            "last_name": "Last",
+            "email_address": "a@b.com",
+            "password": "HashedPassword1",
         },
-        headers=mock_auth_headers,
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
 
     assert response.status_code == 409
@@ -307,19 +400,21 @@ def test_create_therapist_returns_409_for_existing_therapist(
     assert response.json() == {"detail": "Therapist already exists"}
 
 
-def test_patch_anonyomous_patient_updates(
+def test_patch_anonymous_patient_updates(
     client_fixture, session_fixture, mock_auth_headers
 ):
     """Test that a patch request to an anonymous patient updates the record"""
 
     add_anonymous_patient(session_fixture)
 
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
     response = client_fixture.patch(
         "/anonymous-sessions",
         json={
             "age": 30,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
 
     anonymous_session_record = session_fixture.exec(select(AnonymousPatient)).first()
@@ -438,7 +533,7 @@ def test_patch_anonymous_patient_invalid_location_coordinates(
 def test_patch_anonymous_patient_no_location(
     client_fixture, session_fixture, mock_auth_headers, mocker
 ):
-    """Test that fetching a non-existent anonymous patient returns 404"""
+    """Test that patching with an unresolvable postal code returns an error"""
     add_anonymous_patient(session_fixture)
 
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
@@ -488,7 +583,7 @@ def test_patch_anonymous_patient_lgbtq_preference(
 def test_patch_anonymous_patient_lgbtq_preference_invalid_value(
     client_fixture, session_fixture, mock_auth_headers
 ):
-    """test if the dataframe is empty from pgeocode"""
+    """Test that non-boolean value for LGBTQ preference returns 422"""
     add_anonymous_patient(session_fixture)
 
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))

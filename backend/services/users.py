@@ -10,13 +10,13 @@ from backend.core.config import settings
 from ..schemas.users import (
     TherapistCreate,
     TherapistRead,
-    PatientRead,
-    PatientCreate,
     UserCreate,
     AnonymousSessionPatientBase,
 )
 from .location_service import get_coordinates_from_postal_code
 from ..routers.users.exceptions import (
+    PatientCreationError,
+    UserCreationError,
     PatientNotFoundError,
     InvalidPostalCodeError,
     GeocodingServiceError,
@@ -61,7 +61,7 @@ def create_user(user_data: UserCreate, session: Session) -> User:
     hashed_password = get_password_hash(user_data.password)
     user = User(
         **{
-            **user_data.model_dump(exclude={"id"}),
+            **user_data.model_dump(),
             "password": hashed_password,
         }
     )
@@ -71,8 +71,9 @@ def create_user(user_data: UserCreate, session: Session) -> User:
         session.refresh(user)
     except Exception as e:
         session.rollback()
-        logger.exception("Failed to create anonymous patient")
-        raise ValueError("Failed to create anonymous patient") from e
+        logger.exception("Failed to create new user")
+        raise UserCreationError("Failed to create new user") from e
+
     return user
 
 
@@ -179,38 +180,56 @@ def create_therapist(
         raise ValueError("cannot create a therapist") from e
 
 
-def create_patient(user_data: PatientCreate, user_id, session: Session) -> PatientRead:
-    """creates a patient"""
-    coordinate = str(user_data.location)
+def get_patient(
+    anonymous_patient: AnonymousPatient, session: Session
+) -> Patient | None:
+    try:
+        existing_patient = session.exec(
+            select(Patient).where(Patient.id == anonymous_patient.id)
+        ).first()
 
-    patient = Patient(
-        **{**user_data.model_dump(), "location": coordinate, "user_id": user_id}
-    )
+        return existing_patient
+    except Exception as e:
+        logger.exception("Error trying to find existing patient")
+        raise ValueError("Error retrieving existing patient") from e
+
+
+def get_user_by_email(email_address: str | None, session: Session) -> User | None:
+    """Retrieve a user by email."""
+
+    if not email_address:
+        return None
+    user = session.exec(select(User).where(User.email_address == email_address)).first()
+    return user
+
+
+def create_patient(user_data: AnonymousPatient, user_id, session: Session) -> Patient:
+    """creates a patient"""
+
+    if not user_data.personality_test:
+        raise ValueError("Personality test not completed.")
 
     try:
+        patient = Patient(
+            age=user_data.age or 0,
+            user_id=user_id,
+            therapy_needs=user_data.therapy_needs,
+            is_religious_therapist_preference=user_data.is_religious_therapist_preference,
+            gender=user_data.gender,
+            is_lgbtq_therapist_preference=user_data.is_lgbtq_therapist_preference,
+            latitude=user_data.latitude,
+            longitude=user_data.longitude,
+        )
+
         session.add(patient)
         session.commit()
         session.refresh(patient)
-        return PatientRead(
-            **{
-                **patient.model_dump(),
-                "id": str(patient.id),
-                "user_id": str(patient.user_id),
-            }
-        )
     except Exception as e:
         session.rollback()
         logger.exception("Failed to create patient")
-        raise ValueError("Cannot create a patient") from e
+        raise PatientCreationError("Cannot create a patient") from e
 
-
-def get_user_by_email(email: str | None, session: Session) -> User | None:
-    """Retrieve a user by email."""
-
-    if not email:
-        return None
-    user = session.exec(select(User).where(User.email_address == email)).first()
-    return user
+    return patient
 
 
 def verify_password(plain_password, hashed_password):

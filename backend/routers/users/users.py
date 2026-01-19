@@ -8,32 +8,30 @@ from typing import Annotated
 from fastapi import APIRouter, status, Depends, HTTPException, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
-from sqlmodel import select
 from backend.core.database import SessionDep
-from backend.models.user import Patient, User, Therapist, AnonymousPatient
+from backend.models.user import AnonymousPatient
 from backend.core.logging import get_logger
 from backend.schemas.users import (
-    TherapistCreate,
     PatientRead,
-    PatientCreate,
-    TherapistRead,
     UserCreate,
     UserRead,
     AnonymousSessionPatientBase,
     AnonymousSessionPatientResponse,
 )
+from backend.routers.scores.exceptions import PersonalityTestScoreCreationError
+
 from .exceptions import (
     PatientNotFoundError,
     InvalidPostalCodeError,
     GeocodingServiceError,
+    UserCreationError,
+    PatientCreationError,
 )
 
 from .dependencies import (
-    get_current_active_user,
     get_anonymous_patient,
 )
 from ...services.users import (
-    create_therapist,
     get_user_by_email,
     create_patient,
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -46,10 +44,13 @@ from ...services.users import (
     patch_anonymous_patient_session,
 )
 
+from backend.services.scores import (
+    create_patient_personality_test_score,
+    format_personality_test,
+)
+
 router = APIRouter()
 logger = get_logger(__name__)
-
-CurrentUserDep = Annotated[User, Depends(get_current_active_user)]
 
 
 @router.post("/token", response_model=Token)
@@ -110,7 +111,7 @@ async def register_user(data: UserCreate, session: SessionDep) -> UserRead:
         logger.info("Created user: %s with id %s", user.email_address, user.id)
 
         return UserRead(
-            id=str(user.id),
+            id=user.id,
             first_name=user.first_name,
             last_name=user.last_name,
             email_address=user.email_address,
@@ -123,68 +124,103 @@ async def register_user(data: UserCreate, session: SessionDep) -> UserRead:
     "/patients", status_code=status.HTTP_201_CREATED, response_model=PatientRead
 )
 def register_patient(
-    data: PatientCreate, session: SessionDep, current_user: CurrentUserDep
+    data: UserCreate,
+    session: SessionDep,
+    anonymous_patient: Annotated[AnonymousPatient, Depends(get_anonymous_patient)],
 ):
     """Register a new patient."""
-
-    try:
-        existing_patient = session.exec(
-            select(Patient).where(Patient.user_id == current_user.id)
-        ).first()
-    except Exception as e:
-        logger.exception("cannot find patient: %s", e)
-        raise HTTPException(status_code=400, detail="Unable to find patient") from e
-
-    if existing_patient:
-        logger.exception(
-            "Attempt to register with existing patient: %s",
-            current_user.email_address,
+    if not anonymous_patient:
+        logger.error("No anonymous patient found in session")
+        raise HTTPException(
+            status_code=400, detail="No anonymous patient found in session"
         )
+
+    existing_patient = get_user_by_email(data.email_address, session)
+
+    # TODO: add the existing patient check below as a dependency
+    if existing_patient:
         raise HTTPException(status_code=409, detail="Patient already exists")
 
-    logger.info("Registering patient: %s", current_user.email_address)
+    logger.info("Registering patient")
 
     try:
-        user = create_patient(data, current_user.id, session)
-        return user
-    except Exception as e:
+        user = create_user(data, session)
+
+        session.refresh(anonymous_patient)
+
+        patient = create_patient(anonymous_patient, user.id, session)
+
+        formatted_personality_test_score = format_personality_test(
+            anonymous_patient.personality_test
+        )
+
+        patient_with_personality_test_score = create_patient_personality_test_score(
+            patient, formatted_personality_test_score, session
+        )
+
+        return PatientRead(
+            therapy_needs=patient.therapy_needs,
+            latitude=patient.latitude if patient.latitude else 0.0,
+            longitude=patient.longitude if patient.longitude else 0.0,
+            gender=patient_with_personality_test_score.gender,
+            age=patient_with_personality_test_score.age
+            if patient_with_personality_test_score.age
+            else 0,
+            is_lgbtq_therapist_preference=patient_with_personality_test_score.is_lgbtq_therapist_preference,
+            is_religious_therapist_preference=patient_with_personality_test_score.is_religious_therapist_preference,
+            personality_test_id=patient_with_personality_test_score.personality_test.id
+            if patient_with_personality_test_score.personality_test
+            else None,
+            id=patient_with_personality_test_score.id,
+        )
+
+    except ValueError as e:
+        logger.exception("Issue with data on the creation of the patient")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    except (
+        UserCreationError,
+        PatientCreationError,
+        PersonalityTestScoreCreationError,
+    ) as e:
+        logger.exception("Error creating a patient")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.post(
-    "/therapists",
-    status_code=status.HTTP_201_CREATED,
-    response_model=TherapistRead,
-)
-def register_therapist(
-    data: TherapistCreate, session: SessionDep, current_user: CurrentUserDep
-):
-    """Register a new therapist."""
+# @router.post(
+#     "/therapists",
+#     status_code=status.HTTP_201_CREATED,
+#     response_model=TherapistRead,
+# )
+# def register_therapist(
+#     data: TherapistCreate, session: SessionDep, current_user: CurrentUserDep
+# ):
+#     """Register a new therapist."""
 
-    # refactor getting an existing therapist into a dependency.
-    try:
-        existing_therapist = session.exec(
-            select(Therapist).where(Therapist.user_id == current_user.id)
-        ).first()
-    except Exception as e:
-        logger.exception("Error in trying to get therapist")
-        raise HTTPException(
-            status_code=400, detail="Unable to find existing therapist"
-        ) from e
+#     # refactor getting an existing therapist into a dependency.
+#     try:
+#         existing_therapist = session.exec(
+#             select(Therapist).where(Therapist.user_id == current_user.id)
+#         ).first()
+#     except Exception as e:
+#         logger.exception("Error in trying to get therapist")
+#         raise HTTPException(
+#             status_code=400, detail="Unable to find existing therapist"
+#         ) from e
 
-    if existing_therapist:
-        logger.error(
-            "Attempt to register with %s:", current_user.email_address, exc_info=True
-        )
-        raise HTTPException(status_code=409, detail="Therapist already exists")
+#     if existing_therapist:
+#         logger.error(
+#             "Attempt to register with %s:", current_user.email_address, exc_info=True
+#         )
+#         raise HTTPException(status_code=409, detail="Therapist already exists")
 
-    logger.info("Registering therapist: %s", current_user.email_address)
+#     logger.info("Registering therapist: %s", current_user.email_address)
 
-    try:
-        therapist = create_therapist(data, current_user.id, session)
-        return therapist
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+#     try:
+#         therapist = create_therapist(data, current_user.id, session)
+#         return therapist
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/anonymous-sessions")

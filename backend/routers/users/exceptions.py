@@ -8,3 +8,11 @@ class InvalidPostalCodeError(ValueError):
 
 class GeocodingServiceError(Exception):
     """Raised when the external geocoding service fails."""
+
+
+class UserCreationError(Exception):
+    """Raised when there is an error creating a new user."""
+
+
+class PatientCreationError(Exception):
+    """Raised when there is an error creating a new patient."""

@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.exc import ProgrammingError
 from backend.core.database import get_session
 from backend.main import app
+from backend.tests.test_utils import USER_ID
 
 # Test database configuration
 TEST_DB_CONFIG = {
@@ -17,7 +18,7 @@ TEST_DB_CONFIG = {
 
 
 def create_test_database():
-    # Create admin connection to create/drop database
+    """Create admin connection to create/drop database"""
     admin_engine = create_engine(
         f"postgresql://{TEST_DB_CONFIG['user']}:{TEST_DB_CONFIG['password']}"
         f"@{TEST_DB_CONFIG['host']}:{TEST_DB_CONFIG['port']}/postgres"
@@ -26,9 +27,7 @@ def create_test_database():
     with admin_engine.connect() as conn:
         conn.execution_options(isolation_level="AUTOCOMMIT")
         try:
-            # Drop test database if it exists
             conn.execute(text(f"DROP DATABASE IF EXISTS {TEST_DB_CONFIG['database']}"))
-            # Create test database
             conn.execute(text(f"CREATE DATABASE {TEST_DB_CONFIG['database']}"))
         except ProgrammingError as e:
             raise e
@@ -38,6 +37,7 @@ def create_test_database():
 
 @pytest.fixture(scope="function")
 def session_fixture():
+    """the database fixture in the testing environment"""
     create_test_database()
 
     # Create engine for test database
@@ -67,7 +67,7 @@ def mock_jwt_decode(monkeypatch):
 
     def fake_decode(token, key=None, algorithms=None, options=None):
         return {
-            "sub": "a@b.com",
+            "sub": USER_ID,
             "exp": 9999999999,
         }
 
@@ -83,6 +83,7 @@ def mock_auth_headers(mock_jwt_decode):
 
 @pytest.fixture(scope="function")
 def client_fixture(session_fixture: Session):
+    """Pass the client to the test routes"""
     app.dependency_overrides[get_session] = lambda: session_fixture
 
     client = TestClient(app)

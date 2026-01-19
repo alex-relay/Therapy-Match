@@ -57,12 +57,13 @@ class PatientCreate(SQLModel):
 
     therapy_needs: list[str]
     personality_test_id: Optional[UUID] = None
-    location: Coordinate
+    latitude: float | None = None
+    longitude: float | None = None
     description: Optional[str] = None
     age: int = Field(ge=10, le=120)
-    gender: GenderOption
-    is_lgbtq_therapist_preference: StrictBool
-    is_religious_therapist_preference: StrictBool
+    gender: GenderOption | None = None
+    is_lgbtq_therapist_preference: StrictBool | None = None
+    is_religious_therapist_preference: StrictBool | None = None
 
 
 class TherapistCreate(SQLModel):
@@ -80,7 +81,7 @@ class TherapistCreate(SQLModel):
 class PatientRead(PatientCreate):
     """PatientRead Model"""
 
-    id: UUID
+    id: UUID | None = None
 
 
 class LocationCoordinate(SQLModel):
