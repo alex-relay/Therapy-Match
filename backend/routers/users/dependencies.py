@@ -1,62 +1,14 @@
 from typing import Annotated
 import jwt
 from fastapi import status, Depends, HTTPException, Cookie
-from fastapi.security import OAuth2PasswordBearer
-from sqlmodel import SQLModel, select
+from sqlmodel import select
 from backend.core.database import SessionDep
-from backend.models.user import User, AnonymousPatient
+from backend.models.user import AnonymousPatient
 from backend.core.logging import get_logger
-from ...schemas.users import UserRead, AnonymousSessionCookie
-from ...services.users import get_user_by_email, SECRET_KEY, ALGORITHM
+from ...schemas.users import AnonymousSessionCookie
+from ...services.users import SECRET_KEY, ALGORITHM
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 logger = get_logger(__name__)
-
-
-class TokenData(SQLModel):
-    """Docstring for TokenData"""
-
-    username: str | None = None
-
-
-def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)], session: SessionDep
-):
-    """gets the current user from the token"""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
-
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username)
-    except Exception as e:
-        raise e
-    try:
-        user = get_user_by_email(token_data.username, session)
-        return user
-    except Exception as e:
-        raise credentials_exception from e
-
-
-def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
-):
-    """gets the current active user"""
-    if not current_user:
-        raise HTTPException(status_code=400, detail="Inactive user")
-
-    return UserRead(
-        id=current_user.id,
-        first_name=current_user.first_name,
-        last_name=current_user.last_name,
-        email_address=current_user.email_address,
-    )
 
 
 def get_current_session_id(cookie: Annotated[AnonymousSessionCookie, Cookie()]):

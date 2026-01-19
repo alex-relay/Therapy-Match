@@ -4,3 +4,7 @@ class TestScoreCreationError(Exception):
 
 class TestScoreUpdateError(Exception):
     """Custom exception on failing to save an updated personality test"""
+
+
+class PersonalityTestScoreCreationError(Exception):
+    """Raised when there is an error creating a personality test score."""

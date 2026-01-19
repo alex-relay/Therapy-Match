@@ -1,4 +1,5 @@
 """utility functions for creating users, therapists and patients for testing"""
+import uuid
 
 from backend.models.user import (
     Patient,
@@ -15,14 +16,15 @@ USER_ID = "c658ffce-d810-4341-a8ef-2d3651489daf"
 def add_test_patient(session_fixture):
     """Add a test patient to the database."""
     existing_patient = Patient(
-        location="40.7128, -74.0060",
+        latitude=40.7128,
+        longitude=-74.0060,
         description="Existing patient for testing",
         therapy_needs=["anxiety"],
-        gender=GenderOption.PREFER_NOT_TO_SAY.value,
+        gender=GenderOption.PREFER_NOT_TO_SAY,
         is_lgbtq_therapist_preference=True,
         is_religious_therapist_preference=False,
         age=30,
-        user_id=USER_ID,
+        user_id=uuid.UUID(USER_ID),
     )
 
     session_fixture.add(existing_patient)
@@ -49,7 +51,7 @@ def add_test_therapist(session_fixture):
 def add_test_user(session_fixture):
     """Add a test user to the database."""
     user = User(
-        id=USER_ID,
+        id=uuid.UUID(USER_ID),
         first_name="Existing",
         last_name="User",
         email_address="a@b.com",
@@ -63,10 +65,11 @@ def add_test_user(session_fixture):
 
 
 def add_anonymous_patient(session_fixture, mock_overrides=None):
+    """add an anonymous patient for the tests"""
     if not mock_overrides:
         mock_overrides = {}
     base_data = {
-        "session_id": "a@b.com",
+        "session_id": USER_ID,
         "location": None,
         "description": None,
         "therapy_needs": None,
@@ -87,6 +90,7 @@ def add_anonymous_patient(session_fixture, mock_overrides=None):
 
 
 def add_personality_test_score(session_fixture, mock_overrides=None):
+    """add an anonymous personality test score for the tests"""
     if not mock_overrides:
         mock_overrides = {}
     test_score = AnonymousPersonalityTestScore(**{**mock_overrides})

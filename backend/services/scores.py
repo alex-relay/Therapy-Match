@@ -1,11 +1,18 @@
+from decimal import Decimal
 from fastapi import HTTPException
-from sqlmodel import Session
+from sqlmodel import Session, select
 from sqlalchemy.exc import SQLAlchemyError
-from backend.models.user import AnonymousPersonalityTestScore, AnonymousPatient
+from backend.models.user import (
+    AnonymousPersonalityTestScore,
+    AnonymousPatient,
+    Patient,
+    PersonalityTestScore,
+)
 from backend.schemas.scores import Scores, AggregateScores, PersonalityTestQuestion
 from backend.routers.scores.exceptions import (
     TestScoreCreationError,
     TestScoreUpdateError,
+    PersonalityTestScoreCreationError,
 )
 from backend.core.logging import get_logger
 
@@ -114,7 +121,75 @@ def _calculate_concientiousness_score(scores: ScoresType) -> float | None:
     return scores_sum / 10
 
 
-def calculate_test_scores(scores: AggregateScores) -> Scores | None:
+def format_personality_test(
+    anonymous_personality_test: AnonymousPersonalityTestScore | None,
+) -> Scores:
+    if not anonymous_personality_test:
+        raise ValueError("Anonymous Personality Test not provided")
+
+    anonymous_personality_test_dict = anonymous_personality_test.model_dump()
+
+    personality_test_score_aggregate = AggregateScores(
+        extroversion=[
+            entry["score"] for entry in anonymous_personality_test_dict["extroversion"]
+        ],
+        conscientiousness=[
+            entry["score"]
+            for entry in anonymous_personality_test_dict["conscientiousness"]
+        ],
+        agreeableness=[
+            entry["score"] for entry in anonymous_personality_test_dict["agreeableness"]
+        ],
+        neuroticism=[
+            entry["score"] for entry in anonymous_personality_test_dict["neuroticism"]
+        ],
+        openness=[
+            entry["score"] for entry in anonymous_personality_test_dict["openness"]
+        ],
+    )
+
+    calculated_personality_test_score = calculate_test_scores(
+        personality_test_score_aggregate
+    )
+
+    return calculated_personality_test_score
+
+
+def create_patient_personality_test_score(
+    patient: Patient, scores: Scores, session: Session
+):
+
+    if not patient:
+        raise ValueError("Patient not provided")
+
+    if not scores:
+        raise ValueError("Scores not provided")
+
+    try:
+        patient.personality_test = PersonalityTestScore(
+            extroversion=Decimal(scores.extroversion),
+            conscientiousness=Decimal(scores.conscientiousness),
+            agreeableness=Decimal(scores.agreeableness),
+            neuroticism=Decimal(scores.neuroticism),
+            openness=Decimal(scores.openness),
+            patient_id=patient.id,
+        )
+
+        session.add(patient)
+        session.commit()
+        session.refresh(patient)
+
+    except Exception as e:
+        session.rollback()
+        logger.exception("Unable to create a personality test score")
+        raise PersonalityTestScoreCreationError(
+            "Unable to create a personality test score"
+        ) from e
+
+    return patient
+
+
+def calculate_test_scores(scores: AggregateScores) -> Scores:
     if not scores:
         return None
 
@@ -185,6 +260,20 @@ def create_anonymous_session_test_score(
     except SQLAlchemyError as e:
         session.rollback()
         raise TestScoreCreationError("Failed to create test score") from e
+
+
+def get_anonymous_test_score(
+    anonymous_test_score_id: str, session: Session
+) -> AnonymousPersonalityTestScore | None:
+    try:
+        statement = select(AnonymousPersonalityTestScore).where(
+            anonymous_test_score_id == AnonymousPersonalityTestScore.id
+        )
+        anonymous_test_score = session.exec(statement).first()
+
+        return anonymous_test_score
+    except Exception as e:
+        raise ValueError("Unable to retrieve anonymous test score") from e
 
 
 def update_anonymous_session_test_score_category(
