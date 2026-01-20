@@ -29,13 +29,16 @@ const TherapyNeeds = () => {
   const [therapyNeeds, setTherapyNeeds] =
     useState<TherapyNeedsOptions[]>(therapyNeedsValue);
 
+  const navigateToPersonalityTests = () => {
+    if (!stepHistory.includes(step)) {
+      setStepHistory((prevState) => [...prevState, step]);
+    }
+    router.push("/personality-tests/introduction?type=patient");
+  };
+
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      if (!stepHistory.includes(step)) {
-        setStepHistory((prevState) => [...prevState, step]);
-      }
-
-      router.push("/personality-tests/introduction");
+      navigateToPersonalityTests();
     },
   });
 
@@ -66,10 +69,7 @@ const TherapyNeeds = () => {
     ) {
       answerMutate({ therapy_needs: therapyNeeds });
     } else {
-      if (!stepHistory.includes(step)) {
-        setStepHistory((prevState) => [...prevState, step]);
-      }
-      router.push("/personality-tests/introduction");
+      navigateToPersonalityTests();
     }
   };
 
