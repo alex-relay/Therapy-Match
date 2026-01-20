@@ -4,14 +4,21 @@ import Typography from "@mui/material/Typography";
 import CardHeader from "@mui/material/CardHeader";
 import CardMedia from "@mui/material/CardMedia";
 import StyledCard from "@/app/components/common/StyledCard";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCreatePersonalityTest } from "../api/scores/scores";
 
 const PersonalityTestIntroduction = () => {
   const router = useRouter();
+  const params = useSearchParams();
+
   const { mutate: personalityTestMutate } = useCreatePersonalityTest({
     onSuccess: () => {
-      router.push("/personality-tests");
+      const type = params.get("type");
+      router.push(
+        type
+          ? `/personality-tests?type=${encodeURIComponent(type)}`
+          : "/personality-tests",
+      );
     },
   });
 

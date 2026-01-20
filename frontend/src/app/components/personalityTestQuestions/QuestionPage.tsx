@@ -7,7 +7,8 @@ import {
   PersonalityTestQuestionAndScore,
   usePatchPersonalityTestQuestion,
 } from "@/app/api/scores/scores";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { UserType } from "@/app/api/users/users";
 
 type QuestionPageProps = {
   personalityTestScores: PersonalityTestGetResponse | undefined;
@@ -40,6 +41,8 @@ const QuestionPage = ({ personalityTestScores }: QuestionPageProps) => {
   const { mutate: patchPersonalityTestQuestion } =
     usePatchPersonalityTestQuestion();
 
+  const queryParams = useSearchParams();
+
   const [currentQuestion, setCurrentQuestion] = useState(() =>
     getLatestQuestionIndex(personalityTestScores),
   );
@@ -48,6 +51,11 @@ const QuestionPage = ({ personalityTestScores }: QuestionPageProps) => {
 
   const handleOptionClick = (index: number, value: number) => {
     const questionAndAnswer = PERSONALITY_TEST_QUESTIONS[index];
+    const userType = queryParams.get("type") as UserType;
+
+    if (!userType || !["patient", "therapist"].includes(userType)) {
+      return;
+    }
 
     const isPersonalityTestCompleted =
       Object.values(personalityTestScores ?? {}).flatMap((entry) =>
@@ -61,9 +69,10 @@ const QuestionPage = ({ personalityTestScores }: QuestionPageProps) => {
     });
 
     if (isPersonalityTestCompleted) {
-      router.push("/register");
+      router.push(`/register?type=${userType}`);
       return;
     }
+
     if (index < PERSONALITY_TEST_QUESTIONS.length - 1) {
       setCurrentQuestion((prevState) => prevState + 1);
     }
