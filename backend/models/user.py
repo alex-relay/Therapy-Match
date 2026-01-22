@@ -5,11 +5,10 @@ from pydantic import EmailStr, ConfigDict, field_validator, ValidationError
 from sqlalchemy import Column, String
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlmodel import Field, SQLModel, Relationship
-from backend.routers.users.user_types import GenderOption
+from backend.routers.users.user_types import GenderOption, UserOption
 from backend.schemas.scores import PersonalityTestQuestion
 
 
-# TODO: add a type field for user type to the user model, remove is_anonymous
 class User(SQLModel, table=True):
     """Base user model"""
 
@@ -20,7 +19,7 @@ class User(SQLModel, table=True):
     last_name: str
     email_address: EmailStr
     password: str
-    is_anonymous: bool = Field(nullable=False)
+    user_type: UserOption | None = Field(default=None)
 
 
 class ProfileMixin(SQLModel):
@@ -86,6 +85,8 @@ class Patient(ProfileMixin, table=True):
 
 
 class PersonalityTestScoreBaseMixin(SQLModel):
+    """Mixin for the personality test score for patients and therapists."""
+
     neuroticism: list[dict] = Field(sa_type=JSON, default_factory=list)
     openness: list[dict] = Field(sa_type=JSON, default_factory=list)
     extroversion: list[dict] = Field(sa_type=JSON, default_factory=list)
@@ -99,6 +100,7 @@ class PersonalityTestScoreBaseMixin(SQLModel):
     )
     @classmethod
     def validate_questions(cls, v: list[dict]):
+        """validate that each item in the list conforms to PersonalityTestQuestion"""
         for item in v:
             try:
                 PersonalityTestQuestion(**item)

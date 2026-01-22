@@ -6,7 +6,7 @@ from typing import Optional
 from pydantic import EmailStr, Field, field_validator, ConfigDict, StrictBool
 from sqlmodel import SQLModel
 from pydantic_extra_types.coordinate import Coordinate
-from backend.routers.users.user_types import GenderOption
+from backend.routers.users.user_types import GenderOption, UserOption
 
 
 class UserBase(SQLModel):
@@ -15,7 +15,7 @@ class UserBase(SQLModel):
     first_name: str = Field(min_length=2)
     last_name: str = Field(min_length=2)
     email_address: EmailStr
-    is_anonymous: bool = True
+    user_type: UserOption | None = Field(default=None)
 
 
 class AnonymousSessionCookie(SQLModel):
@@ -106,7 +106,7 @@ class AnonymousSessionPatientBase(SQLModel):
     is_religious_therapist_preference: StrictBool | None = None
     postal_code: str | None = None
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")  # type: ignore
 
     @field_validator("postal_code")
     @classmethod
