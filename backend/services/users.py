@@ -1,3 +1,4 @@
+from typing import TypeVar
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
 import jwt
@@ -8,8 +9,6 @@ from backend.models.user import Therapist, Patient, User, AnonymousPatient
 from backend.core.logging import get_logger
 from backend.core.config import settings
 from ..schemas.users import (
-    TherapistCreate,
-    TherapistRead,
     UserCreate,
     AnonymousSessionPatientBase,
 )
@@ -27,6 +26,7 @@ logger = get_logger(__name__)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day
 SECRET_KEY = settings.secret_key
+T = TypeVar("T", bound=SQLModel)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -137,52 +137,42 @@ def patch_anonymous_patient_session(
 
     logger.info("Committing changes to the DB")
 
+    committed_patient_to_db = commit_to_db(session, patient)
+
+    return committed_patient_to_db
+
+
+def commit_to_db(session: Session, obj: T) -> T:
+    """Commits an object to the database and refreshes the instance."""
     try:
-        session.add(patient)
+        session.add(obj)
         session.commit()
-        session.refresh(patient)
+        session.refresh(obj)
+        return obj
     except Exception as e:
         session.rollback()
-        logger.exception("Database error while updating patient: %s", patient.id)
-        raise ValueError(
-            "Unable to update anonymous session record in database."
-        ) from e
-
-    return patient
+        entity_name = type(obj).__name__
+        logger.exception("Failed to commit %s to the database", entity_name)
+        raise ValueError(f"Cannot commit {entity_name} to the database") from e
 
 
 def create_therapist(
-    user_data: TherapistCreate, user_id: UUID, session: Session
-) -> TherapistRead:
+    user_data: UserCreate, user_id: UUID | None, session: Session
+) -> Therapist:
     """creates a therapist"""
-    coordinate = str(user_data.location)
-    therapist = Therapist(
-        **{**user_data.model_dump(), "location": coordinate, "user_id": user_id}
-    )
+    if not user_id:
+        raise ValueError("User ID is required to create a therapist.")
 
-    if not therapist:
-        raise ValueError("Therapist not found")
+    therapist = Therapist(**{**user_data.model_dump(), "user_id": user_id})
 
-    try:
-        session.add(therapist)
-        session.commit()
-        session.refresh(therapist)
-        return TherapistRead(
-            **{
-                **therapist.model_dump(),
-                "id": str(therapist.id),
-                "user_id": str(therapist.user_id),
-            }
-        )
-    except Exception as e:
-        session.rollback()
-        logger.exception("Failed to create therapist: %s", e)
-        raise ValueError("cannot create a therapist") from e
+    therapist = commit_to_db(session, therapist)
+    return therapist
 
 
 def get_patient(
     anonymous_patient: AnonymousPatient, session: Session
 ) -> Patient | None:
+    """Retrieve existing patient by anonymous patient ID."""
     try:
         existing_patient = session.exec(
             select(Patient).where(Patient.id == anonymous_patient.id)
@@ -200,6 +190,21 @@ def get_user_by_email(email_address: str | None, session: Session) -> User | Non
     if not email_address:
         return None
     user = session.exec(select(User).where(User.email_address == email_address)).first()
+    return user
+
+
+def get_user_by_email_and_type(
+    email_address: str | None, user_type: str | None, session: Session
+) -> User | None:
+    """Retrieve a user by email."""
+
+    if not email_address or not user_type:
+        return None
+    user = session.exec(
+        select(User).where(
+            User.email_address == email_address, User.user_type == user_type
+        )
+    ).first()
     return user
 
 

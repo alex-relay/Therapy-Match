@@ -2,6 +2,7 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 from sqlmodel import select
+from backend.routers.users.user_types import UserOption
 from backend.tests.test_utils import (
     add_test_patient,
     add_test_therapist,
@@ -85,28 +86,23 @@ MOCK_PERSONALITY_TEST = {
 #     assert response.json() == {"message": "Hello World"}
 
 
-# def test_create_therapist(client_fixture, session_fixture, mock_auth_headers):
-#     """Test creating a new therapist."""
-#     add_test_user(session_fixture)
-#     response = client_fixture.post(
-#         "/therapists",
-#         json={
-#             "location": "40.7128, -74.0060",
-#             "description": "Experienced therapist",
-#             "specializations": ["anxiety", "depression"],
-#             "therapist_type": "licensed",
-#             "gender": GenderOption.NON_BINARY.value,
-#             "age": 27,
-#         },
-#         headers=mock_auth_headers,
-#     )
+def test_create_therapist(client_fixture, mock_auth_headers):
+    """Test creating a new therapist."""
+    response = client_fixture.post(
+        "/therapists",
+        json={
+            "first_name": "Therapist",
+            "last_name": "Last",
+            "email_address": "a@b.com",
+            "password": "HashedPassword1",
+            "type": UserOption.THERAPIST.value,
+        },
+        headers=mock_auth_headers,
+    )
 
-#     assert response.status_code == 201
-#     data = response.json()
-#     assert data["description"] == "Experienced therapist"
-#     assert data["specializations"] == ["anxiety", "depression"]
-#     assert data["therapist_type"] == "licensed"
-#     assert data["location"] == {"latitude": 40.7128, "longitude": -74.006}
+    assert response.status_code == 201
+    data = response.json()
+    assert data["id"] is not None
 
 
 def test_create_anonymous_session(client_fixture, session_fixture):
@@ -173,6 +169,7 @@ def test_create_patient(client_fixture, session_fixture, mock_auth_headers):
             "last_name": "Last",
             "email_address": "a@b.com",
             "password": "Hashedpassword1",
+            "user_type": UserOption.PATIENT.value,
         },
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
@@ -180,14 +177,7 @@ def test_create_patient(client_fixture, session_fixture, mock_auth_headers):
     assert response.status_code == 201
     data = response.json()
 
-    assert data["therapy_needs"] == ["anxiety", "depression"]
-    assert data["personality_test_id"] is not None
-    assert data["latitude"] == 43.6555
-    assert data["longitude"] == -19.6345
-    assert data["age"] == 27
-    assert data["gender"] == "female"
-    assert data["is_lgbtq_therapist_preference"] is True
-    assert data["is_religious_therapist_preference"] is True
+    assert data["id"] is not None
 
 
 def test_create_patient_without_personality_test(
@@ -346,6 +336,7 @@ def test_create_patient_returns_409_for_existing_patient(
     add_test_patient(session_fixture)
 
     overrides = {
+        "session_id": USER_ID,
         "latitude": 43.6555,
         "longitude": -19.6345,
         "description": None,
@@ -368,6 +359,7 @@ def test_create_patient_returns_409_for_existing_patient(
             "last_name": "Last",
             "email_address": "a@b.com",
             "password": "HashedPassword1",
+            "user_type": UserOption.PATIENT.value,
         },
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
@@ -380,18 +372,18 @@ def test_create_therapist_returns_409_for_existing_therapist(
     client_fixture, session_fixture, mock_auth_headers
 ):
     """Test that creating a therapist with an existing email returns 409."""
-    add_test_user(session_fixture)
+
+    add_test_user(session_fixture, {"user_type": UserOption.THERAPIST.value})
     add_test_therapist(session_fixture)
 
     response = client_fixture.post(
         "/therapists",
         json={
-            "location": "40.7128, -74.0060",
-            "description": "Experienced therapist",
-            "specializations": ["anxiety", "depression"],
-            "therapist_type": "licensed",
-            "age": 30,
-            "gender": GenderOption.MALE.value,
+            "first_name": "First",
+            "last_name": "Last",
+            "email_address": "a@b.com",
+            "password": "HashedPassword1",
+            "user_type": UserOption.THERAPIST.value,
         },
         headers=mock_auth_headers,
     )

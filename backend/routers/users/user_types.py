@@ -12,3 +12,10 @@ class GenderOption(str, Enum):
 class UserOption(str, Enum):
     PATIENT = "patient"
     THERAPIST = "therapist"
+
+
+class TherapistTypeOption(str, Enum):
+    PSYCHOLOGIST = "psychologist"
+    PSYCHOTHERAPIST = "psychotherapist"
+    SOCIAL_WORKER = "social_worker"
+    REGISTERED_PRACTITIONER = "registered_practitioner"
