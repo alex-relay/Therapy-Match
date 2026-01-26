@@ -13,12 +13,18 @@ from backend.models.user import AnonymousPatient
 from backend.core.logging import get_logger
 from backend.schemas.users import (
     PatientRead,
+    TherapistRead,
     UserCreate,
-    UserRead,
     AnonymousSessionPatientBase,
     AnonymousSessionPatientResponse,
 )
 from backend.routers.scores.exceptions import PersonalityTestScoreCreationError
+
+from backend.services.scores import (
+    create_patient_personality_test_score,
+    format_personality_test,
+)
+
 
 from .exceptions import (
     PatientNotFoundError,
@@ -31,9 +37,10 @@ from .exceptions import (
 from .dependencies import (
     get_anonymous_patient,
 )
+
 from ...services.users import (
-    get_user_by_email,
     create_patient,
+    create_therapist,
     ACCESS_TOKEN_EXPIRE_MINUTES,
     authenticate_user,
     create_access_token,
@@ -41,12 +48,8 @@ from ...services.users import (
     create_user,
     create_anonymous_patient_session,
     TokenUser,
+    get_user_by_email_and_type,
     patch_anonymous_patient_session,
-)
-
-from backend.services.scores import (
-    create_patient_personality_test_score,
-    format_personality_test,
 )
 
 router = APIRouter()
@@ -89,35 +92,35 @@ async def login_for_access_token(
         ) from e
 
 
-@router.post("/users", status_code=status.HTTP_201_CREATED, response_model=UserRead)
-async def register_user(data: UserCreate, session: SessionDep) -> UserRead:
-    """Create a new user."""
+# @router.post("/users", status_code=status.HTTP_201_CREATED, response_model=UserRead)
+# async def register_user(data: UserCreate, session: SessionDep) -> UserRead:
+#     """Create a new user."""
 
-    existing_user = get_user_by_email(data.email_address, session)
+#     existing_user = get_user_by_email(data.email_address, session)
 
-    if existing_user:
-        logger.error(
-            "Attempt to register with existing email: %s",
-            data.email_address,
-            exc_info=True,
-        )
-        raise HTTPException(status_code=409, detail="User already exists")
+#     if existing_user:
+#         logger.error(
+#             "Attempt to register with existing email: %s",
+#             data.email_address,
+#             exc_info=True,
+#         )
+#         raise HTTPException(status_code=409, detail="User already exists")
 
-    logger.info("Registering user: %s", data.email_address)
+#     logger.info("Registering user: %s", data.email_address)
 
-    try:
-        user = create_user(data, session)
+#     try:
+#         user = create_user(data, session)
 
-        logger.info("Created user: %s with id %s", user.email_address, user.id)
+#         logger.info("Created user: %s with id %s", user.email_address, user.id)
 
-        return UserRead(
-            id=user.id,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            email_address=user.email_address,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+#         return UserRead(
+#             id=user.id,
+#             first_name=user.first_name,
+#             last_name=user.last_name,
+#             email_address=user.email_address,
+#         )
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post(
@@ -135,10 +138,11 @@ def register_patient(
             status_code=400, detail="No anonymous patient found in session"
         )
 
-    existing_patient = get_user_by_email(data.email_address, session)
+    existing_user = get_user_by_email_and_type(
+        data.email_address, data.user_type, session
+    )
 
-    # TODO: add the existing patient check below as a dependency
-    if existing_patient:
+    if existing_user:
         raise HTTPException(status_code=409, detail="Patient already exists")
 
     logger.info("Registering patient")
@@ -159,18 +163,6 @@ def register_patient(
         )
 
         return PatientRead(
-            therapy_needs=patient.therapy_needs,
-            latitude=patient.latitude if patient.latitude else 0.0,
-            longitude=patient.longitude if patient.longitude else 0.0,
-            gender=patient_with_personality_test_score.gender,
-            age=patient_with_personality_test_score.age
-            if patient_with_personality_test_score.age
-            else 0,
-            is_lgbtq_therapist_preference=patient_with_personality_test_score.is_lgbtq_therapist_preference,
-            is_religious_therapist_preference=patient_with_personality_test_score.is_religious_therapist_preference,
-            personality_test_id=patient_with_personality_test_score.personality_test.id
-            if patient_with_personality_test_score.personality_test
-            else None,
             id=patient_with_personality_test_score.id,
         )
 
@@ -187,40 +179,48 @@ def register_patient(
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-# @router.post(
-#     "/therapists",
-#     status_code=status.HTTP_201_CREATED,
-#     response_model=TherapistRead,
-# )
-# def register_therapist(
-#     data: TherapistCreate, session: SessionDep, current_user: CurrentUserDep
-# ):
-#     """Register a new therapist."""
+@router.post(
+    "/therapists",
+    status_code=status.HTTP_201_CREATED,
+    response_model=TherapistRead,
+)
+def register_therapist(data: UserCreate, session: SessionDep):
+    """Register a new therapist."""
 
-#     # refactor getting an existing therapist into a dependency.
-#     try:
-#         existing_therapist = session.exec(
-#             select(Therapist).where(Therapist.user_id == current_user.id)
-#         ).first()
-#     except Exception as e:
-#         logger.exception("Error in trying to get therapist")
-#         raise HTTPException(
-#             status_code=400, detail="Unable to find existing therapist"
-#         ) from e
+    existing_therapist = get_user_by_email_and_type(
+        data.email_address, data.user_type, session
+    )
 
-#     if existing_therapist:
-#         logger.error(
-#             "Attempt to register with %s:", current_user.email_address, exc_info=True
-#         )
-#         raise HTTPException(status_code=409, detail="Therapist already exists")
+    if existing_therapist:
+        logger.warning(
+            "Attempt to register with existing email: %s", data.email_address
+        )
+        raise HTTPException(status_code=409, detail="Therapist already exists")
 
-#     logger.info("Registering therapist: %s", current_user.email_address)
+    logger.info("Registering therapist: %s", data.email_address)
 
-#     try:
-#         therapist = create_therapist(data, current_user.id, session)
-#         return therapist
-#     except Exception as e:
-#         raise HTTPException(status_code=400, detail=str(e)) from e
+    try:
+        user = create_user(data, session)
+
+        therapist = create_therapist(data, user.id, session)
+
+        logger.info("Created therapist")
+
+        if not therapist.id:
+            raise ValueError("Therapist creation failed")
+
+        return TherapistRead(
+            id=therapist.id,
+        )
+    except ValueError as e:
+        logger.exception("Issue with data on therapist creation")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except UserCreationError as e:
+        logger.exception("Error creating therapist user")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("Unexpected error during therapist registration")
+        raise HTTPException(status_code=500, detail="An internal error occurred") from e
 
 
 @router.post("/anonymous-sessions")
@@ -228,6 +228,8 @@ def create_anonymous_session(
     session: SessionDep,
     anonymous_session: Optional[str] = Cookie(None, alias="anonymous_session"),
 ) -> JSONResponse:
+    """creates an anonymous patient session and sets a cookie"""
+
     if anonymous_session:
         return JSONResponse({"messsage": "Cookie has already been created"})
 

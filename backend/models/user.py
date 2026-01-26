@@ -5,7 +5,11 @@ from pydantic import EmailStr, ConfigDict, field_validator, ValidationError
 from sqlalchemy import Column, String
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlmodel import Field, SQLModel, Relationship
-from backend.routers.users.user_types import GenderOption, UserOption
+from backend.routers.users.user_types import (
+    GenderOption,
+    UserOption,
+    TherapistTypeOption,
+)
 from backend.schemas.scores import PersonalityTestQuestion
 
 
@@ -59,7 +63,7 @@ class Therapist(ProfileMixin, table=True):
 
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
     user_id: UUID | None = Field(default=None, foreign_key="users.id", unique=True)
-    therapist_type: str
+    therapist_type: TherapistTypeOption | None = Field(default=None)
     specializations: List[str] = Field(sa_column=Column(ARRAY(String)))
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(

@@ -28,7 +28,7 @@ const getLatestQuestionIndex = (
   return personalityTestScoreValues.length - 1;
 };
 
-const COMPLETED_SCORE_QUESTION_COUNT = 50;
+const LAST_QUESTION_INDEX = PERSONALITY_TEST_QUESTIONS.length - 1;
 
 const getIsQuestionAnswered = (
   answers: PersonalityTestQuestionAndScore[],
@@ -57,10 +57,7 @@ const QuestionPage = ({ personalityTestScores }: QuestionPageProps) => {
       return;
     }
 
-    const isPersonalityTestCompleted =
-      Object.values(personalityTestScores ?? {}).flatMap((entry) =>
-        Array.isArray(entry) ? entry : [],
-      ).length === COMPLETED_SCORE_QUESTION_COUNT;
+    const isPersonalityTestCompleted = index === LAST_QUESTION_INDEX;
 
     patchPersonalityTestQuestion({
       id: questionAndAnswer.backendId,

@@ -1,14 +1,15 @@
 """utility functions for creating users, therapists and patients for testing"""
-import uuid
-
+from uuid import UUID
 from backend.models.user import (
     Patient,
     Therapist,
     User,
     GenderOption,
+    TherapistTypeOption,
     AnonymousPatient,
     AnonymousPersonalityTestScore,
 )
+from backend.routers.users.user_types import UserOption
 
 USER_ID = "c658ffce-d810-4341-a8ef-2d3651489daf"
 
@@ -18,13 +19,13 @@ def add_test_patient(session_fixture):
     existing_patient = Patient(
         latitude=40.7128,
         longitude=-74.0060,
-        description="Existing patient for testing",
+        description="Patient for testing",
         therapy_needs=["anxiety"],
         gender=GenderOption.PREFER_NOT_TO_SAY,
         is_lgbtq_therapist_preference=True,
         is_religious_therapist_preference=False,
         age=30,
-        user_id=uuid.UUID(USER_ID),
+        user_id=UUID(USER_ID),
     )
 
     session_fixture.add(existing_patient)
@@ -35,12 +36,14 @@ def add_test_patient(session_fixture):
 def add_test_therapist(session_fixture):
     """Add a test therapist to the database."""
     therapist = Therapist(
-        location="40.7128, -74.0060",
+        latitude=40.7128,
+        longitude=-74.0060,
         description="Existing patient for testing",
-        therapist_type="licensed",
-        gender=GenderOption.FEMALE.value,
+        specializations=["anxiety", "depression"],
+        therapist_type=TherapistTypeOption.PSYCHOLOGIST,
+        gender=GenderOption.FEMALE,
         age=45,
-        user_id=USER_ID,
+        user_id=UUID(USER_ID),
     )
 
     session_fixture.add(therapist)
@@ -48,16 +51,19 @@ def add_test_therapist(session_fixture):
     session_fixture.refresh(therapist)
 
 
-def add_test_user(session_fixture):
+def add_test_user(session_fixture, mock_overrides=None):
     """Add a test user to the database."""
-    user = User(
-        id=uuid.UUID(USER_ID),
-        first_name="Existing",
-        last_name="User",
-        email_address="a@b.com",
-        password="hashedpassword",
-        is_anonymous=False,
-    )
+
+    input_data = {
+        "id": UUID(USER_ID),
+        "first_name": "Existing",
+        "last_name": "User",
+        "email_address": "a@b.com",
+        "password": "hashedpassword",
+        "user_type": UserOption.PATIENT.value,
+        **(mock_overrides or {}),
+    }
+    user = User(**input_data)
 
     session_fixture.add(user)
     session_fixture.commit()
@@ -66,9 +72,7 @@ def add_test_user(session_fixture):
 
 def add_anonymous_patient(session_fixture, mock_overrides=None):
     """add an anonymous patient for the tests"""
-    if not mock_overrides:
-        mock_overrides = {}
-    base_data = {
+    input_data = {
         "session_id": USER_ID,
         "location": None,
         "description": None,
@@ -78,9 +82,10 @@ def add_anonymous_patient(session_fixture, mock_overrides=None):
         "personality_test": None,
         "is_lgbtq_therapist_preference": None,
         "is_religious_therapist_preference": None,
+        **(mock_overrides or {}),
     }
 
-    patient = AnonymousPatient(**{**base_data, **mock_overrides})
+    patient = AnonymousPatient(**input_data)
 
     session_fixture.add(patient)
     session_fixture.commit()

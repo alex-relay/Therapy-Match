@@ -2,10 +2,8 @@
 
 import re
 from uuid import UUID
-from typing import Optional
 from pydantic import EmailStr, Field, field_validator, ConfigDict, StrictBool
 from sqlmodel import SQLModel
-from pydantic_extra_types.coordinate import Coordinate
 from backend.routers.users.user_types import GenderOption, UserOption
 
 
@@ -52,30 +50,32 @@ class UserRead(UserBase):
     id: UUID
 
 
-class PatientCreate(SQLModel):
-    """Patient Create Model"""
+class UserProfileMixin(SQLModel):
+    """User profile mixin"""
 
-    therapy_needs: list[str]
-    personality_test_id: Optional[UUID] = None
     latitude: float | None = None
     longitude: float | None = None
-    description: Optional[str] = None
-    age: int = Field(ge=10, le=120)
+    description: str | None = None
+    age: int | None = Field(default=None, ge=10, le=120)
     gender: GenderOption | None = None
+    personality_test_id: UUID | None = None
+
+
+class PatientCreate(UserProfileMixin):
+    """Patient Create Model"""
+
+    therapy_needs: list[str] = []
     is_lgbtq_therapist_preference: StrictBool | None = None
     is_religious_therapist_preference: StrictBool | None = None
 
 
-class TherapistCreate(SQLModel):
+class TherapistCreate(UserProfileMixin):
     """Therapist Create Model"""
 
-    therapist_type: str
-    specializations: list[str]
-    personality_test_id: Optional[UUID] = None
-    location: Coordinate
-    description: Optional[str] = None
-    age: int = Field(ge=10, le=120)
-    gender: GenderOption
+    therapist_type: str | None = None
+    specializations: list[str] | None = None
+    is_lgbtq_specialization: StrictBool | None = None
+    is_religious_specialization: StrictBool | None = None
 
 
 class PatientRead(PatientCreate):
