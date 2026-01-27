@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from backend.models.user import Therapist, Patient, User, AnonymousPatient
 from backend.core.logging import get_logger
 from backend.core.config import settings
+from backend.routers.users.user_types import UserOption
 from ..schemas.users import (
     UserCreate,
     AnonymousSessionPatientBase,
@@ -44,6 +45,7 @@ class Token(SQLModel):
     access_token: str
     token_type: str
     user: TokenUser
+    roles: list[str]
 
 
 class TokenData(SQLModel):
@@ -156,6 +158,21 @@ def commit_to_db(session: Session, obj: T) -> T:
         raise ValueError(f"Cannot commit {entity_name} to the database") from e
 
 
+def update_user_roles(user: User, role: UserOption, session: Session):
+    """updates user roles"""
+
+    if not user or not role:
+        raise ValueError("User and role must be provided to update roles.")
+
+    if role in user.roles:
+        raise ValueError("Role already exists for the user.")
+
+    user.roles.append(role)
+    updated_user = commit_to_db(session, user)
+
+    return updated_user
+
+
 def create_therapist(
     user_data: UserCreate, user_id: UUID | None, session: Session
 ) -> Therapist:
@@ -196,16 +213,16 @@ def get_user_by_email(email_address: str | None, session: Session) -> User | Non
 def get_user_by_email_and_type(
     email_address: str | None, user_type: str | None, session: Session
 ) -> User | None:
-    """Retrieve a user by email."""
+    """Retrieve a user by email if they have the specified role."""
 
     if not email_address or not user_type:
         return None
-    user = session.exec(
-        select(User).where(
-            User.email_address == email_address, User.user_type == user_type
-        )
-    ).first()
-    return user
+    user = session.exec(select(User).where(User.email_address == email_address)).first()
+
+    if user and user_type in user.roles:
+        return user
+
+    return None
 
 
 def create_patient(user_data: AnonymousPatient, user_id, session: Session) -> Patient:
@@ -263,11 +280,15 @@ def get_user(db, email_address: str):
 def authenticate_user(session, email_address: str, password: str):
     """Authenticate user"""
     user = get_user_by_email(email_address, session)
+
     if not user:
-        logger.error("no user found %s", email_address, exc_info=True)
-        return False
+        logger.warning("Unable to find user to authenticate")
+        raise ValueError("Could not retrieve user.")
+
     if not verify_password(password, user.password):
-        return False
+        logger.warning("Authentication failed for user_id: %s", user.id)
+        raise ValueError("Invalid email or password.")
+
     return user
 
 

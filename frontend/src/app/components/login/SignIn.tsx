@@ -114,7 +114,6 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
 
     const res = await signIn("credentials", {
       callbackUrl: "/profile",
-      redirect: true,
       emailAddress: email,
       password,
     });
