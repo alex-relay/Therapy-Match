@@ -10,8 +10,20 @@ from backend.models.user import (
     AnonymousPersonalityTestScore,
 )
 from backend.routers.users.user_types import UserOption
+from backend.services.users import get_password_hash
 
 USER_ID = "c658ffce-d810-4341-a8ef-2d3651489daf"
+
+TEST_USER_PASSWORD = "hashedpassword"
+
+TEST_USER_BASE = {
+    "id": UUID(USER_ID),
+    "first_name": "Existing",
+    "last_name": "User",
+    "email_address": "a@b.com",
+    "password": get_password_hash(TEST_USER_PASSWORD),
+    "roles": [UserOption.PATIENT.value],
+}
 
 
 def add_test_patient(session_fixture):
@@ -55,12 +67,7 @@ def add_test_user(session_fixture, mock_overrides=None):
     """Add a test user to the database."""
 
     input_data = {
-        "id": UUID(USER_ID),
-        "first_name": "Existing",
-        "last_name": "User",
-        "email_address": "a@b.com",
-        "password": "hashedpassword",
-        "user_type": UserOption.PATIENT.value,
+        **TEST_USER_BASE,
         **(mock_overrides or {}),
     }
     user = User(**input_data)

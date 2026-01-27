@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from backend.core.database import SessionDep
 from backend.models.user import AnonymousPatient
 from backend.core.logging import get_logger
+from backend.routers.users.user_types import UserOption
 from backend.schemas.users import (
     PatientRead,
     TherapistRead,
@@ -50,6 +51,7 @@ from ...services.users import (
     TokenUser,
     get_user_by_email_and_type,
     patch_anonymous_patient_session,
+    update_user_roles,
 )
 
 router = APIRouter()
@@ -64,15 +66,23 @@ async def login_for_access_token(
     """Authenticate and create token"""
     try:
         user = authenticate_user(session, form_data.username, form_data.password)
-    except Exception as e:
+    except ValueError as e:
+        logger.exception("Unable to authenticate user")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
+    except Exception as e:
+        logger.exception("Error in authenticating user")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error in authenticating user",
             headers={"WWW-Authenticate": "Bearer"},
         ) from e
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Unable to find user")
 
     try:
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -83,9 +93,11 @@ async def login_for_access_token(
             access_token=access_token,
             token_type="bearer",
             user=TokenUser(email_address=user.email_address),
+            roles=user.roles,
         )
 
     except Exception as e:
+        logger.exception("Could not create access token")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not create access token",
@@ -142,17 +154,23 @@ def register_patient(
         data.email_address, data.user_type, session
     )
 
-    if existing_user:
+    is_patient_in_user_roles = (
+        UserOption.PATIENT in (existing_user.roles or []) if existing_user else False
+    )
+
+    if is_patient_in_user_roles:
         raise HTTPException(status_code=409, detail="Patient already exists")
 
     logger.info("Registering patient")
 
     try:
-        user = create_user(data, session)
+        user = existing_user if existing_user else create_user(data, session)
 
         session.refresh(anonymous_patient)
 
         patient = create_patient(anonymous_patient, user.id, session)
+
+        update_user_roles(user, UserOption.PATIENT, session)
 
         formatted_personality_test_score = format_personality_test(
             anonymous_patient.personality_test

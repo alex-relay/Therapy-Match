@@ -1,3 +1,4 @@
+from uuid import UUID
 from datetime import timedelta
 import numpy as np
 import pandas as pd
@@ -10,6 +11,8 @@ from backend.tests.test_utils import (
     add_anonymous_patient,
     add_personality_test_score,
     USER_ID,
+    TEST_USER_BASE,
+    TEST_USER_PASSWORD,
 )
 from backend.models.user import GenderOption, AnonymousPatient
 from backend.services.users import create_access_token
@@ -80,10 +83,112 @@ MOCK_PERSONALITY_TEST = {
 }
 
 
-# def test_read_main(client_fixture):
-#     response = client_fixture.get("/")
-#     assert response.status_code == 200
-#     assert response.json() == {"message": "Hello World"}
+def test_user_login_for_multiple_roles(client_fixture, session_fixture):
+    """Test user login route"""
+    add_test_user(
+        session_fixture,
+        {
+            "roles": [UserOption.THERAPIST.value, UserOption.PATIENT.value],
+            "id": UUID("d658ffce-d810-4341-a8ef-2d3651489daf"),
+        },
+    )
+
+    response = client_fixture.post(
+        "/token",
+        data={
+            "username": TEST_USER_BASE["email_address"],
+            "password": TEST_USER_PASSWORD,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+    assert data["user"]["email_address"] == TEST_USER_BASE["email_address"]
+    assert set(data["roles"]) == {UserOption.PATIENT.value, UserOption.THERAPIST.value}
+
+
+def test_login_invalid_password(client_fixture, session_fixture):
+    """Test user login route with invalid password"""
+    add_test_user(session_fixture)
+
+    response = client_fixture.post(
+        "/token",
+        data={
+            "username": TEST_USER_BASE["email_address"],
+            "password": "WrongPassword1",
+        },
+    )
+
+    assert response.status_code == 401
+    data = response.json()
+
+    assert data["detail"] == "Invalid credentials"
+
+
+def test_login_invalid_email(client_fixture, session_fixture):
+    """Test user login route with invalid email"""
+    add_test_user(session_fixture)
+
+    response = client_fixture.post(
+        "/token",
+        data={"username": "y@z.com", "password": TEST_USER_PASSWORD},
+    )
+
+    assert response.status_code == 401
+    data = response.json()
+
+    assert data["detail"] == "Invalid credentials"
+
+
+def test_therapist_login(client_fixture, session_fixture):
+    """Test user login route"""
+    add_test_user(
+        session_fixture,
+        {
+            "roles": [UserOption.THERAPIST.value],
+            "id": UUID("d658ffce-d810-4341-a8ef-2d3651489daf"),
+        },
+    )
+
+    response = client_fixture.post(
+        "/token",
+        data={
+            "username": TEST_USER_BASE["email_address"],
+            "password": TEST_USER_PASSWORD,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+    assert data["user"]["email_address"] == TEST_USER_BASE["email_address"]
+    assert data["roles"] == [UserOption.THERAPIST.value]
+
+
+def test_patient_login(client_fixture, session_fixture):
+    """Test user login route"""
+    add_test_user(session_fixture)
+
+    response = client_fixture.post(
+        "/token",
+        data={
+            "username": TEST_USER_BASE["email_address"],
+            "password": TEST_USER_PASSWORD,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+    assert data["user"]["email_address"] == TEST_USER_BASE["email_address"]
+    assert data["roles"] == [UserOption.PATIENT.value]
 
 
 def test_create_therapist(client_fixture, mock_auth_headers):
@@ -373,7 +478,7 @@ def test_create_therapist_returns_409_for_existing_therapist(
 ):
     """Test that creating a therapist with an existing email returns 409."""
 
-    add_test_user(session_fixture, {"user_type": UserOption.THERAPIST.value})
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
     add_test_therapist(session_fixture)
 
     response = client_fixture.post(

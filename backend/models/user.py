@@ -7,7 +7,6 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlmodel import Field, SQLModel, Relationship
 from backend.routers.users.user_types import (
     GenderOption,
-    UserOption,
     TherapistTypeOption,
 )
 from backend.schemas.scores import PersonalityTestQuestion
@@ -23,7 +22,7 @@ class User(SQLModel, table=True):
     last_name: str
     email_address: EmailStr
     password: str
-    user_type: UserOption | None = Field(default=None)
+    roles: List[str] = Field(sa_column=Column(ARRAY(String)), default_factory=list)
 
 
 class ProfileMixin(SQLModel):
