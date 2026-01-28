@@ -61,10 +61,12 @@ class TokenData(SQLModel):
 def create_user(user_data: UserCreate, session: Session) -> User:
     """creates a user"""
     hashed_password = get_password_hash(user_data.password)
+    user_type = user_data.user_type
     user = User(
         **{
             **user_data.model_dump(),
             "password": hashed_password,
+            "roles": [user_type],
         }
     )
     try:
@@ -164,10 +166,13 @@ def update_user_roles(user: User, role: UserOption, session: Session):
     if not user or not role:
         raise ValueError("User and role must be provided to update roles.")
 
-    if role in user.roles:
+    if role.value in user.roles:
         raise ValueError("Role already exists for the user.")
 
-    user.roles.append(role)
+    user_roles = user.roles.copy()
+    user_roles.append(role.value)
+    user.roles = user_roles
+
     updated_user = commit_to_db(session, user)
 
     return updated_user
