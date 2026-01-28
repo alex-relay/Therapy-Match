@@ -13,7 +13,7 @@ class UserBase(SQLModel):
     first_name: str = Field(min_length=2)
     last_name: str = Field(min_length=2)
     email_address: EmailStr
-    user_type: UserOption | None = Field(default=None)
+    user_type: UserOption
 
 
 class AnonymousSessionCookie(SQLModel):

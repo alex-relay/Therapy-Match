@@ -14,7 +14,7 @@ from backend.tests.test_utils import (
     TEST_USER_BASE,
     TEST_USER_PASSWORD,
 )
-from backend.models.user import GenderOption, AnonymousPatient
+from backend.models.user import GenderOption, AnonymousPatient, User
 from backend.services.users import create_access_token
 
 MOCK_PERSONALITY_TEST = {
@@ -200,13 +200,88 @@ def test_create_therapist(client_fixture, mock_auth_headers):
             "last_name": "Last",
             "email_address": "a@b.com",
             "password": "HashedPassword1",
-            "type": UserOption.THERAPIST.value,
+            "user_type": UserOption.THERAPIST.value,
         },
         headers=mock_auth_headers,
     )
 
     assert response.status_code == 201
     data = response.json()
+    assert data["id"] is not None
+
+
+def test_create_therapist_with_existing_user(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test creating a new therapist with an existing user."""
+    add_test_user(
+        session_fixture,
+    )
+
+    response = client_fixture.post(
+        "/therapists",
+        json={
+            "first_name": "Therapist",
+            "last_name": "Last",
+            "email_address": TEST_USER_BASE["email_address"],
+            "password": "HashedPassword1",
+            "user_type": UserOption.THERAPIST.value,
+        },
+        headers=mock_auth_headers,
+    )
+
+    data = response.json()
+    assert response.status_code == 201
+
+    user = session_fixture.exec(
+        select(User).where(User.email_address == TEST_USER_BASE["email_address"])
+    ).first()
+
+    assert set(user.roles) == {UserOption.THERAPIST.value, UserOption.PATIENT.value}
+    assert data["id"] is not None
+
+
+def test_create_patient_with_existing_user(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test creating a new patient object with an existing user."""
+    add_test_user(
+        session_fixture,
+        {"roles": [UserOption.THERAPIST.value]},
+    )
+
+    anonymous_patient = add_anonymous_patient(session_fixture)
+
+    personality_test_overrides = {
+        **MOCK_PERSONALITY_TEST,
+        "anonymous_patient_id": anonymous_patient.id,
+    }
+
+    add_personality_test_score(session_fixture, personality_test_overrides)
+
+    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
+
+    response = client_fixture.post(
+        "/patients",
+        json={
+            "first_name": "Patient",
+            "last_name": "Last",
+            "email_address": TEST_USER_BASE["email_address"],
+            "password": "HashedPassword1",
+            "user_type": UserOption.PATIENT.value,
+        },
+        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+    )
+
+    data = response.json()
+
+    assert response.status_code == 201
+
+    user = session_fixture.exec(
+        select(User).where(User.email_address == TEST_USER_BASE["email_address"])
+    ).first()
+
+    assert set(user.roles) == {UserOption.THERAPIST.value, UserOption.PATIENT.value}
     assert data["id"] is not None
 
 
@@ -311,6 +386,7 @@ def test_create_patient_without_personality_test(
             "last_name": "Last",
             "email_address": "a@b.com",
             "password": "Hashedpassword1",
+            "user_type": UserOption.PATIENT.value,
         },
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
     )
@@ -346,6 +422,7 @@ def test_create_patient_with_invalid_first_name(
             "last_name": "Last",
             "email_address": "a@b.com",
             "password": "Hashedpassword1",
+            "user_type": UserOption.PATIENT.value,
         },
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
     )
@@ -387,6 +464,7 @@ def test_create_patient_with_invalid_email(
             "last_name": "Last",
             "email_address": "abc",
             "password": "Hashedpassword1",
+            "user_type": UserOption.PATIENT.value,
         },
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
     )
@@ -424,6 +502,7 @@ def test_create_patient_with_null_password_value(
             "last_name": "Last",
             "email_address": "a@b.com",
             "password": None,
+            "user_type": UserOption.PATIENT.value,
         },
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
     )

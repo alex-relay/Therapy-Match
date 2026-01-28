@@ -49,7 +49,7 @@ from ...services.users import (
     create_user,
     create_anonymous_patient_session,
     TokenUser,
-    get_user_by_email_and_type,
+    get_user_by_email,
     patch_anonymous_patient_session,
     update_user_roles,
 )
@@ -150,15 +150,18 @@ def register_patient(
             status_code=400, detail="No anonymous patient found in session"
         )
 
-    existing_user = get_user_by_email_and_type(
-        data.email_address, data.user_type, session
-    )
+    existing_user = get_user_by_email(data.email_address, session)
 
     is_patient_in_user_roles = (
-        UserOption.PATIENT in (existing_user.roles or []) if existing_user else False
+        UserOption.PATIENT.value in (existing_user.roles or [])
+        if existing_user
+        else False
     )
 
     if is_patient_in_user_roles:
+        logger.warning(
+            "Attempt to register with existing patient: %s", data.email_address
+        )
         raise HTTPException(status_code=409, detail="Patient already exists")
 
     logger.info("Registering patient")
@@ -166,11 +169,10 @@ def register_patient(
     try:
         user = existing_user if existing_user else create_user(data, session)
 
-        session.refresh(anonymous_patient)
-
         patient = create_patient(anonymous_patient, user.id, session)
 
-        update_user_roles(user, UserOption.PATIENT, session)
+        if existing_user:
+            update_user_roles(user, data.user_type, session)
 
         formatted_personality_test_score = format_personality_test(
             anonymous_patient.personality_test
@@ -205,22 +207,29 @@ def register_patient(
 def register_therapist(data: UserCreate, session: SessionDep):
     """Register a new therapist."""
 
-    existing_therapist = get_user_by_email_and_type(
-        data.email_address, data.user_type, session
+    existing_user = get_user_by_email(data.email_address, session)
+
+    is_therapist_in_user_roles = (
+        UserOption.THERAPIST.value in (existing_user.roles or [])
+        if existing_user
+        else False
     )
 
-    if existing_therapist:
+    if is_therapist_in_user_roles:
         logger.warning(
-            "Attempt to register with existing email: %s", data.email_address
+            "Attempt to register with existing therapist: %s", data.email_address
         )
         raise HTTPException(status_code=409, detail="Therapist already exists")
 
     logger.info("Registering therapist: %s", data.email_address)
 
     try:
-        user = create_user(data, session)
+        user = existing_user if existing_user else create_user(data, session)
 
         therapist = create_therapist(data, user.id, session)
+
+        if existing_user:
+            update_user_roles(user, data.user_type, session)
 
         logger.info("Created therapist")
 
