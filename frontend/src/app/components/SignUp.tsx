@@ -152,7 +152,7 @@ export default function SignUp() {
       last_name,
       email_address,
       password,
-      type: userType,
+      user_type: userType,
     });
   };
 

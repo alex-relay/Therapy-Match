@@ -213,7 +213,7 @@ def test_create_therapist(client_fixture, mock_auth_headers):
 def test_create_therapist_with_existing_user(
     client_fixture, session_fixture, mock_auth_headers
 ):
-    """Test creating a new therapist with an existing user."""
+    """Test creating a new therapist object with an existing user."""
     add_test_user(
         session_fixture,
     )

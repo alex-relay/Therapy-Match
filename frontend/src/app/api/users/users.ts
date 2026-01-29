@@ -37,7 +37,21 @@ type CreateUserProps = {
   last_name: string;
   email_address: string;
   password: string;
-  type: UserType;
+  user_type: UserType;
+};
+
+type Token = {
+  access_token: string;
+  token_type: string;
+  user: {
+    email_address: string;
+  };
+  roles: UserType[];
+};
+
+type LoginCredentialsProps = {
+  email_address: string;
+  password: string;
 };
 
 type Patient = {
@@ -52,13 +66,12 @@ type Patient = {
   id: string;
 };
 
-// TODO: We need to hash the password on the client side in the request.
 const createUser = ({
-  type,
+  user_type,
   ...formData
 }: CreateUserProps): Promise<Patient> => {
   const endpoint =
-    type === "patient" ? `${API_URL}/patients` : `${API_URL}/therapists`;
+    user_type === "patient" ? `${API_URL}/patients` : `${API_URL}/therapists`;
 
   return fetch(endpoint, {
     headers: {
@@ -66,7 +79,30 @@ const createUser = ({
     },
     method: "POST",
     credentials: "include",
-    body: JSON.stringify(formData),
+    body: JSON.stringify({ ...formData, user_type }),
+  }).then(async (response) => {
+    if (!response.ok) {
+      const resp = await response.json();
+      throw new Error(resp.detail);
+    }
+    return response.json();
+  });
+};
+
+const authenticateUserLogin = ({
+  email_address,
+  password,
+}: LoginCredentialsProps): Promise<Token> => {
+  return fetch(`${API_URL}/token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    body: new URLSearchParams({
+      username: email_address,
+      password: password,
+    }),
   }).then(async (response) => {
     if (!response.ok) {
       const resp = await response.json();
@@ -77,7 +113,7 @@ const createUser = ({
 };
 
 const useCreateUser = (
-  options?: UseMutationOptions<Patient, Error, createUserProps>,
+  options?: UseMutationOptions<Patient, Error, CreateUserProps>,
 ) => {
   return useMutation({
     mutationFn: createUser,
@@ -85,4 +121,13 @@ const useCreateUser = (
   });
 };
 
-export { useCreateUser, createUser };
+const useAuthenticateUser = (
+  options?: UseMutationOptions<Token, Error, LoginCredentialsProps>,
+) => {
+  return useMutation({
+    mutationFn: authenticateUserLogin,
+    ...options,
+  });
+};
+
+export { useCreateUser, createUser, useAuthenticateUser };
