@@ -1,6 +1,8 @@
-from typing import TypeVar
+from typing import Annotated, TypeVar
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
+from fastapi.params import Depends
+from fastapi import HTTPException, status
 import jwt
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session, select, SQLModel
@@ -13,6 +15,9 @@ from ..schemas.users import (
     UserCreate,
     AnonymousSessionPatientBase,
 )
+
+from jwt.exceptions import InvalidTokenError
+
 from .location_service import get_coordinates_from_postal_code
 from ..routers.users.exceptions import (
     PatientCreationError,
@@ -46,16 +51,6 @@ class Token(SQLModel):
     token_type: str
     user: TokenUser
     roles: list[str]
-
-
-class TokenData(SQLModel):
-    """Represents decoded JWT token data.
-
-    Attributes:
-        username: The username extracted from the token, if present.
-    """
-
-    username: str | None = None
 
 
 def create_user(user_data: UserCreate, session: Session) -> User:
@@ -213,6 +208,26 @@ def get_user_by_email(email_address: str | None, session: Session) -> User | Non
         return None
     user = session.exec(select(User).where(User.email_address == email_address)).first()
     return user
+
+
+# async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: Session) -> User:
+#     credentials_exception = HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED,
+#         detail="Could not validate credentials",
+#         headers={"WWW-Authenticate": "Bearer"},
+#     )
+#     try:
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+#         username = payload.get("sub")
+#         if username is None:
+#             raise credentials_exception
+#         token_data = TokenUser(email_address)
+#     except InvalidTokenError:
+#         raise credentials_exception
+#     user = get_user_by_email(token_data.username, session)
+#     if user is None:
+#         raise credentials_exception
+#     return user
 
 
 def get_user_by_email_and_type(
