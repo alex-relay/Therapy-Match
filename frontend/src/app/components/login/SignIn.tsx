@@ -17,7 +17,8 @@ import { styled } from "@mui/material/styles";
 import ForgotPassword from "./ForgotPassword";
 // import { GoogleIcon, FacebookIcon, SitemarkIcon } from "../CustomIcons";
 import { SitemarkIcon } from "../CustomIcons";
-import { signIn } from "next-auth/react";
+import { useAuthenticateUser } from "@/app/api/users/users";
+import { useRouter } from "next/navigation";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -72,6 +73,22 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
   const [open, setOpen] = React.useState(false);
 
+  const router = useRouter();
+
+  const { mutate: authenticateUser, isPending: isAuthenticationPending } =
+    useAuthenticateUser({
+      onSuccess: async (data) => {
+        if (data?.access_token) {
+          router.push("/profile");
+        } else {
+          throw new Error("Authentication failed: No access token received.");
+        }
+      },
+      onError: (error) => {
+        console.error("Authentication failed:", error);
+      },
+    });
+
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -112,15 +129,15 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
     const email = data.get("email");
     const password = data.get("password");
 
-    const res = await signIn("credentials", {
-      callbackUrl: "/profile",
-      emailAddress: email,
-      password,
+    if (!email || !password) {
+      return;
+    }
+
+    authenticateUser({
+      email_address: email as string,
+      password: password as string,
     });
-
-    return res;
   };
-
   return (
     <SignInContainer direction="column" justifyContent="space-between">
       <Card variant="outlined" data-testid="signin-card">
@@ -197,6 +214,7 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
             type="submit"
             fullWidth
             variant="contained"
+            disabled={isAuthenticationPending}
           >
             Sign in
           </Button>
