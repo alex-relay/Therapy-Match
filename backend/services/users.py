@@ -13,6 +13,8 @@ from ..schemas.users import (
     UserCreate,
     AnonymousSessionPatientBase,
 )
+
+
 from .location_service import get_coordinates_from_postal_code
 from ..routers.users.exceptions import (
     PatientCreationError,
@@ -46,16 +48,6 @@ class Token(SQLModel):
     token_type: str
     user: TokenUser
     roles: list[str]
-
-
-class TokenData(SQLModel):
-    """Represents decoded JWT token data.
-
-    Attributes:
-        username: The username extracted from the token, if present.
-    """
-
-    username: str | None = None
 
 
 def create_user(user_data: UserCreate, session: Session) -> User:
@@ -191,27 +183,21 @@ def create_therapist(
     return therapist
 
 
-def get_patient(
-    anonymous_patient: AnonymousPatient, session: Session
-) -> Patient | None:
-    """Retrieve existing patient by anonymous patient ID."""
-    try:
-        existing_patient = session.exec(
-            select(Patient).where(Patient.id == anonymous_patient.id)
-        ).first()
-
-        return existing_patient
-    except Exception as e:
-        logger.exception("Error trying to find existing patient")
-        raise ValueError("Error retrieving existing patient") from e
-
-
 def get_user_by_email(email_address: str | None, session: Session) -> User | None:
     """Retrieve a user by email."""
 
     if not email_address:
         return None
     user = session.exec(select(User).where(User.email_address == email_address)).first()
+    return user
+
+
+def get_user_by_id(user_id: UUID | None, session: Session) -> User | None:
+    """Retrieve a user by ID."""
+
+    if not user_id:
+        return None
+    user = session.exec(select(User).where(User.id == user_id)).first()
     return user
 
 

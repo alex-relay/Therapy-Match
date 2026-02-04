@@ -241,6 +241,37 @@ def test_create_therapist_with_existing_user(
     assert data["id"] is not None
 
 
+def test_get_authenticated_patient(client_fixture, session_fixture, mock_auth_headers):
+    """Test getting authenticated patient."""
+
+    test_user_based_string_id = str(TEST_USER_BASE["id"])
+    add_test_user(session_fixture, {"id": test_user_based_string_id})
+    add_test_patient(session_fixture)
+
+    access_token = create_access_token(
+        {"sub": test_user_based_string_id}, timedelta(minutes=60)
+    )
+
+    response = client_fixture.get(
+        "/patients/me",
+        headers={**mock_auth_headers, "Authorization": f"Bearer {access_token}"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert "id" in data
+    assert data["latitude"] == 40.7128
+    assert data["longitude"] == -74.006
+    assert data["description"] == "Patient for testing"
+    assert data["age"] == 30
+    assert data["gender"] == "prefer_not_to_say"
+    assert data["personality_test_id"] is None
+    assert data["therapy_needs"] == ["anxiety"]
+    assert data["is_lgbtq_therapist_preference"] is True
+    assert data["is_religious_therapist_preference"] is False
+
+
 def test_create_patient_with_existing_user(
     client_fixture, session_fixture, mock_auth_headers
 ):
