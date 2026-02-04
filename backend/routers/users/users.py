@@ -9,7 +9,7 @@ from fastapi import APIRouter, status, Depends, HTTPException, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from backend.core.database import SessionDep
-from backend.models.user import AnonymousPatient
+from backend.models.user import AnonymousPatient, Patient
 from backend.core.logging import get_logger
 from backend.routers.users.user_types import UserOption
 from backend.schemas.users import (
@@ -37,6 +37,7 @@ from .exceptions import (
 
 from .dependencies import (
     get_anonymous_patient,
+    get_patient_by_user_id,
 )
 
 from ...services.users import (
@@ -337,3 +338,15 @@ def get_anonymous_patient_data(
     return AnonymousSessionPatientResponse(
         **anonymous_patient.model_dump(exclude={"session_id"})
     )
+
+
+@router.get("/patients/me", response_model=PatientRead)
+def get_patient_profile(
+    current_patient: Annotated[Patient, Depends(get_patient_by_user_id)],
+):
+    """get the current user's profile"""
+    if not current_patient:
+        logger.error("Current patient not found")
+        raise HTTPException(status_code=404, detail="Patient profile not found")
+
+    return PatientRead(**current_patient.model_dump())

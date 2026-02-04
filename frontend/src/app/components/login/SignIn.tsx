@@ -124,7 +124,7 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
     return isValid;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     const data = new FormData(e.currentTarget);
     const email = data.get("email");
     const password = data.get("password");

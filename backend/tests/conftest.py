@@ -65,7 +65,9 @@ def session_fixture():
 def mock_jwt_decode(monkeypatch):
     """Patch jwt.decode to always return a fixed payload."""
 
-    def fake_decode(token, key=None, algorithms=None, options=None):
+    def fake_decode(
+        token, key=None, algorithms=None, options=None
+    ):  # pylint: disable=unused-argument
         return {
             "sub": USER_ID,
             "exp": 9999999999,
@@ -78,7 +80,7 @@ def mock_jwt_decode(monkeypatch):
 @pytest.fixture(scope="function")
 def mock_auth_headers(mock_jwt_decode):
     # mock the return value of authorization in the headers
-    return {"Authorization": "Bearer token"}
+    return {"Authorization": "Bearer test_token"}
 
 
 @pytest.fixture(scope="function")

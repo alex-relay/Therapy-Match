@@ -1,8 +1,6 @@
-from typing import Annotated, TypeVar
+from typing import TypeVar
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
-from fastapi.params import Depends
-from fastapi import HTTPException, status
 import jwt
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session, select, SQLModel
@@ -16,7 +14,6 @@ from ..schemas.users import (
     AnonymousSessionPatientBase,
 )
 
-from jwt.exceptions import InvalidTokenError
 
 from .location_service import get_coordinates_from_postal_code
 from ..routers.users.exceptions import (
@@ -186,21 +183,6 @@ def create_therapist(
     return therapist
 
 
-def get_patient(
-    anonymous_patient: AnonymousPatient, session: Session
-) -> Patient | None:
-    """Retrieve existing patient by anonymous patient ID."""
-    try:
-        existing_patient = session.exec(
-            select(Patient).where(Patient.id == anonymous_patient.id)
-        ).first()
-
-        return existing_patient
-    except Exception as e:
-        logger.exception("Error trying to find existing patient")
-        raise ValueError("Error retrieving existing patient") from e
-
-
 def get_user_by_email(email_address: str | None, session: Session) -> User | None:
     """Retrieve a user by email."""
 
@@ -210,24 +192,13 @@ def get_user_by_email(email_address: str | None, session: Session) -> User | Non
     return user
 
 
-# async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: Session) -> User:
-#     credentials_exception = HTTPException(
-#         status_code=status.HTTP_401_UNAUTHORIZED,
-#         detail="Could not validate credentials",
-#         headers={"WWW-Authenticate": "Bearer"},
-#     )
-#     try:
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#         username = payload.get("sub")
-#         if username is None:
-#             raise credentials_exception
-#         token_data = TokenUser(email_address)
-#     except InvalidTokenError:
-#         raise credentials_exception
-#     user = get_user_by_email(token_data.username, session)
-#     if user is None:
-#         raise credentials_exception
-#     return user
+def get_user_by_id(user_id: UUID | None, session: Session) -> User | None:
+    """Retrieve a user by ID."""
+
+    if not user_id:
+        return None
+    user = session.exec(select(User).where(User.id == user_id)).first()
+    return user
 
 
 def get_user_by_email_and_type(
