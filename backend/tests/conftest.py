@@ -1,3 +1,4 @@
+from unittest.mock import MagicMock
 import pytest
 from sqlmodel import create_engine, Session, SQLModel
 from sqlalchemy import text
@@ -65,20 +66,22 @@ def session_fixture():
 def mock_jwt_decode(monkeypatch):
     """Patch jwt.decode to always return a fixed payload."""
 
-    def fake_decode(
-        token, key=None, algorithms=None, options=None
-    ):  # pylint: disable=unused-argument
-        return {
-            "sub": USER_ID,
-            "exp": 9999999999,
-        }
+    mock_decode = MagicMock()
+    mock_decode.return_value = {
+        "sub": USER_ID,
+        "exp": 9999999999,
+    }
 
-    monkeypatch.setattr("backend.services.users.jwt.decode", fake_decode)
-    yield
+    # 2. Apply the patch using the mock object
+    monkeypatch.setattr("backend.services.users.jwt.decode", mock_decode)
+
+    # 3. Yield the mock so the test function can access/modify it
+    yield mock_decode
 
 
 @pytest.fixture(scope="function")
 def mock_auth_headers(mock_jwt_decode):
+    """Pass mock authorization headers to test routes"""
     # mock the return value of authorization in the headers
     return {"Authorization": "Bearer test_token"}
 

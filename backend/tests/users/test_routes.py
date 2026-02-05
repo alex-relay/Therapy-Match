@@ -244,12 +244,11 @@ def test_create_therapist_with_existing_user(
 def test_get_authenticated_patient(client_fixture, session_fixture, mock_auth_headers):
     """Test getting authenticated patient."""
 
-    test_user_based_string_id = str(TEST_USER_BASE["id"])
-    add_test_user(session_fixture, {"id": test_user_based_string_id})
+    add_test_user(session_fixture)
     add_test_patient(session_fixture)
 
     access_token = create_access_token(
-        {"sub": test_user_based_string_id}, timedelta(minutes=60)
+        {"sub": str(TEST_USER_BASE["id"])}, timedelta(minutes=60)
     )
 
     response = client_fixture.get(
@@ -270,6 +269,67 @@ def test_get_authenticated_patient(client_fixture, session_fixture, mock_auth_he
     assert data["therapy_needs"] == ["anxiety"]
     assert data["is_lgbtq_therapist_preference"] is True
     assert data["is_religious_therapist_preference"] is False
+
+
+def test_authenticated_patient_not_found(
+    client_fixture, session_fixture, mock_auth_headers, mock_jwt_decode
+):
+    """Test getting authenticated patient when not found."""
+    test_alternative_user_id = UUID("b658ffce-d810-4341-a8ef-2d3651489daf")
+
+    add_test_user(session_fixture)
+    add_test_user(session_fixture, {"id": test_alternative_user_id})
+
+    add_test_patient(session_fixture)
+
+    access_token = create_access_token(
+        {"sub": str(test_alternative_user_id)}, timedelta(minutes=60)
+    )
+
+    mock_jwt_decode.return_value = {
+        "sub": str(test_alternative_user_id),
+        "exp": 9999999999,
+    }
+
+    response = client_fixture.get(
+        "/patients/me",
+        headers={**mock_auth_headers, "Authorization": f"Bearer {access_token}"},
+    )
+
+    assert response.status_code == 404
+    data = response.json()
+    assert data == {"detail": "Patient not found"}
+
+
+def test_authenticated_user_not_found(
+    client_fixture, session_fixture, mock_auth_headers, mock_jwt_decode
+):
+    """Test getting authenticated patient returns 401 when user cannot be validated."""
+
+    test_alternative_user_id = UUID("b758ffce-d810-4341-a8ef-2d3651489daf")
+
+    add_test_user(session_fixture)
+    add_test_user(session_fixture, {"id": UUID("b658ffce-d810-4341-a8ef-2d3651489daf")})
+
+    add_test_patient(session_fixture)
+
+    access_token = create_access_token(
+        {"sub": str(test_alternative_user_id)}, timedelta(minutes=60)
+    )
+
+    mock_jwt_decode.return_value = {
+        "sub": str(test_alternative_user_id),
+        "exp": 9999999999,
+    }
+
+    response = client_fixture.get(
+        "/patients/me",
+        headers={**mock_auth_headers, "Authorization": f"Bearer {access_token}"},
+    )
+
+    assert response.status_code == 401
+    data = response.json()
+    assert data == {"detail": "Could not validate credentials"}
 
 
 def test_create_patient_with_existing_user(

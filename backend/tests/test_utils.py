@@ -25,24 +25,34 @@ TEST_USER_BASE = {
     "roles": [UserOption.PATIENT.value],
 }
 
+TEST_PATIENT_BASE = {
+    "latitude": 40.7128,
+    "longitude": -74.0060,
+    "description": "Patient for testing",
+    "therapy_needs": ["anxiety"],
+    "gender": GenderOption.PREFER_NOT_TO_SAY,
+    "is_lgbtq_therapist_preference": True,
+    "is_religious_therapist_preference": False,
+    "age": 30,
+    "user_id": UUID(USER_ID),
+}
 
-def add_test_patient(session_fixture):
+
+def add_test_patient(session_fixture, mock_overrides=None):
     """Add a test patient to the database."""
-    existing_patient = Patient(
-        latitude=40.7128,
-        longitude=-74.0060,
-        description="Patient for testing",
-        therapy_needs=["anxiety"],
-        gender=GenderOption.PREFER_NOT_TO_SAY,
-        is_lgbtq_therapist_preference=True,
-        is_religious_therapist_preference=False,
-        age=30,
-        user_id=UUID(USER_ID),
-    )
+
+    patient_data = {
+        **TEST_PATIENT_BASE,
+        **(mock_overrides or {}),
+    }
+
+    existing_patient = Patient(**patient_data)
 
     session_fixture.add(existing_patient)
     session_fixture.commit()
     session_fixture.refresh(existing_patient)
+
+    return existing_patient
 
 
 def add_test_therapist(session_fixture):
