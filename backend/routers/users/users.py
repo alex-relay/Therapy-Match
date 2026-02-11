@@ -3,11 +3,9 @@ This module provides the routes for users.
 """
 from uuid import uuid4
 from datetime import timedelta
-from typing import Optional
 from typing import Annotated
-from fastapi import APIRouter, status, Depends, HTTPException, Cookie
+from fastapi import APIRouter, status, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.responses import JSONResponse
 from backend.core.database import SessionDep
 from backend.models.user import AnonymousPatient, Patient
 from backend.core.logging import get_logger
@@ -47,6 +45,7 @@ from ...services.users import (
     authenticate_user,
     create_access_token,
     Token,
+    AnonymousSessionToken,
     create_user,
     create_anonymous_patient_session,
     TokenUser,
@@ -253,15 +252,9 @@ def register_therapist(data: UserCreate, session: SessionDep):
 
 @router.post("/anonymous-sessions")
 def create_anonymous_session(
-    session: SessionDep,
-    anonymous_session: Optional[str] = Cookie(None, alias="anonymous_session"),
-) -> JSONResponse:
-    """creates an anonymous patient session and sets a cookie"""
-
-    if anonymous_session:
-        return JSONResponse({"messsage": "Cookie has already been created"})
-
-    content = {"message": "Anonymous patient session created successfully"}
+    db_session: SessionDep,
+) -> AnonymousSessionToken:
+    """Creates an anonymous patient session and returns a token."""
     session_id = str(uuid4())
 
     try:
@@ -271,26 +264,15 @@ def create_anonymous_session(
 
         logger.info("Creating the anonymous session")
 
-        create_anonymous_patient_session(session_id, session)
+        create_anonymous_patient_session(session_id, db_session)
 
-        response = JSONResponse(content=content)
-        response.set_cookie(
-            key="anonymous_session",
-            value=access_token,
-            httponly=True,
-            max_age=60 * 60,
-            path="/",
-            samesite="none",
-            secure=True,
-        )
-
-        return response
+        return AnonymousSessionToken(access_token=access_token, user_id=session_id)
 
     except Exception as e:
         logger.exception("Unable to create an anonymous session")
         raise HTTPException(
             status_code=500,
-            detail=str("An internal error occurred"),
+            detail="An internal error occurred",
         ) from e
 
 

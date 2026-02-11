@@ -1,12 +1,11 @@
 from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer
 import jwt
-from fastapi import status, Depends, HTTPException, Cookie
+from fastapi import status, Depends, HTTPException
 from sqlmodel import select
 from backend.core.database import SessionDep
-from backend.models.user import AnonymousPatient, Patient, User
+from backend.models.user import AnonymousPatient, Patient, Therapist, User
 from backend.core.logging import get_logger
-from ...schemas.users import AnonymousSessionCookie
 from ...services.users import (
     SECRET_KEY,
     ALGORITHM,
@@ -17,10 +16,9 @@ logger = get_logger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def get_current_session_id(cookie: Annotated[AnonymousSessionCookie, Cookie()]):
+def get_current_session_id(token: str = Depends(oauth2_scheme)):
     """gets the current session id"""
     try:
-        token = cookie.anonymous_session
         if not token:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -131,3 +129,33 @@ def get_patient_by_user_id(
         )
 
     return patient
+
+
+def get_therapist_by_user_id(
+    user: Annotated[User, Depends(get_current_user)], db_session: SessionDep
+) -> Therapist | None:
+    """Retrieve a therapist by user ID."""
+
+    if not user.id:
+        return None
+
+    try:
+        therapist = db_session.exec(
+            select(Therapist).where(Therapist.user_id == user.id)
+        ).first()
+
+    except Exception as e:
+        logger.exception("Unable to get therapist by user id")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving therapist data.",
+        ) from e
+
+    if not therapist:
+        logger.error("Therapist not found for user_id: %s", user.id)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Therapist not found",
+        )
+
+    return therapist

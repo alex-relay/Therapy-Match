@@ -50,6 +50,11 @@ class Token(SQLModel):
     roles: list[str]
 
 
+class AnonymousSessionToken(SQLModel):
+    access_token: str
+    user_id: str
+
+
 def create_user(user_data: UserCreate, session: Session) -> User:
     """creates a user"""
     hashed_password = get_password_hash(user_data.password)

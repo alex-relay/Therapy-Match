@@ -1,38 +1,83 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+const FASTAPI_URL = process.env.FASTAPI_URL;
+
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
-      // The name to display on the sign in form (e.g. "Sign in with...")
       name: "Credentials",
-      // `credentials` is used to generate a form on the sign in page.
-      // You can specify which fields should be submitted, by adding keys to the `credentials` object.
-      // e.g. domain, username, password, 2FA token, etc.
-      // You can pass any HTML attribute to the <input> tag through the object.
       credentials: {
         emailAddress: { label: "Email Address", type: "email" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // Add logic here to look up the user from the credentials supplied
-        const res = await fetch("http://localhost:8000/token", {
-          method: "POST",
-          body: new URLSearchParams({
-            username: credentials?.emailAddress || "",
-            password: credentials?.password || "",
-          }),
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        });
-
-        const user = await res.json();
-
-        // If no error and we have user data, return it
-        if (res.ok && user) {
-          return user;
+        if (!credentials?.emailAddress || !credentials?.password) {
+          return null;
         }
-        // Return null if user data could not be retrieveds
-        return null;
+
+        try {
+          const res = await fetch(`${FASTAPI_URL}/token`, {
+            method: "POST",
+            body: new URLSearchParams({
+              username: credentials?.emailAddress || "",
+              password: credentials?.password || "",
+            }),
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          });
+
+          if (res.status === 401) {
+            console.warn(
+              "Login failed: Invalid credentials for",
+              credentials.emailAddress,
+            );
+            return null; // Triggers the default "Sign In Failed" error
+          }
+
+          // 4. Handle Unexpected Errors (500 Server Error)
+          if (!res.ok) {
+            console.error("Login failed: Backend returned error", res.status);
+            throw new Error("BackendError");
+          }
+
+          const user = await res.json();
+          return user;
+        } catch (error) {
+          if (error instanceof Error && error.message === "BackendError") {
+            throw error;
+          }
+          console.error("Login critical failure:", error);
+          throw new Error("NetworkError");
+        }
+      },
+    }),
+    CredentialsProvider({
+      id: "anonymous-session",
+      name: "Anonymous",
+      credentials: {},
+      async authorize() {
+        try {
+          const res = await fetch(`${FASTAPI_URL}/anonymous-sessions`, {
+            method: "POST",
+          });
+
+          if (res.status === 401) {
+            console.warn("Anonymous session creation failed: Unauthorized");
+            return null;
+          }
+
+          const session = await res.json();
+
+          if (res.ok && session) {
+            return session;
+          }
+
+          console.error("Anonymous session creation failed:", res.status);
+          return null;
+        } catch (error) {
+          console.error("Anonymous session critical failure:", error);
+          throw new Error("NetworkError");
+        }
       },
     }),
   ],
@@ -47,7 +92,7 @@ const handler = NextAuth({
     },
     async session({ session, token }) {
       if (token?.accessToken) {
-        session.accessToken = token.accessToken as string;
+        // session.accessToken = token.accessToken as string;
         session.user = token.user;
       }
       return session;

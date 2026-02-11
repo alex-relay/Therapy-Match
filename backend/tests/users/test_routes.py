@@ -1,5 +1,4 @@
 from uuid import UUID
-from datetime import timedelta
 import numpy as np
 import pandas as pd
 from sqlmodel import select
@@ -15,7 +14,6 @@ from backend.tests.test_utils import (
     TEST_USER_PASSWORD,
 )
 from backend.models.user import GenderOption, AnonymousPatient, User
-from backend.services.users import create_access_token
 
 MOCK_PERSONALITY_TEST = {
     "anonymous_patient_id": "c303282d-f2e6-46ca-a04a-35d3d873712d",
@@ -247,14 +245,7 @@ def test_get_authenticated_patient(client_fixture, session_fixture, mock_auth_he
     add_test_user(session_fixture)
     add_test_patient(session_fixture)
 
-    access_token = create_access_token(
-        {"sub": str(TEST_USER_BASE["id"])}, timedelta(minutes=60)
-    )
-
-    response = client_fixture.get(
-        "/patients/me",
-        headers={**mock_auth_headers, "Authorization": f"Bearer {access_token}"},
-    )
+    response = client_fixture.get("/patients/me", headers=mock_auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -282,19 +273,12 @@ def test_authenticated_patient_not_found(
 
     add_test_patient(session_fixture)
 
-    access_token = create_access_token(
-        {"sub": str(test_alternative_user_id)}, timedelta(minutes=60)
-    )
-
     mock_jwt_decode.return_value = {
         "sub": str(test_alternative_user_id),
         "exp": 9999999999,
     }
 
-    response = client_fixture.get(
-        "/patients/me",
-        headers={**mock_auth_headers, "Authorization": f"Bearer {access_token}"},
-    )
+    response = client_fixture.get("/patients/me", headers=mock_auth_headers)
 
     assert response.status_code == 404
     data = response.json()
@@ -313,10 +297,6 @@ def test_authenticated_user_not_found(
 
     add_test_patient(session_fixture)
 
-    access_token = create_access_token(
-        {"sub": str(test_alternative_user_id)}, timedelta(minutes=60)
-    )
-
     mock_jwt_decode.return_value = {
         "sub": str(test_alternative_user_id),
         "exp": 9999999999,
@@ -324,7 +304,7 @@ def test_authenticated_user_not_found(
 
     response = client_fixture.get(
         "/patients/me",
-        headers={**mock_auth_headers, "Authorization": f"Bearer {access_token}"},
+        headers=mock_auth_headers,
     )
 
     assert response.status_code == 401
@@ -350,8 +330,6 @@ def test_create_patient_with_existing_user(
 
     add_personality_test_score(session_fixture, personality_test_overrides)
 
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
     response = client_fixture.post(
         "/patients",
         json={
@@ -361,7 +339,7 @@ def test_create_patient_with_existing_user(
             "password": "HashedPassword1",
             "user_type": UserOption.PATIENT.value,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        headers=mock_auth_headers,
     )
 
     data = response.json()
@@ -382,16 +360,11 @@ def test_create_anonymous_session(client_fixture, session_fixture):
         "/anonymous-sessions",
     )
 
-    set_cookie_header = response.headers.get("set-cookie")
-
     assert response.status_code == 200
-    assert response.json() == {
-        "message": "Anonymous patient session created successfully"
-    }
-    assert "anonymous_session" in set_cookie_header
-    assert "HttpOnly" in set_cookie_header
-    assert "Max-Age=3600" in set_cookie_header
-    assert "Path=/" in set_cookie_header
+    data = response.json()
+
+    assert data["access_token"] is not None
+    assert data["user_id"] is not None
 
     anon_session_record = session_fixture.exec(select(AnonymousPatient)).first()
     assert anon_session_record is not None
@@ -431,8 +404,6 @@ def test_create_patient(client_fixture, session_fixture, mock_auth_headers):
 
     add_personality_test_score(session_fixture, personality_test_overrides)
 
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
     response = client_fixture.post(
         "/patients",
         json={
@@ -442,7 +413,7 @@ def test_create_patient(client_fixture, session_fixture, mock_auth_headers):
             "password": "Hashedpassword1",
             "user_type": UserOption.PATIENT.value,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        headers=mock_auth_headers,
     )
 
     assert response.status_code == 201
@@ -479,7 +450,7 @@ def test_create_patient_without_personality_test(
             "password": "Hashedpassword1",
             "user_type": UserOption.PATIENT.value,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+        headers=mock_auth_headers,
     )
 
     data = response.json()
@@ -515,7 +486,7 @@ def test_create_patient_with_invalid_first_name(
             "password": "Hashedpassword1",
             "user_type": UserOption.PATIENT.value,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+        headers=mock_auth_headers,
     )
 
     data = response.json()["detail"]
@@ -557,7 +528,7 @@ def test_create_patient_with_invalid_email(
             "password": "Hashedpassword1",
             "user_type": UserOption.PATIENT.value,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+        headers=mock_auth_headers,
     )
 
     data = response.json()["detail"]
@@ -595,7 +566,7 @@ def test_create_patient_with_null_password_value(
             "password": None,
             "user_type": UserOption.PATIENT.value,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+        headers=mock_auth_headers,
     )
 
     data = response.json()["detail"]
@@ -625,8 +596,6 @@ def test_create_patient_returns_409_for_existing_patient(
 
     add_anonymous_patient(session_fixture, overrides)
 
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
     response = client_fixture.post(
         "/patients",
         json={
@@ -636,7 +605,7 @@ def test_create_patient_returns_409_for_existing_patient(
             "password": "HashedPassword1",
             "user_type": UserOption.PATIENT.value,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        headers=mock_auth_headers,
     )
 
     assert response.status_code == 409
@@ -674,14 +643,12 @@ def test_patch_anonymous_patient_updates(
 
     add_anonymous_patient(session_fixture)
 
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
     response = client_fixture.patch(
         "/anonymous-sessions",
         json={
             "age": 30,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        headers=mock_auth_headers,
     )
 
     anonymous_session_record = session_fixture.exec(select(AnonymousPatient)).first()
@@ -704,7 +671,7 @@ def test_patch_anonyomous_patient_does_not_affect_older_data(
         json={
             "age": 30,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={USER_ID}"},
+        headers=mock_auth_headers,
     )
 
     anonymous_session_record = session_fixture.exec(select(AnonymousPatient)).first()
@@ -723,18 +690,14 @@ def test_patch_anonymous_patient_overwrites_previous_patch(
         "age": 29,
     }
 
-    # Create the anonymous patient with the session ID
     add_anonymous_patient(session_fixture, mock_overrides)
-
-    # Create a proper JWT token like the server does
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
     response = client_fixture.patch(
         "/anonymous-sessions",
         json={
             "age": 30,
         },
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        headers=mock_auth_headers,
     )
 
     assert response.status_code == 200
@@ -758,12 +721,10 @@ def test_patch_anonymous_patient_saves_location_coordinates(
 
     add_anonymous_patient(session_fixture)
 
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
     response = client_fixture.patch(
         "/anonymous-sessions",
         json={"postal_code": "M5A 4L1"},
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        headers=mock_auth_headers,
     )
 
     assert response.status_code == 200
@@ -781,12 +742,10 @@ def test_patch_anonymous_patient_invalid_location_coordinates(
 
     add_anonymous_patient(session_fixture)
 
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
     response = client_fixture.patch(
         "/anonymous-sessions",
         json={"postal_code": "123 456"},
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        headers=mock_auth_headers,
     )
 
     data = response.json()
@@ -803,8 +762,6 @@ def test_patch_anonymous_patient_no_location(
     """Test that patching with an unresolvable postal code returns an error"""
     add_anonymous_patient(session_fixture)
 
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
     mock_location = pd.Series(
         {
             "latitude": np.nan,
@@ -817,7 +774,7 @@ def test_patch_anonymous_patient_no_location(
     response = client_fixture.patch(
         "/anonymous-sessions",
         json={"postal_code": "L4J 6B6"},
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        headers=mock_auth_headers,
     )
 
     data = response.json()
@@ -833,12 +790,10 @@ def test_patch_anonymous_patient_lgbtq_preference(
     """test if the dataframe is empty from pgeocode"""
     add_anonymous_patient(session_fixture)
 
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
     response = client_fixture.patch(
         "/anonymous-sessions",
         json={"is_lgbtq_therapist_preference": True},
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        headers=mock_auth_headers,
     )
 
     data = response.json()
@@ -853,12 +808,10 @@ def test_patch_anonymous_patient_lgbtq_preference_invalid_value(
     """Test that non-boolean value for LGBTQ preference returns 422"""
     add_anonymous_patient(session_fixture)
 
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
     response = client_fixture.patch(
         "/anonymous-sessions",
         json={"is_lgbtq_therapist_preference": 1},
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        headers=mock_auth_headers,
     )
 
     data = response.json()
@@ -871,12 +824,7 @@ def test_get_anonymous_patient(client_fixture, session_fixture, mock_auth_header
     """Test to get an anonymous patient"""
     add_anonymous_patient(session_fixture, {"gender": "male", "age": 29})
 
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
-    response = client_fixture.get(
-        "/anonymous-sessions",
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
-    )
+    response = client_fixture.get("/anonymous-sessions", headers=mock_auth_headers)
 
     data = response.json()
 
@@ -891,11 +839,9 @@ def test_get_anonymous_patient_returns_404_nonexisting_patient(
     """test if the dataframe is empty from pgeocode"""
     add_anonymous_patient(session_fixture, {"session_id": "1234"})
 
-    access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
-
     response = client_fixture.get(
         "/anonymous-sessions",
-        headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
+        headers=mock_auth_headers,
     )
 
     data = response.json()["detail"]

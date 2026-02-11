@@ -3,9 +3,9 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import { signIn } from "next-auth/react";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
-// import Divider from "@mui/material/Divider";
 import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
 import Link from "@mui/material/Link";
@@ -15,9 +15,7 @@ import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import ForgotPassword from "./ForgotPassword";
-// import { GoogleIcon, FacebookIcon, SitemarkIcon } from "../CustomIcons";
 import { SitemarkIcon } from "../CustomIcons";
-import { useAuthenticateUser } from "@/app/api/users/users";
 import { useRouter } from "next/navigation";
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -66,7 +64,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
-export default function SignIn({ csrfToken }: { csrfToken: string }) {
+export default function SignIn() {
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
   const [passwordError, setPasswordError] = React.useState(false);
@@ -74,20 +72,6 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
   const [open, setOpen] = React.useState(false);
 
   const router = useRouter();
-
-  const { mutate: authenticateUser, isPending: isAuthenticationPending } =
-    useAuthenticateUser({
-      onSuccess: async (data) => {
-        if (data?.access_token) {
-          router.push("/profile");
-        } else {
-          throw new Error("Authentication failed: No access token received.");
-        }
-      },
-      onError: (error) => {
-        console.error("Authentication failed:", error);
-      },
-    });
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -124,7 +108,7 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     const data = new FormData(e.currentTarget);
     const email = data.get("email");
     const password = data.get("password");
@@ -133,11 +117,32 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
       return;
     }
 
-    authenticateUser({
-      email_address: email as string,
-      password: password as string,
+    const res = await signIn("credentials", {
+      redirect: false,
+      emailAddress: email,
+      password,
     });
+
+    if (res?.error) {
+      const { error } = res;
+      setPasswordError(true);
+
+      if (error === "CredentialsSignin") {
+        setPasswordErrorMessage("Invalid email or password.");
+      } else {
+        console.error("Login System Error:", error);
+        setPasswordErrorMessage(
+          "Service temporarily unavailable. Please try again later.",
+        );
+      }
+      return;
+    }
+
+    if (res?.ok) {
+      router.replace("/profile");
+    }
   };
+
   return (
     <SignInContainer direction="column" justifyContent="space-between">
       <Card variant="outlined" data-testid="signin-card">
@@ -167,7 +172,6 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
             gap: 2,
           }}
         >
-          <input name="csrfToken" type="hidden" value={csrfToken} />
           <FormControl>
             <FormLabel htmlFor="email">Email</FormLabel>
             <TextField
@@ -214,7 +218,7 @@ export default function SignIn({ csrfToken }: { csrfToken: string }) {
             type="submit"
             fullWidth
             variant="contained"
-            disabled={isAuthenticationPending}
+            // disabled={isAuthenticationPending}
           >
             Sign in
           </Button>

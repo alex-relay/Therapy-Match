@@ -1,6 +1,6 @@
 import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const PROXY_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type createUserProps = {
   first_name: string;
@@ -16,9 +16,8 @@ interface User {
   password: string;
 }
 
-// TODO: We need to hash the password on the client side in the request.
 const createUser = (formData: createUserProps): Promise<User> => {
-  return fetch(`${API_URL}/users`, {
+  return fetch(`${PROXY_URL}/users`, {
     headers: {
       "Content-Type": "application/json",
     },

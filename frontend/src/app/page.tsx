@@ -3,18 +3,29 @@ import Typography from "@mui/material/Typography";
 import CardHeader from "@mui/material/CardHeader";
 import CardMedia from "@mui/material/CardMedia";
 import { useRouter } from "next/navigation";
-import { useCreateAnonymousSession } from "../app/api/users/users";
 import StyledCard from "./components/common/StyledCard";
 import Stack from "@mui/material/Stack";
+import { signIn } from "next-auth/react";
 
 export default function Home() {
   const router = useRouter();
 
-  const { mutate: anonymousSessionMutate } = useCreateAnonymousSession({
-    onSuccess: () => {
+  // TODO: implement a toast/snackbar for better user feedback
+  const handlePatientTileClick = async () => {
+    const res = await signIn("anonymous-session", {
+      redirect: false,
+    });
+
+    if (res?.error) {
+      console.error("Failed to create anonymous session:", res.error);
+      return;
+    }
+
+    if (res?.ok) {
+      sessionStorage.setItem("stepHistory", JSON.stringify([]));
       router.push("/questions/gender");
-    },
-  });
+    }
+  };
 
   return (
     <>
@@ -23,10 +34,7 @@ export default function Home() {
       </Typography>
       <Stack direction="row" gap={12.5}>
         <StyledCard
-          onClick={() => {
-            anonymousSessionMutate();
-            sessionStorage.setItem("stepHistory", JSON.stringify([]));
-          }}
+          onClick={handlePatientTileClick}
           variant="outlined"
           data-testid="myself-tile"
         >
