@@ -5,8 +5,11 @@ from typing import Annotated
 from fastapi import APIRouter, status, HTTPException, Depends
 from sqlalchemy.exc import SQLAlchemyError
 from backend.core.database import SessionDep
-from backend.models.user import PersonalityTestScore, AnonymousPatient
-from backend.routers.users.dependencies import get_anonymous_patient
+from backend.models.user import PersonalityTestScore, AnonymousPatient, Therapist
+from backend.routers.users.dependencies import (
+    get_anonymous_patient,
+    get_therapist_by_user_id,
+)
 from backend.routers.scores.exceptions import TestScoreCreationError
 from backend.schemas.scores import (
     UserPersonalityTestCreate,
@@ -37,12 +40,12 @@ PERSONALITY_TRAITS = [
 
 
 @router.post(
-    "/therapists/{therapist_id}/personality-scores",
+    "/therapists/me/personality-scores",
     status_code=status.HTTP_201_CREATED,
     response_model=UserPersonalityTestRead,
 )
 def create_therapist_test_scores(
-    therapist_id: str,
+    therapist: Annotated[Therapist, Depends(get_therapist_by_user_id)],
     data: UserPersonalityTestCreate,
     session: SessionDep,
 ):
@@ -63,7 +66,7 @@ def create_therapist_test_scores(
 
     try:
         personality_test_score = PersonalityTestScore(
-            **asdict(scores), therapist_id=therapist_id
+            **asdict(scores), therapist_id=therapist.id
         )
         session.add(personality_test_score)
         session.commit()
@@ -71,8 +74,10 @@ def create_therapist_test_scores(
 
     except Exception as e:
         session.rollback()
-        logger.error("Failed to save therapist test scores %s", e)
-        raise e
+        logger.exception("Failed to save therapist test scores")
+        raise HTTPException(
+            status_code=500, detail="Error saving therapist test scores"
+        ) from e
 
     logger.info("Saving test score completed")
 
