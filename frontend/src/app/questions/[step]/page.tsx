@@ -2,7 +2,7 @@
 
 import QuestionForm from "@/app/components/common/Question";
 import { useParams } from "next/navigation";
-import GENERAL_QUESTIONS_COMPONENT_MAP from "../../components/generalQuestions/generalQuestions";
+import GENERAL_QUESTIONS_COMPONENT_MAP from "@/app/components/generalQuestions/client/generalQuestions";
 import { PageName } from "@/app/utils/utils";
 
 const Questions = () => {

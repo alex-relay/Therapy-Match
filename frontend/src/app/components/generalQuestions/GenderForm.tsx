@@ -6,14 +6,14 @@ import FormControl from "@mui/material/FormControl";
 import {
   StyledFormControlLabel,
   StyledRadioButton,
-} from "../common/OptionsContainers";
+} from "@/app/components/common/OptionsContainers";
 import { useParams, useRouter } from "next/navigation";
-import { usePatchQuestion } from "../../api/profile/profile";
+import { usePatchQuestion } from "@/app/api/profile/profile";
 import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
-import NavigationButtons from "../common/NavigationButtons";
+import NavigationButtons from "@/app/components/common/NavigationButtons";
 import { useNavContext } from "@/app/NavigationContext";
-import QuestionFormWrapper from "./QuestionFormWrapper";
-import { AnonymousPatientContext } from "./AnonymousPatientContext";
+import QuestionFormWrapper from "./client/QuestionFormWrapper";
+import { AnonymousPatientContext } from "./client/AnonymousPatientContext";
 
 const OPTIONS_MAP = {
   male: "Male",
@@ -34,10 +34,12 @@ export default function GenderForm() {
   const gender = anonymousPatient?.gender ?? null;
   const [selectedValue, setSelectedValue] = useState<string | null>(gender);
 
+  const nextStep = getNextStep(step);
+  const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
+
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      const nextStep = getNextStep(step);
-      if (stepHistory.indexOf(step) < 0) {
+      if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 
@@ -57,9 +59,7 @@ export default function GenderForm() {
     if (selectedValue !== anonymousPatient?.gender) {
       answerMutate({ gender: selectedValue });
     } else {
-      const nextStep = getNextStep(step);
-
-      if (stepHistory.indexOf(step) < 0) {
+      if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 

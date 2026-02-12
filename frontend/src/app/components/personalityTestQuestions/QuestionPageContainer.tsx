@@ -1,7 +1,10 @@
 "use client";
 
-import QuestionPage from "./QuestionPage";
-import { useGetPersonalityTestScores } from "@/app/api/scores/scores";
+import AnonymousTestQuestionPage from "./AnonymousTestQuestionPage";
+import {
+  useGetPersonalityTestScores,
+  usePatchAnonymousPersonalityTestQuestion,
+} from "@/app/api/scores/scores";
 
 const QuestionPageContainer = () => {
   const {
@@ -9,11 +12,19 @@ const QuestionPageContainer = () => {
     isLoading: isPersonalityTestScoresLoading,
   } = useGetPersonalityTestScores();
 
+  const { mutate: patchAnonymousPersonalityTestQuestion } =
+    usePatchAnonymousPersonalityTestQuestion();
+
   if (isPersonalityTestScoresLoading) {
     return <div>Loading...</div>;
   }
 
-  return <QuestionPage personalityTestScores={personalityTestScores} />;
+  return (
+    <AnonymousTestQuestionPage
+      personalityTestScores={personalityTestScores}
+      onAnswerQuestion={patchAnonymousPersonalityTestQuestion}
+    />
+  );
 };
 
 export default QuestionPageContainer;

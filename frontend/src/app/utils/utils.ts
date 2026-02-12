@@ -1,5 +1,5 @@
 import { CategoryType } from "../api/scores/scores";
-import GENERAL_QUESTIONS_COMPONENT_MAP from "../components/generalQuestions/generalQuestions";
+import GENERAL_QUESTIONS_COMPONENT_MAP from "@/app/components/generalQuestions/client/generalQuestions";
 
 export type QuestionOptions = {
   agree: number;

@@ -2,7 +2,7 @@
 
 import PageContainer from "@/app/components/common/PageContainer";
 import StyledStack from "@/app/components/common/PageStyledStack";
-import AnonymousPatientProvider from "@/app/components/generalQuestions/AnonymousPatientContext";
+import AnonymousPatientProvider from "@/app/components/generalQuestions/client/AnonymousPatientContext";
 import NavigationContextProvider from "@/app/NavigationContext";
 import React from "react";
 

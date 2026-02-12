@@ -5,9 +5,9 @@ import FormControl from "@mui/material/FormControl";
 import {
   StyledFormControlLabel,
   StyledRadioButton,
-} from "../common/OptionsContainers";
+} from "@/app/components/common/OptionsContainers";
 import { useState, useContext } from "react";
-import NavigationButtons from "../common/NavigationButtons";
+import NavigationButtons from "@/app/components/common/NavigationButtons";
 import { useParams, useRouter } from "next/navigation";
 import { usePatchQuestion } from "@/app/api/profile/profile";
 import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
@@ -29,12 +29,12 @@ const LGBTQPreferenceForm = () => {
   );
 
   const step = params.step as PageName;
+  const nextStep = getNextStep(step);
+  const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      const nextStep = getNextStep(step);
-
-      if (!stepHistory.includes(step)) {
+      if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 
@@ -50,9 +50,7 @@ const LGBTQPreferenceForm = () => {
         is_lgbtq_therapist_preference: selectedValue,
       });
     } else {
-      const nextStep = getNextStep(step);
-
-      if (stepHistory.indexOf(step) < 0) {
+      if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 

@@ -8,8 +8,8 @@ import { useContext, useState } from "react";
 import NavigationButtons from "../common/NavigationButtons";
 import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
-import QuestionFormWrapper from "./QuestionFormWrapper";
-import { AnonymousPatientContext } from "./AnonymousPatientContext";
+import QuestionFormWrapper from "./client/QuestionFormWrapper";
+import { AnonymousPatientContext } from "./client/AnonymousPatientContext";
 
 const transformPostalCode = (postalCode: string) => {
   if (!postalCode) {
@@ -54,11 +54,14 @@ const LocationForm = () => {
   const { stepHistory, setStepHistory } = useNavContext();
 
   const step = params.step as PageName;
+  const nextStep = getNextStep(step);
+  const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      const nextStep = getNextStep(step);
-      setStepHistory((prevState) => [...prevState, step]);
+      if (!isStepInStepHistory) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
       router.push(`/questions/${nextStep}`);
     },
   });
@@ -79,8 +82,9 @@ const LocationForm = () => {
     if (cleanPostalCode !== anonymousPatient?.postal_code) {
       answerMutate({ postal_code: cleanPostalCode });
     } else {
-      const nextStep = getNextStep(step);
-      setStepHistory((prevState) => [...prevState, step]);
+      if (!isStepInStepHistory) {
+        setStepHistory((prevState) => [...prevState, step]);
+      }
       router.push(`/questions/${nextStep}`);
     }
   };
