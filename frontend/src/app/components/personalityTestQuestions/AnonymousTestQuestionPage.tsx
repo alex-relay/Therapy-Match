@@ -5,13 +5,13 @@ import { PERSONALITY_TEST_QUESTIONS } from "@/app/utils/utils";
 import {
   PersonalityTestGetResponse,
   PersonalityTestQuestionAndScore,
-  usePatchPersonalityTestQuestion,
 } from "@/app/api/scores/scores";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UserType } from "@/app/api/users/users";
 
 type QuestionPageProps = {
   personalityTestScores: PersonalityTestGetResponse | undefined;
+  onAnswerQuestion: (score: PersonalityTestQuestionAndScore) => void;
 };
 
 const getLatestQuestionIndex = (
@@ -37,10 +37,10 @@ const getIsQuestionAnswered = (
   return answers.find((answer) => answer.id === questionId);
 };
 
-const QuestionPage = ({ personalityTestScores }: QuestionPageProps) => {
-  const { mutate: patchPersonalityTestQuestion } =
-    usePatchPersonalityTestQuestion();
-
+const QuestionPage = ({
+  personalityTestScores,
+  onAnswerQuestion,
+}: QuestionPageProps) => {
   const queryParams = useSearchParams();
 
   const [currentQuestion, setCurrentQuestion] = useState(() =>
@@ -59,7 +59,7 @@ const QuestionPage = ({ personalityTestScores }: QuestionPageProps) => {
 
     const isPersonalityTestCompleted = index === LAST_QUESTION_INDEX;
 
-    patchPersonalityTestQuestion({
+    onAnswerQuestion({
       id: questionAndAnswer.backendId,
       category: questionAndAnswer.category,
       score: value,

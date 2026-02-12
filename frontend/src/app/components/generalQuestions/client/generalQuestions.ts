@@ -1,7 +1,7 @@
 import { GeneralQuestionsComponentMap } from "@/app/utils/utils";
-import AgeForm from "./AgeForm";
-import GenderForm from "./GenderForm";
-import LocationForm from "./LocationForm";
+import AgeForm from "../AgeForm";
+import GenderForm from "../GenderForm";
+import LocationForm from "../LocationForm";
 import TherapyNeedsForm from "./TherapyNeedsForm";
 import ReligiousPreferenceForm from "./ReligiousPreferenceForm";
 import LGBTQPreferenceForm from "./LGBTQPreferenceForm";

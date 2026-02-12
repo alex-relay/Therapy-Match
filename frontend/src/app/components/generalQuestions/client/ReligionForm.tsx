@@ -5,13 +5,13 @@ import RadioGroup from "@mui/material/RadioGroup";
 import {
   StyledFormControlLabel,
   StyledRadioButton,
-} from "../common/OptionsContainers";
+} from "../../common/OptionsContainers";
 import { useParams, useRouter } from "next/navigation";
-import { usePatchQuestion } from "../../api/profile/profile";
+import { usePatchQuestion } from "@/app/api/profile/profile";
 import { getNextStep, PageName } from "@/app/utils/utils";
 import Box from "@mui/material/Box";
 import { FormControl } from "@mui/material";
-import NavigationButtons from "../common/NavigationButtons";
+import NavigationButtons from "@/app/components/common/NavigationButtons";
 
 const OPTIONS_MAP = {
   jewish: "Jewish",

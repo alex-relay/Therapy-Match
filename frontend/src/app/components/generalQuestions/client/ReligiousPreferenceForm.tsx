@@ -6,11 +6,11 @@ import FormControl from "@mui/material/FormControl";
 import {
   StyledFormControlLabel,
   StyledRadioButton,
-} from "../common/OptionsContainers";
+} from "@/app/components/common/OptionsContainers";
 import { useParams, useRouter } from "next/navigation";
-import { usePatchQuestion } from "../../api/profile/profile";
+import { usePatchQuestion } from "@/app/api/profile/profile";
 import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
-import NavigationButtons from "../common/NavigationButtons";
+import NavigationButtons from "@/app/components/common/NavigationButtons";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
@@ -29,12 +29,12 @@ export default function ReligiousPreferenceForm() {
   );
 
   const step = params.step as PageName;
+  const nextStep = getNextStep(step);
+  const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      const nextStep = getNextStep(step);
-
-      if (stepHistory.indexOf(step) < 0) {
+      if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 
@@ -54,9 +54,7 @@ export default function ReligiousPreferenceForm() {
     if (selectedValue !== anonymousPatient?.is_religious_therapist_preference) {
       answerMutate({ is_religious_therapist_preference: selectedValue });
     } else {
-      const nextStep = getNextStep(step);
-
-      if (stepHistory.indexOf(step) < 0) {
+      if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 

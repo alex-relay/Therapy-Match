@@ -4,8 +4,8 @@ import FormGroup from "@mui/material/FormGroup";
 import { useState, useContext } from "react";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
-import { StyledFormControlLabel } from "../common/OptionsContainers";
-import NavigationButtons from "../common/NavigationButtons";
+import { StyledFormControlLabel } from "@/app/components/common/OptionsContainers";
+import NavigationButtons from "@/app/components/common/NavigationButtons";
 import { useParams, useRouter } from "next/navigation";
 import {
   TherapyNeedsOptions,

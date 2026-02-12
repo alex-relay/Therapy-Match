@@ -7,8 +7,8 @@ import Box from "@mui/material/Box";
 import NavigationButtons from "../common/NavigationButtons";
 import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
-import QuestionFormWrapper from "./QuestionFormWrapper";
-import { AnonymousPatientContext } from "./AnonymousPatientContext";
+import QuestionFormWrapper from "./client/QuestionFormWrapper";
+import { AnonymousPatientContext } from "./client/AnonymousPatientContext";
 
 const validateAgeInput = (
   age: string | null,
@@ -49,12 +49,12 @@ export default function AgeForm() {
   const [age, setAge] = useState<string | null>(anonymousPatientAge);
 
   const step = params.step as PageName;
+  const nextStep = getNextStep(step);
+  const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
 
   const { mutate: answerMutate } = usePatchQuestion({
     onSuccess: () => {
-      const nextStep = getNextStep(step);
-
-      if (stepHistory.indexOf(step) < 0) {
+      if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 
@@ -72,9 +72,7 @@ export default function AgeForm() {
     if (age !== anonymousPatientAge) {
       answerMutate({ age: Number(age) });
     } else {
-      const nextStep = getNextStep(step);
-
-      if (stepHistory.indexOf(step) < 0) {
+      if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);
       }
 

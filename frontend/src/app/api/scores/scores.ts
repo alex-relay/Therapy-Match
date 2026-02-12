@@ -120,7 +120,7 @@ const useGetPersonalityTestScores = () => {
   });
 };
 
-const patchPersonalityTestQuestion = async (
+const patchAnonymousPersonalityTestQuestion = async (
   question: PersonalityTestQuestionAndScore,
 ): Promise<PersonalityTestPatchResponse> => {
   const response = await fetch(
@@ -154,7 +154,7 @@ const patchPersonalityTestQuestion = async (
 
 type MutationContext = { previousScores: PersonalityTestPatchResponse };
 
-const usePatchPersonalityTestQuestion = (
+const usePatchAnonymousPersonalityTestQuestion = (
   options?: UseMutationOptions<
     PersonalityTestPatchResponse,
     Error,
@@ -165,7 +165,7 @@ const usePatchPersonalityTestQuestion = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: patchPersonalityTestQuestion,
+    mutationFn: patchAnonymousPersonalityTestQuestion,
     onMutate: async (
       score,
     ): Promise<{ previousScores: PersonalityTestPatchResponse }> => {
@@ -206,11 +206,11 @@ const usePatchPersonalityTestQuestion = (
             };
           }
 
-          allCategoryAnswers.push(score);
+          const updatedAllCategoryAnswers = [...allCategoryAnswers, score];
 
           return {
             ...previousScores,
-            [category]: allCategoryAnswers,
+            [category]: updatedAllCategoryAnswers,
           };
         },
       );
@@ -232,5 +232,5 @@ const usePatchPersonalityTestQuestion = (
 export {
   useCreatePersonalityTest,
   useGetPersonalityTestScores,
-  usePatchPersonalityTestQuestion,
+  usePatchAnonymousPersonalityTestQuestion,
 };
