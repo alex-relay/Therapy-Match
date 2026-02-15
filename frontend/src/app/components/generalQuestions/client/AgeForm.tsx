@@ -1,14 +1,18 @@
 "use client";
-import { usePatchQuestion } from "../../api/profile/profile";
+import { usePatchAnonymousQuestion } from "../../../api/profile/profile";
 import { useState, useContext } from "react";
 import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
-import NavigationButtons from "../common/NavigationButtons";
-import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
+import NavigationButtons from "../../common/NavigationButtons";
+import {
+  getAnonymousSessionNextStep,
+  getPreviousStep,
+  AnonymousQuestionsStepName,
+} from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
-import QuestionFormWrapper from "./client/QuestionFormWrapper";
-import { AnonymousPatientContext } from "./client/AnonymousPatientContext";
+import QuestionFormWrapper from "./QuestionFormWrapper";
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
 const validateAgeInput = (
   age: string | null,
@@ -39,6 +43,7 @@ export default function AgeForm() {
   const [error, setError] = useState("");
   const router = useRouter();
   const params = useParams();
+
   const { stepHistory, setStepHistory } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
 
@@ -48,11 +53,11 @@ export default function AgeForm() {
 
   const [age, setAge] = useState<string | null>(anonymousPatientAge);
 
-  const step = params.step as PageName;
-  const nextStep = getNextStep(step);
+  const step = params.step as AnonymousQuestionsStepName;
+  const nextStep = getAnonymousSessionNextStep(step);
   const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
 
-  const { mutate: answerMutate } = usePatchQuestion({
+  const { mutate: answerMutate } = usePatchAnonymousQuestion({
     onSuccess: () => {
       if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);

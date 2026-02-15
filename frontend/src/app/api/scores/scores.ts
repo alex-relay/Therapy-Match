@@ -46,7 +46,8 @@ export type PersonalityTestGetResponse = {
   agreeableness: PersonalityTestQuestionAndScore[];
 };
 
-const createPersonalityTest = async () => {
+// TODO: need to change the endpoint name to: `.../anonymous-sessions/current/personality-tests`
+const createAnonymousSessionPersonalityTest = async () => {
   const response = await fetch(
     `${API_URL}/anonymous-sessions/personality-tests`,
     {
@@ -78,12 +79,12 @@ const useCreatePersonalityTest = (
   options?: UseMutationOptions<PersonalityTestAggregateScores, Error>,
 ) => {
   return useMutation<PersonalityTestAggregateScores>({
-    mutationFn: createPersonalityTest,
+    mutationFn: createAnonymousSessionPersonalityTest,
     ...options,
   });
 };
 
-const getPersonalityTestScores =
+const getAnonymousSessionPersonalityTestScores =
   async (): Promise<PersonalityTestGetResponse> => {
     const response = await fetch(
       `${API_URL}/anonymous-sessions/personality-tests`,
@@ -116,7 +117,7 @@ const getPersonalityTestScores =
 const useGetPersonalityTestScores = () => {
   return useQuery({
     queryKey: ["personalityTest, scores"],
-    queryFn: getPersonalityTestScores,
+    queryFn: getAnonymousSessionPersonalityTestScores,
   });
 };
 

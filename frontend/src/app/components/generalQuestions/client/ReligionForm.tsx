@@ -7,11 +7,14 @@ import {
   StyledRadioButton,
 } from "../../common/OptionsContainers";
 import { useParams, useRouter } from "next/navigation";
-import { usePatchQuestion } from "@/app/api/profile/profile";
-import { getNextStep, PageName } from "@/app/utils/utils";
-import Box from "@mui/material/Box";
+import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
+import {
+  getAnonymousSessionNextStep,
+  AnonymousQuestionsStepName,
+} from "@/app/utils/utils";
 import { FormControl } from "@mui/material";
 import NavigationButtons from "@/app/components/common/NavigationButtons";
+import QuestionFormWrapper from "./QuestionFormWrapper";
 
 const OPTIONS_MAP = {
   jewish: "Jewish",
@@ -32,11 +35,11 @@ export default function ReligionForm() {
   );
   const router = useRouter();
   const params = useParams();
-  const step = params.step as PageName;
+  const step = params.step as AnonymousQuestionsStepName;
 
-  const { mutate: answerMutate } = usePatchQuestion({
+  const { mutate: answerMutate } = usePatchAnonymousQuestion({
     onSuccess: () => {
-      const nextStep = getNextStep(step);
+      const nextStep = getAnonymousSessionNextStep(step);
       router.push(`/questions/${nextStep}`);
     },
   });
@@ -55,13 +58,7 @@ export default function ReligionForm() {
   };
 
   return (
-    <Box
-      display="flex"
-      gap={2}
-      sx={{ width: "80%", flexDirection: "column" }}
-      component="form"
-      onSubmit={handleSubmit}
-    >
+    <QuestionFormWrapper handleSubmit={handleSubmit}>
       <FormControl>
         <RadioGroup
           aria-labelledby="religion-question-label"
@@ -86,6 +83,6 @@ export default function ReligionForm() {
           router.push(`/questions/gender`);
         }}
       />
-    </Box>
+    </QuestionFormWrapper>
   );
 }

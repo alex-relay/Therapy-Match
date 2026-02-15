@@ -1,11 +1,9 @@
 "use client";
 import Typography from "@mui/material/Typography";
-import CardHeader from "@mui/material/CardHeader";
-import CardMedia from "@mui/material/CardMedia";
 import { useRouter } from "next/navigation";
-import StyledCard from "./components/common/StyledCard";
 import Stack from "@mui/material/Stack";
 import { signIn } from "next-auth/react";
+import Tile from "./components/common/Tile";
 
 export default function Home() {
   const router = useRouter();
@@ -27,41 +25,29 @@ export default function Home() {
     }
   };
 
+  const handleTherapistTileClick = () => {
+    sessionStorage.setItem("stepHistory", JSON.stringify([]));
+    router.push("/register?type=therapist");
+  };
+
   return (
     <>
       <Typography variant="h3">
         What type of therapy are you looking for?
       </Typography>
       <Stack direction="row" gap={12.5}>
-        <StyledCard
-          onClick={handlePatientTileClick}
-          variant="outlined"
-          data-testid="myself-tile"
-        >
-          <CardHeader title="Myself" />
-          <CardMedia
-            component="img"
-            height="100px"
-            src="/globe.svg"
-            alt="globe"
-          />
-        </StyledCard>
-        <StyledCard
-          onClick={() => {
-            router.push("/register?type=therapist");
-            sessionStorage.setItem("stepHistory", JSON.stringify([]));
-          }}
-          variant="outlined"
-          data-testid="therapist-tile"
-        >
-          <CardHeader title="Therapist" />
-          <CardMedia
-            component="img"
-            height="100px"
-            src="/globe.svg"
-            alt="globe"
-          />
-        </StyledCard>
+        <Tile
+          onTileClick={handlePatientTileClick}
+          title="Myself"
+          image="/globe.svg"
+          alt="globe"
+        />
+        <Tile
+          onTileClick={handleTherapistTileClick}
+          title="Therapist"
+          image="/globe.svg"
+          alt="globe"
+        />
       </Stack>
     </>
   );

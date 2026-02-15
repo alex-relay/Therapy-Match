@@ -10,9 +10,9 @@ import { useParams, useRouter } from "next/navigation";
 import {
   TherapyNeedsOptions,
   TherapyNeedsOptionsMap,
-  usePatchQuestion,
+  usePatchAnonymousQuestion,
 } from "@/app/api/profile/profile";
-import { getPreviousStep, PageName } from "@/app/utils/utils";
+import { getPreviousStep, AnonymousQuestionsStepName } from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
@@ -22,7 +22,7 @@ const TherapyNeeds = () => {
   const params = useParams();
   const { stepHistory, setStepHistory } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
-  const step = params.step as PageName;
+  const step = params.step as AnonymousQuestionsStepName;
 
   const therapyNeedsValue = anonymousPatient?.therapy_needs ?? [];
 
@@ -36,7 +36,7 @@ const TherapyNeeds = () => {
     router.push("/personality-tests/introduction?type=patient");
   };
 
-  const { mutate: answerMutate } = usePatchQuestion({
+  const { mutate: answerMutate } = usePatchAnonymousQuestion({
     onSuccess: () => {
       navigateToPersonalityTests();
     },

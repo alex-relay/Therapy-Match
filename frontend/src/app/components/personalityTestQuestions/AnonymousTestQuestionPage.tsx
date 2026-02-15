@@ -37,7 +37,7 @@ const getIsQuestionAnswered = (
   return answers.find((answer) => answer.id === questionId);
 };
 
-const QuestionPage = ({
+const AnonymousTestQuestionPage = ({
   personalityTestScores,
   onAnswerQuestion,
 }: QuestionPageProps) => {
@@ -52,6 +52,7 @@ const QuestionPage = ({
   const handleOptionClick = (index: number, value: number) => {
     const questionAndAnswer = PERSONALITY_TEST_QUESTIONS[index];
     const userType = queryParams.get("type") as UserType;
+    const isLastQuestion = index === PERSONALITY_TEST_QUESTIONS.length - 1;
 
     if (!userType || !["patient", "therapist"].includes(userType)) {
       return;
@@ -70,7 +71,7 @@ const QuestionPage = ({
       return;
     }
 
-    if (index < PERSONALITY_TEST_QUESTIONS.length - 1) {
+    if (!isLastQuestion) {
       setCurrentQuestion((prevState) => prevState + 1);
     }
   };
@@ -115,4 +116,4 @@ const QuestionPage = ({
   );
 };
 
-export default QuestionPage;
+export default AnonymousTestQuestionPage;

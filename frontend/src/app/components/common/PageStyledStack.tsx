@@ -4,7 +4,7 @@ import Stack from "@mui/material/Stack";
 import { styled } from "@mui/material/styles";
 
 const StyledStack = styled(Stack)(({ theme }) => ({
-  maxWidth: "1000px",
+  maxWidth: "1200px",
   width: "100%",
   height: "100%",
   gap: "10px",

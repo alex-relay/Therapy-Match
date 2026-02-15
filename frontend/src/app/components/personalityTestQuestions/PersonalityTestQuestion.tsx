@@ -48,13 +48,14 @@ const StyledOptionsBox = styled(Box)(({ theme }) => ({
   },
 }));
 
-const Question = ({
+const PersonalityTestQuestion = ({
   question,
   index,
   onAnswer,
   actions,
   selectedAnswer,
 }: QuestionProps) => (
+  // TODO: refactor to use the GeneralQuestion component.
   <QuestionForm.Card sx={{ width: "100%" }} variant="outlined">
     <Box
       sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
@@ -91,4 +92,4 @@ const Question = ({
   </QuestionForm.Card>
 );
 
-export default Question;
+export default PersonalityTestQuestion;
