@@ -63,7 +63,7 @@ export interface PatientProfileResponse {
 
 export type PatchQuestionProps = Partial<PatientProfilePatchRequest>;
 
-export const patchQuestion = async ({
+export const patchAnonymousQuestion = async ({
   ...profileData
 }: PatchQuestionProps): Promise<PatientProfileResponse> => {
   const response = await fetch(`${PROXY_URL}/anonymous-sessions`, {
@@ -81,7 +81,7 @@ export const patchQuestion = async ({
   return response.json();
 };
 
-export const usePatchQuestion = (
+export const usePatchAnonymousQuestion = (
   options?: UseMutationOptions<
     PatientProfileResponse,
     Error,
@@ -91,7 +91,7 @@ export const usePatchQuestion = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: patchQuestion,
+    mutationFn: patchAnonymousQuestion,
     onMutate: async (sessionUpdate) => {
       await queryClient.cancelQueries({
         queryKey: ["anonymousPatientSession"],

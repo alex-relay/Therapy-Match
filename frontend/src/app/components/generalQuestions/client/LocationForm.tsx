@@ -1,51 +1,20 @@
 "use client";
 
-import { usePatchQuestion } from "@/app/api/profile/profile";
+import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { useParams, useRouter } from "next/navigation";
 import { useContext, useState } from "react";
-import NavigationButtons from "../common/NavigationButtons";
-import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
+import NavigationButtons from "../../common/NavigationButtons";
+import {
+  getAnonymousSessionNextStep,
+  getPreviousStep,
+  AnonymousQuestionsStepName,
+} from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
-import QuestionFormWrapper from "./client/QuestionFormWrapper";
-import { AnonymousPatientContext } from "./client/AnonymousPatientContext";
-
-const transformPostalCode = (postalCode: string) => {
-  if (!postalCode) {
-    return "";
-  }
-  const cleaned = postalCode.replace(/\s+/g, "").toUpperCase();
-  if (cleaned.length >= 6) {
-    return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
-  }
-  return cleaned;
-};
-
-const validatePostalCode = (
-  postalCode: string | null,
-  onPostalCodeError: (msg: string) => void,
-) => {
-  const errorMessage = "Please enter a valid postal code (e.g., M5A 4L1)";
-  if (!postalCode) {
-    onPostalCodeError(errorMessage);
-    return false;
-  }
-
-  const cleaned = postalCode
-    .replace(/\u00A0/g, " ")
-    .trim()
-    .toUpperCase();
-
-  const postalCodeRegex = /^[ABCEGHJ-NPRSTVXY]\d[A-Z][ -]?\d[A-Z]\d$/;
-
-  if (!postalCodeRegex.test(cleaned)) {
-    onPostalCodeError(errorMessage);
-    return false;
-  }
-
-  return true;
-};
+import QuestionFormWrapper from "./QuestionFormWrapper";
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
+import { validatePostalCode, transformPostalCode } from "../utils";
 
 const LocationForm = () => {
   const [error, setError] = useState("");
@@ -53,11 +22,11 @@ const LocationForm = () => {
   const router = useRouter();
   const { stepHistory, setStepHistory } = useNavContext();
 
-  const step = params.step as PageName;
-  const nextStep = getNextStep(step);
+  const step = params.step as AnonymousQuestionsStepName;
+  const nextStep = getAnonymousSessionNextStep(step);
   const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
 
-  const { mutate: answerMutate } = usePatchQuestion({
+  const { mutate: answerMutate } = usePatchAnonymousQuestion({
     onSuccess: () => {
       if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);
@@ -74,8 +43,10 @@ const LocationForm = () => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const cleanPostalCode = transformPostalCode(postalCode ?? "");
-    if (!validatePostalCode(cleanPostalCode, setError)) {
+    const cleanPostalCode = transformPostalCode(postalCode);
+
+    if (!validatePostalCode(cleanPostalCode)) {
+      setError("Please enter a valid postal code (e.g., M5A 4L1)");
       return;
     }
 

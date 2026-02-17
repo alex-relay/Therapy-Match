@@ -6,7 +6,7 @@ import {
   usePatchAnonymousPersonalityTestQuestion,
 } from "@/app/api/scores/scores";
 
-const QuestionPageContainer = () => {
+const AnonymousTestQuestionPageContainer = () => {
   const {
     data: personalityTestScores,
     isLoading: isPersonalityTestScoresLoading,
@@ -27,4 +27,4 @@ const QuestionPageContainer = () => {
   );
 };
 
-export default QuestionPageContainer;
+export default AnonymousTestQuestionPageContainer;

@@ -8,12 +8,16 @@ import {
   StyledRadioButton,
 } from "@/app/components/common/OptionsContainers";
 import { useParams, useRouter } from "next/navigation";
-import { usePatchQuestion } from "@/app/api/profile/profile";
-import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
+import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
+import {
+  getAnonymousSessionNextStep,
+  getPreviousStep,
+  AnonymousQuestionsStepName,
+} from "@/app/utils/utils";
 import NavigationButtons from "@/app/components/common/NavigationButtons";
 import { useNavContext } from "@/app/NavigationContext";
-import QuestionFormWrapper from "./client/QuestionFormWrapper";
-import { AnonymousPatientContext } from "./client/AnonymousPatientContext";
+import QuestionFormWrapper from "./QuestionFormWrapper";
+import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
 const OPTIONS_MAP = {
   male: "Male",
@@ -28,16 +32,18 @@ type GenderFormValues = keyof typeof OPTIONS_MAP | "";
 export default function GenderForm() {
   const router = useRouter();
   const params = useParams();
-  const step = params.step as PageName;
+  const step = params.step as AnonymousQuestionsStepName;
+
   const { stepHistory, setStepHistory } = useNavContext();
   const { anonymousPatient } = useContext(AnonymousPatientContext);
   const gender = anonymousPatient?.gender ?? null;
+
   const [selectedValue, setSelectedValue] = useState<string | null>(gender);
 
-  const nextStep = getNextStep(step);
+  const nextStep = getAnonymousSessionNextStep(step);
   const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
 
-  const { mutate: answerMutate } = usePatchQuestion({
+  const { mutate: answerMutate } = usePatchAnonymousQuestion({
     onSuccess: () => {
       if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);

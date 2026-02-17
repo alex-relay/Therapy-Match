@@ -1,5 +1,5 @@
 import { CategoryType } from "../api/scores/scores";
-import GENERAL_QUESTIONS_COMPONENT_MAP from "@/app/components/generalQuestions/client/generalQuestions";
+import { ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP } from "@/app/components/generalQuestions/generalQuestions";
 
 export type QuestionOptions = {
   agree: number;
@@ -320,7 +320,7 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   },
 ];
 
-export type PageName =
+export type AnonymousQuestionsStepName =
   | "gender"
   | "religious-importance"
   | "lgbtq-preference"
@@ -328,24 +328,43 @@ export type PageName =
   | "location"
   | "therapy-needs";
 
-type StepInfo = {
+export type TherapistQuestionStepName =
+  | "gender"
+  | "age"
+  | "location"
+  | "therapy-needs"
+  | "specializations";
+
+type StepInfoBase = {
   component: React.ComponentType;
   title: string;
-  getNextStep: (answer?: string) => PageName;
 };
 
-export type GeneralQuestionsComponentMap = {
-  [key in PageName]: StepInfo;
+type AnonymousSessionStepInfo = StepInfoBase & {
+  getNextStep: () => AnonymousQuestionsStepName;
 };
 
-const getNextStep = (
-  currentStep: PageName,
-  data?: string | undefined,
-): PageName => {
-  const stepInfo: StepInfo =
-    GENERAL_QUESTIONS_COMPONENT_MAP[currentStep as PageName];
+type TherapistSessionStepInfo = StepInfoBase & {
+  getNextStep: () => TherapistQuestionStepName;
+};
+
+export type AnonymousQuestionsComponentMap = {
+  [key in AnonymousQuestionsStepName]: AnonymousSessionStepInfo;
+};
+
+export type TherapistQuestionsComponentMap = {
+  [key in TherapistQuestionStepName]: TherapistSessionStepInfo;
+};
+
+const getAnonymousSessionNextStep = (
+  currentStep: AnonymousQuestionsStepName,
+): AnonymousQuestionsStepName => {
+  const stepInfo: AnonymousSessionStepInfo =
+    ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP[
+      currentStep as AnonymousQuestionsStepName
+    ];
   if (stepInfo) {
-    return stepInfo.getNextStep(data);
+    return stepInfo.getNextStep();
   }
   return "gender";
 };
@@ -370,4 +389,8 @@ const getPreviousStep = (currentStep: string, stepHistory: string[]) => {
   return `/questions/${previousStep}`;
 };
 
-export { PERSONALITY_TEST_QUESTIONS, getNextStep, getPreviousStep };
+export {
+  PERSONALITY_TEST_QUESTIONS,
+  getAnonymousSessionNextStep,
+  getPreviousStep,
+};

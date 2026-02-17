@@ -8,11 +8,11 @@ import {
   useEffect,
   useContext,
 } from "react";
-import { PageName } from "./utils/utils";
+import { AnonymousQuestionsStepName } from "./utils/utils";
 
 type NavContextType = {
-  stepHistory: PageName[];
-  setStepHistory: Dispatch<SetStateAction<PageName[]>>;
+  stepHistory: AnonymousQuestionsStepName[];
+  setStepHistory: Dispatch<SetStateAction<AnonymousQuestionsStepName[]>>;
 };
 
 export const NavContext = createContext<NavContextType | null>(null);
@@ -29,7 +29,7 @@ export const useNavContext = () => {
   return currentNavContext;
 };
 
-const getInitialHistory = (): PageName[] => {
+const getInitialHistory = (): AnonymousQuestionsStepName[] => {
   if (typeof window === "undefined" || !("sessionStorage" in window)) {
     return [];
   }
@@ -45,7 +45,8 @@ const getInitialHistory = (): PageName[] => {
   const savedHistory = window.sessionStorage.getItem("stepHistory");
   if (savedHistory) {
     try {
-      const parsedSavedHistory: PageName[] = JSON.parse(savedHistory);
+      const parsedSavedHistory: AnonymousQuestionsStepName[] =
+        JSON.parse(savedHistory);
       if (
         Array.isArray(parsedSavedHistory) &&
         parsedSavedHistory.every((item) => typeof item === "string")
@@ -65,7 +66,8 @@ export const NavigationContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [stepHistory, setStepHistory] = useState<PageName[]>(getInitialHistory);
+  const [stepHistory, setStepHistory] =
+    useState<AnonymousQuestionsStepName[]>(getInitialHistory);
 
   useEffect(() => {
     const currentPath = window.location.pathname;

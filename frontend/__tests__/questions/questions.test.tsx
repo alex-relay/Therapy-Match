@@ -29,7 +29,10 @@ describe("Questions pages", () => {
 
     renderQuestionsPage();
 
-    const usePatchQuestionSpy = jest.spyOn(questions, "usePatchQuestion");
+    const usePatchAnonymousQuestionSpy = jest.spyOn(
+      questions,
+      "usePatchAnonymousQuestion",
+    );
 
     expect(
       await screen.findByText(/What is your gender identity/),
@@ -37,7 +40,7 @@ describe("Questions pages", () => {
 
     await user.click(screen.getByText("Male"));
 
-    expect(usePatchQuestionSpy).toHaveBeenCalled();
+    expect(usePatchAnonymousQuestionSpy).toHaveBeenCalled();
   });
 
   it("renders the Age form and makes a patch request on submitting an age", async () => {
@@ -63,10 +66,13 @@ describe("Questions pages", () => {
 
     expect(ageInput).toHaveValue("27");
 
-    const usePatchQuestionSpy = jest.spyOn(questions, "usePatchQuestion");
+    const usePatchAnonymousQuestionSpy = jest.spyOn(
+      questions,
+      "usePatchAnonymousQuestion",
+    );
     await user.keyboard("{enter}");
 
-    expect(usePatchQuestionSpy).toHaveBeenCalled();
+    expect(usePatchAnonymousQuestionSpy).toHaveBeenCalled();
   });
 
   it("renders the Age form and shows an error based on an invalid number", async () => {

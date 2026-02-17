@@ -3,7 +3,7 @@ import Stack from "@mui/material/Stack";
 import SignInCard from "./SignIn";
 import Content from "../Content";
 
-export default function SignInSide({ csrfToken }: { csrfToken: string }) {
+export default function SignInSide() {
   return (
     <Stack
       direction={{ xs: "column-reverse", md: "row" }}
@@ -16,7 +16,7 @@ export default function SignInSide({ csrfToken }: { csrfToken: string }) {
       }}
     >
       <Content />
-      <SignInCard csrfToken={csrfToken} />
+      <SignInCard />
     </Stack>
   );
 }

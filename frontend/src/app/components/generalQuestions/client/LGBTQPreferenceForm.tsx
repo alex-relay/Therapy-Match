@@ -9,8 +9,12 @@ import {
 import { useState, useContext } from "react";
 import NavigationButtons from "@/app/components/common/NavigationButtons";
 import { useParams, useRouter } from "next/navigation";
-import { usePatchQuestion } from "@/app/api/profile/profile";
-import { getNextStep, getPreviousStep, PageName } from "@/app/utils/utils";
+import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
+import {
+  getAnonymousSessionNextStep,
+  getPreviousStep,
+  AnonymousQuestionsStepName,
+} from "@/app/utils/utils";
 import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 import { AnonymousPatientContext } from "./AnonymousPatientContext";
@@ -28,11 +32,11 @@ const LGBTQPreferenceForm = () => {
     lgbtqPreferenceValue,
   );
 
-  const step = params.step as PageName;
-  const nextStep = getNextStep(step);
+  const step = params.step as AnonymousQuestionsStepName;
+  const nextStep = getAnonymousSessionNextStep(step);
   const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
 
-  const { mutate: answerMutate } = usePatchQuestion({
+  const { mutate: answerMutate } = usePatchAnonymousQuestion({
     onSuccess: () => {
       if (!isStepInStepHistory) {
         setStepHistory((prevState) => [...prevState, step]);
@@ -65,8 +69,11 @@ const LGBTQPreferenceForm = () => {
   };
 
   return (
-    <QuestionFormWrapper handleSubmit={handleSubmit}>
-      <FormControl component={"fieldset"} sx={{ gap: 2 }}>
+    <QuestionFormWrapper
+      handleSubmit={handleSubmit}
+      wrapperSx={{ alignItems: "center" }}
+    >
+      <FormControl component={"fieldset"} sx={{ gap: 2, width: "80%" }}>
         <RadioGroup
           name="lgbtqPreference"
           sx={{ gap: 2 }}
@@ -85,14 +92,14 @@ const LGBTQPreferenceForm = () => {
             checked={selectedValue === false}
           />
         </RadioGroup>
-        <NavigationButtons
-          isNextButtonDisabled={selectedValue === null}
-          onPrevButtonClick={() => {
-            const previousStep = getPreviousStep(step, stepHistory);
-            router.push(previousStep);
-          }}
-        />
       </FormControl>
+      <NavigationButtons
+        isNextButtonDisabled={selectedValue === null}
+        onPrevButtonClick={() => {
+          const previousStep = getPreviousStep(step, stepHistory);
+          router.push(previousStep);
+        }}
+      />
     </QuestionFormWrapper>
   );
 };
