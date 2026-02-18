@@ -8,77 +8,13 @@ from backend.tests.test_utils import (
     add_test_therapist,
     add_test_user,
     add_anonymous_patient,
-    add_personality_test_score,
+    add_anonymous_personality_test_score,
     USER_ID,
     TEST_USER_BASE,
     TEST_USER_PASSWORD,
+    MOCK_PERSONALITY_TEST,
 )
 from backend.models.user import GenderOption, AnonymousPatient, User
-
-MOCK_PERSONALITY_TEST = {
-    "anonymous_patient_id": "c303282d-f2e6-46ca-a04a-35d3d873712d",
-    "extroversion": [
-        {"id": "1", "category": "extroversion", "score": 2},
-        {"id": "2", "category": "extroversion", "score": 2},
-        {"id": "3", "category": "extroversion", "score": 2},
-        {"id": "4", "category": "extroversion", "score": 5},
-        {"id": "5", "category": "extroversion", "score": 2},
-        {"id": "6", "category": "extroversion", "score": 2},
-        {"id": "7", "category": "extroversion", "score": 3},
-        {"id": "8", "category": "extroversion", "score": 4},
-        {"id": "9", "category": "extroversion", "score": 2},
-        {"id": "10", "category": "extroversion", "score": 4},
-    ],
-    "conscientiousness": [
-        {"id": "1", "category": "conscientiousness", "score": 4},
-        {"id": "2", "category": "conscientiousness", "score": 5},
-        {"id": "3", "category": "conscientiousness", "score": 2},
-        {"id": "4", "category": "conscientiousness", "score": 3},
-        {"id": "5", "category": "conscientiousness", "score": 3},
-        {"id": "6", "category": "conscientiousness", "score": 4},
-        {"id": "7", "category": "conscientiousness", "score": 1},
-        {"id": "8", "category": "conscientiousness", "score": 4},
-        {"id": "9", "category": "conscientiousness", "score": 2},
-        {"id": "10", "category": "conscientiousness", "score": 1},
-    ],
-    "openness": [
-        {"id": "1", "category": "openness", "score": 1},
-        {"id": "2", "category": "openness", "score": 3},
-        {"id": "3", "category": "openness", "score": 4},
-        {"id": "4", "category": "openness", "score": 1},
-        {"id": "5", "category": "openness", "score": 1},
-        {"id": "6", "category": "openness", "score": 4},
-        {"id": "7", "category": "openness", "score": 3},
-        {"id": "8", "category": "openness", "score": 3},
-        {"id": "9", "category": "openness", "score": 4},
-        {"id": "10", "category": "openness", "score": 4},
-    ],
-    "neuroticism": [
-        {"id": "1", "category": "neuroticism", "score": 2},
-        {"id": "2", "category": "neuroticism", "score": 4},
-        {"id": "3", "category": "neuroticism", "score": 3},
-        {"id": "4", "category": "neuroticism", "score": 2},
-        {"id": "5", "category": "neuroticism", "score": 2},
-        {"id": "6", "category": "neuroticism", "score": 5},
-        {"id": "7", "category": "neuroticism", "score": 2},
-        {"id": "8", "category": "neuroticism", "score": 4},
-        {"id": "9", "category": "neuroticism", "score": 3},
-        {"id": "10", "category": "neuroticism", "score": 2},
-    ],
-    "agreeableness": [
-        {"id": "1", "category": "agreeableness", "score": 3},
-        {"id": "2", "category": "agreeableness", "score": 3},
-        {"id": "3", "category": "agreeableness", "score": 1},
-        {"id": "4", "category": "agreeableness", "score": 4},
-        {"id": "5", "category": "agreeableness", "score": 3},
-        {"id": "6", "category": "agreeableness", "score": 3},
-        {"id": "7", "category": "agreeableness", "score": 2},
-        {"id": "8", "category": "agreeableness", "score": 5},
-        {"id": "9", "category": "agreeableness", "score": 1},
-        {"id": "10", "category": "agreeableness", "score": 2},
-    ],
-    "id": "256bea15-0b6d-437c-81a7-a5c5ff49737c",
-}
 
 
 def test_user_login_for_multiple_roles(client_fixture, session_fixture):
@@ -328,7 +264,7 @@ def test_create_patient_with_existing_user(
         "anonymous_patient_id": anonymous_patient.id,
     }
 
-    add_personality_test_score(session_fixture, personality_test_overrides)
+    add_anonymous_personality_test_score(session_fixture, personality_test_overrides)
 
     response = client_fixture.post(
         "/patients",
@@ -402,7 +338,7 @@ def test_create_patient(client_fixture, session_fixture, mock_auth_headers):
         "anonymous_patient_id": anonymous_patient.id,
     }
 
-    add_personality_test_score(session_fixture, personality_test_overrides)
+    add_anonymous_personality_test_score(session_fixture, personality_test_overrides)
 
     response = client_fixture.post(
         "/patients",

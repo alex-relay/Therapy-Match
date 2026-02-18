@@ -32,16 +32,6 @@ class AnonymousPersonalityTestRead(PersonalityTestBase):
     id: UUID
 
 
-class UserPersonalityTestCreate(SQLModel):
-    """User Personality Test Create"""
-
-    extroversion: list[int]
-    conscientiousness: list[int]
-    openness: list[int]
-    neuroticism: list[int]
-    agreeableness: list[int]
-
-
 class AggregateUserPersonalityTestRead(SQLModel):
     """Aggregate User Personality Test Read"""
 

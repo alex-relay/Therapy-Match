@@ -7,6 +7,7 @@ from backend.models.user import (
     AnonymousPatient,
     Patient,
     PersonalityTestScore,
+    TherapistPersonalityTest,
 )
 from backend.schemas.scores import Scores, AggregateScores, PersonalityTestQuestion
 from backend.routers.scores.exceptions import (
@@ -128,31 +129,26 @@ def _calculate_conscientiousness_score(scores: ScoresType) -> float | None:
 
 
 def format_personality_test(
-    anonymous_personality_test: AnonymousPersonalityTestScore | None,
+    personality_test: AnonymousPersonalityTestScore | TherapistPersonalityTest | None,
 ) -> Scores:
     """Filters for the scores in each of the personality test categries"""
-    if not anonymous_personality_test:
-        raise ValueError("Anonymous Personality Test not provided")
+    if not personality_test:
+        raise ValueError("Personality test not provided")
 
-    anonymous_personality_test_dict = anonymous_personality_test.model_dump()
+    personality_test_dict = personality_test.model_dump()
 
     personality_test_score_aggregate = AggregateScores(
         extroversion=[
-            entry["score"] for entry in anonymous_personality_test_dict["extroversion"]
+            entry["score"] for entry in personality_test_dict["extroversion"]
         ],
         conscientiousness=[
-            entry["score"]
-            for entry in anonymous_personality_test_dict["conscientiousness"]
+            entry["score"] for entry in personality_test_dict["conscientiousness"]
         ],
         agreeableness=[
-            entry["score"] for entry in anonymous_personality_test_dict["agreeableness"]
+            entry["score"] for entry in personality_test_dict["agreeableness"]
         ],
-        neuroticism=[
-            entry["score"] for entry in anonymous_personality_test_dict["neuroticism"]
-        ],
-        openness=[
-            entry["score"] for entry in anonymous_personality_test_dict["openness"]
-        ],
+        neuroticism=[entry["score"] for entry in personality_test_dict["neuroticism"]],
+        openness=[entry["score"] for entry in personality_test_dict["openness"]],
     )
 
     calculated_personality_test_score = calculate_test_scores(
@@ -256,6 +252,8 @@ def create_anonymous_session_test_score(
     anonymous_session: AnonymousPatient, session: Session
 ):
     """Create a test score for an anonymous session."""
+    if not anonymous_session.id:
+        raise ValueError("Anonymous patient id not provided.")
     try:
         personality_test_score = AnonymousPersonalityTestScore(
             anonymous_patient_id=anonymous_session.id
@@ -270,9 +268,29 @@ def create_anonymous_session_test_score(
         raise TestScoreCreationError("Failed to create test score") from e
 
 
+def create_therapist_personality_test_instance(
+    personality_test: TherapistPersonalityTest, session: Session
+) -> TherapistPersonalityTest:
+    """Commit the therapist test resource to the DB"""
+    if not personality_test:
+        raise ValueError("Personality test score not provided.")
+
+    try:
+        session.add(personality_test)
+        session.commit()
+        session.refresh(personality_test)
+
+        return personality_test
+    except SQLAlchemyError as e:
+        session.rollback()
+        logger.exception("Error in saving a therapist test score")
+        raise TestScoreCreationError("Failed to create a therapist test score") from e
+
+
 def get_anonymous_test_score(
     anonymous_test_score_id: str, session: Session
 ) -> AnonymousPersonalityTestScore | None:
+    """Retrieve an anonymous patient's test score from the corresponding table"""
     try:
         statement = select(AnonymousPersonalityTestScore).where(
             anonymous_test_score_id == AnonymousPersonalityTestScore.id
