@@ -1,18 +1,12 @@
 "use client";
 import { usePatchAnonymousQuestion } from "../../../api/profile/profile";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import TextField from "@mui/material/TextField";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import NavigationButtons from "../../common/NavigationButtons";
-import {
-  getAnonymousSessionNextStep,
-  getPreviousStep,
-  AnonymousQuestionsStepName,
-} from "@/app/utils/utils";
-import { useNavContext } from "@/app/NavigationContext";
+import { AnonymousStepComponentProps } from "@/app/utils/utils";
 import QuestionFormWrapper from "./QuestionFormWrapper";
-import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
 const validateAgeInput = (
   age: string | null,
@@ -39,28 +33,27 @@ const validateAgeInput = (
   return true;
 };
 
-export default function AgeForm() {
+export default function AgeForm({
+  entity,
+  step,
+  nextStep,
+  onStepHistoryChange,
+  stepHistory,
+  previousStep,
+}: AnonymousStepComponentProps) {
   const [error, setError] = useState("");
   const router = useRouter();
-  const params = useParams();
 
-  const { stepHistory, setStepHistory } = useNavContext();
-  const { anonymousPatient } = useContext(AnonymousPatientContext);
-
-  const anonymousPatientAge = anonymousPatient?.age
-    ? String(anonymousPatient?.age)
-    : "";
+  const anonymousPatientAge = entity?.age ? String(entity?.age) : "";
 
   const [age, setAge] = useState<string | null>(anonymousPatientAge);
 
-  const step = params.step as AnonymousQuestionsStepName;
-  const nextStep = getAnonymousSessionNextStep(step);
   const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
 
   const { mutate: answerMutate } = usePatchAnonymousQuestion({
     onSuccess: () => {
       if (!isStepInStepHistory) {
-        setStepHistory((prevState) => [...prevState, step]);
+        onStepHistoryChange((prevState) => [...prevState, step]);
       }
 
       router.push(`/questions/${nextStep}`);
@@ -78,7 +71,7 @@ export default function AgeForm() {
       answerMutate({ age: Number(age) });
     } else {
       if (!isStepInStepHistory) {
-        setStepHistory((prevState) => [...prevState, step]);
+        onStepHistoryChange((prevState) => [...prevState, step]);
       }
 
       router.push(`/questions/${nextStep}`);
@@ -103,7 +96,6 @@ export default function AgeForm() {
       </Box>
       <NavigationButtons
         onPrevButtonClick={() => {
-          const previousStep = getPreviousStep(step, stepHistory);
           router.push(previousStep);
         }}
         isNextButtonDisabled={!age}

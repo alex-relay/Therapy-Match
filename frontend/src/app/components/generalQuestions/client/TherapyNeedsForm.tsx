@@ -1,37 +1,37 @@
 "use client";
 
 import FormGroup from "@mui/material/FormGroup";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import { StyledFormControlLabel } from "@/app/components/common/OptionsContainers";
 import NavigationButtons from "@/app/components/common/NavigationButtons";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   TherapyNeedsOptions,
   TherapyNeedsOptionsMap,
   usePatchAnonymousQuestion,
 } from "@/app/api/profile/profile";
-import { getPreviousStep, AnonymousQuestionsStepName } from "@/app/utils/utils";
-import { useNavContext } from "@/app/NavigationContext";
+import { AnonymousStepComponentProps } from "@/app/utils/utils";
 import QuestionFormWrapper from "./QuestionFormWrapper";
-import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
-const TherapyNeeds = () => {
+const TherapyNeeds = ({
+  step,
+  stepHistory,
+  previousStep,
+  onStepHistoryChange,
+  entity,
+}: AnonymousStepComponentProps) => {
   const router = useRouter();
-  const params = useParams();
-  const { stepHistory, setStepHistory } = useNavContext();
-  const { anonymousPatient } = useContext(AnonymousPatientContext);
-  const step = params.step as AnonymousQuestionsStepName;
 
-  const therapyNeedsValue = anonymousPatient?.therapy_needs ?? [];
+  const therapyNeedsValue = entity?.therapy_needs ?? [];
 
   const [therapyNeeds, setTherapyNeeds] =
     useState<TherapyNeedsOptions[]>(therapyNeedsValue);
 
   const navigateToPersonalityTests = () => {
     if (!stepHistory.includes(step)) {
-      setStepHistory((prevState) => [...prevState, step]);
+      onStepHistoryChange((prevState) => [...prevState, step]);
     }
     router.push("/personality-tests/introduction?type=patient");
   };
@@ -59,8 +59,8 @@ const TherapyNeeds = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const isStateMatchingSavedNeeds = therapyNeeds?.every(
-      (need) => anonymousPatient?.therapy_needs?.includes(need),
+    const isStateMatchingSavedNeeds = therapyNeeds.every((need) =>
+      therapyNeedsValue.includes(need),
     );
 
     if (
@@ -116,7 +116,6 @@ const TherapyNeeds = () => {
       </FormGroup>
       <NavigationButtons
         onPrevButtonClick={() => {
-          const previousStep = getPreviousStep(step, stepHistory);
           router.push(previousStep);
         }}
         isNextButtonDisabled={false}

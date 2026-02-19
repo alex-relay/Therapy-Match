@@ -6,40 +6,37 @@ import {
   StyledFormControlLabel,
   StyledRadioButton,
 } from "@/app/components/common/OptionsContainers";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import NavigationButtons from "@/app/components/common/NavigationButtons";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
-import {
-  getAnonymousSessionNextStep,
-  getPreviousStep,
-  AnonymousQuestionsStepName,
-} from "@/app/utils/utils";
-import { useNavContext } from "@/app/NavigationContext";
+import { AnonymousStepComponentProps } from "@/app/utils/utils";
 import QuestionFormWrapper from "./QuestionFormWrapper";
-import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
-const LGBTQPreferenceForm = () => {
+const LGBTQPreferenceForm = ({
+  step,
+  stepHistory,
+  previousStep,
+  nextStep,
+  onStepHistoryChange,
+  entity,
+}: AnonymousStepComponentProps) => {
   const router = useRouter();
-  const params = useParams();
-  const { stepHistory, setStepHistory } = useNavContext();
-  const { anonymousPatient } = useContext(AnonymousPatientContext);
 
-  const lgbtqPreferenceValue =
-    anonymousPatient?.is_lgbtq_therapist_preference ?? null;
+  console.log({ previousStep });
+
+  const lgbtqPreferenceValue = entity?.is_lgbtq_therapist_preference ?? null;
 
   const [selectedValue, setSelectedValue] = useState<boolean | null>(
     lgbtqPreferenceValue,
   );
 
-  const step = params.step as AnonymousQuestionsStepName;
-  const nextStep = getAnonymousSessionNextStep(step);
   const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
 
   const { mutate: answerMutate } = usePatchAnonymousQuestion({
     onSuccess: () => {
       if (!isStepInStepHistory) {
-        setStepHistory((prevState) => [...prevState, step]);
+        onStepHistoryChange((prevState) => [...prevState, step]);
       }
 
       router.push(`/questions/${nextStep}`);
@@ -49,13 +46,13 @@ const LGBTQPreferenceForm = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (selectedValue !== anonymousPatient?.is_lgbtq_therapist_preference) {
+    if (selectedValue !== lgbtqPreferenceValue) {
       answerMutate({
         is_lgbtq_therapist_preference: selectedValue,
       });
     } else {
       if (!isStepInStepHistory) {
-        setStepHistory((prevState) => [...prevState, step]);
+        onStepHistoryChange((prevState) => [...prevState, step]);
       }
 
       router.push(`/questions/${nextStep}`);
@@ -65,7 +62,7 @@ const LGBTQPreferenceForm = () => {
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    setSelectedValue(event.target.value === "yes" ? true : false);
+    setSelectedValue(event.target.value === "yes");
   };
 
   return (
@@ -96,7 +93,6 @@ const LGBTQPreferenceForm = () => {
       <NavigationButtons
         isNextButtonDisabled={selectedValue === null}
         onPrevButtonClick={() => {
-          const previousStep = getPreviousStep(step, stepHistory);
           router.push(previousStep);
         }}
       />

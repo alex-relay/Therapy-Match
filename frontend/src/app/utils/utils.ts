@@ -1,5 +1,7 @@
+import { Dispatch, SetStateAction } from "react";
 import { CategoryType } from "../api/scores/scores";
 import { ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP } from "@/app/components/generalQuestions/generalQuestions";
+import { PatientProfileResponse } from "../api/profile/profile";
 
 export type QuestionOptions = {
   agree: number;
@@ -335,16 +337,34 @@ export type TherapistQuestionStepName =
   | "therapy-needs"
   | "specializations";
 
-type StepInfoBase = {
-  component: React.ComponentType;
+export type AnonymousStepComponentProps = {
+  step: AnonymousQuestionsStepName;
+  onStepHistoryChange: Dispatch<SetStateAction<AnonymousQuestionsStepName[]>>;
+  stepHistory: AnonymousQuestionsStepName[];
+  entity: PatientProfileResponse | null;
+  nextStep: AnonymousQuestionsStepName;
+  previousStep: string;
+};
+
+export type TherapistStepComponentProps = {
+  step: TherapistQuestionStepName;
+  onStepHistoryChange: Dispatch<SetStateAction<TherapistQuestionStepName[]>>;
+  stepHistory: TherapistQuestionStepName[];
+  entity: PatientProfileResponse | null; // TODO: This needs to change to the TherapistProfileResponse
+  nextStep: TherapistQuestionStepName;
+  previousStep: string;
+};
+
+type AnonymousStepInfoBase = {
+  component: React.FunctionComponent<AnonymousStepComponentProps>;
   title: string;
 };
 
-type AnonymousSessionStepInfo = StepInfoBase & {
+type AnonymousSessionStepInfo = AnonymousStepInfoBase & {
   getNextStep: () => AnonymousQuestionsStepName;
 };
 
-type TherapistSessionStepInfo = StepInfoBase & {
+type TherapistSessionStepInfo = AnonymousStepInfoBase & {
   getNextStep: () => TherapistQuestionStepName;
 };
 
@@ -369,7 +389,10 @@ const getAnonymousSessionNextStep = (
   return "gender";
 };
 
-const getPreviousStep = (currentStep: string, stepHistory: string[]) => {
+const getPreviousAnonymousStep = (
+  currentStep: string,
+  stepHistory: string[],
+) => {
   if (!currentStep || !stepHistory.length) {
     return "/";
   }
@@ -392,5 +415,5 @@ const getPreviousStep = (currentStep: string, stepHistory: string[]) => {
 export {
   PERSONALITY_TEST_QUESTIONS,
   getAnonymousSessionNextStep,
-  getPreviousStep,
+  getPreviousAnonymousStep,
 };
