@@ -9,21 +9,18 @@ import {
 import { useState } from "react";
 import NavigationButtons from "@/app/components/common/NavigationButtons";
 import { useRouter } from "next/navigation";
-import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
 import { AnonymousStepComponentProps } from "@/app/utils/utils";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 
 const LGBTQPreferenceForm = ({
-  step,
-  stepHistory,
   previousStep,
   nextStep,
-  onStepHistoryChange,
+  stepHistory,
+  step,
+  onAnswerMutate,
   entity,
 }: AnonymousStepComponentProps) => {
   const router = useRouter();
-
-  console.log({ previousStep });
 
   const lgbtqPreferenceValue = entity?.is_lgbtq_therapist_preference ?? null;
 
@@ -31,33 +28,20 @@ const LGBTQPreferenceForm = ({
     lgbtqPreferenceValue,
   );
 
-  const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
-
-  const { mutate: answerMutate } = usePatchAnonymousQuestion({
-    onSuccess: () => {
-      if (!isStepInStepHistory) {
-        onStepHistoryChange((prevState) => [...prevState, step]);
-      }
-
-      router.push(`/questions/${nextStep}`);
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (selectedValue !== lgbtqPreferenceValue) {
-      answerMutate({
+      onAnswerMutate({
         is_lgbtq_therapist_preference: selectedValue,
       });
-    } else {
-      if (!isStepInStepHistory) {
-        onStepHistoryChange((prevState) => [...prevState, step]);
-      }
-
-      router.push(`/questions/${nextStep}`);
+      return;
     }
+    router.push(`/questions/${nextStep}`);
   };
+
+  const isPrevButtonDisabled =
+    !stepHistory.length || stepHistory.indexOf(step) === 0;
 
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -92,6 +76,7 @@ const LGBTQPreferenceForm = ({
       </FormControl>
       <NavigationButtons
         isNextButtonDisabled={selectedValue === null}
+        isPrevButtonDisabled={isPrevButtonDisabled}
         onPrevButtonClick={() => {
           router.push(previousStep);
         }}

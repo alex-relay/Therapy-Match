@@ -1,7 +1,10 @@
 import { Dispatch, SetStateAction } from "react";
 import { CategoryType } from "../api/scores/scores";
 import { ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP } from "@/app/components/generalQuestions/generalQuestions";
-import { PatientProfileResponse } from "../api/profile/profile";
+import {
+  PatchQuestionProps,
+  PatientProfileResponse,
+} from "../api/profile/profile";
 
 export type QuestionOptions = {
   agree: number;
@@ -340,6 +343,7 @@ export type TherapistQuestionStepName =
 export type AnonymousStepComponentProps = {
   step: AnonymousQuestionsStepName;
   onStepHistoryChange: Dispatch<SetStateAction<AnonymousQuestionsStepName[]>>;
+  onAnswerMutate: (body: PatchQuestionProps) => void;
   stepHistory: AnonymousQuestionsStepName[];
   entity: PatientProfileResponse | null;
   nextStep: AnonymousQuestionsStepName;
@@ -360,11 +364,16 @@ type AnonymousStepInfoBase = {
   title: string;
 };
 
+type TherapistStepInfoBase = {
+  component: React.FunctionComponent<TherapistStepComponentProps>;
+  title: string;
+};
+
 type AnonymousSessionStepInfo = AnonymousStepInfoBase & {
   getNextStep: () => AnonymousQuestionsStepName;
 };
 
-type TherapistSessionStepInfo = AnonymousStepInfoBase & {
+type TherapistSessionStepInfo = TherapistStepInfoBase & {
   getNextStep: () => TherapistQuestionStepName;
 };
 
@@ -390,8 +399,8 @@ const getAnonymousSessionNextStep = (
 };
 
 const getPreviousAnonymousStep = (
-  currentStep: string,
-  stepHistory: string[],
+  currentStep: AnonymousQuestionsStepName,
+  stepHistory: AnonymousQuestionsStepName[],
 ) => {
   if (!currentStep || !stepHistory.length) {
     return "/";

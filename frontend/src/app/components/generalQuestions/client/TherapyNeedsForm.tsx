@@ -37,8 +37,10 @@ const TherapyNeeds = ({
   };
 
   const { mutate: answerMutate } = usePatchAnonymousQuestion({
-    onSuccess: () => {
-      navigateToPersonalityTests();
+    options: {
+      onSuccess: () => {
+        navigateToPersonalityTests();
+      },
     },
   });
 
@@ -72,6 +74,9 @@ const TherapyNeeds = ({
       navigateToPersonalityTests();
     }
   };
+
+  const isPrevButtonDisabled =
+    !stepHistory.length || stepHistory.indexOf(step) === 0;
 
   return (
     <QuestionFormWrapper handleSubmit={handleSubmit}>
@@ -119,7 +124,7 @@ const TherapyNeeds = ({
           router.push(previousStep);
         }}
         isNextButtonDisabled={false}
-        isPrevButtonDisabled={step === "gender"}
+        isPrevButtonDisabled={isPrevButtonDisabled}
       />
     </QuestionFormWrapper>
   );

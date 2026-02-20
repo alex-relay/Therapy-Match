@@ -1,5 +1,4 @@
 "use client";
-import { usePatchAnonymousQuestion } from "../../../api/profile/profile";
 import { useState } from "react";
 import TextField from "@mui/material/TextField";
 import { useRouter } from "next/navigation";
@@ -35,10 +34,10 @@ const validateAgeInput = (
 
 export default function AgeForm({
   entity,
-  step,
   nextStep,
-  onStepHistoryChange,
+  step,
   stepHistory,
+  onAnswerMutate,
   previousStep,
 }: AnonymousStepComponentProps) {
   const [error, setError] = useState("");
@@ -48,18 +47,6 @@ export default function AgeForm({
 
   const [age, setAge] = useState<string | null>(anonymousPatientAge);
 
-  const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
-
-  const { mutate: answerMutate } = usePatchAnonymousQuestion({
-    onSuccess: () => {
-      if (!isStepInStepHistory) {
-        onStepHistoryChange((prevState) => [...prevState, step]);
-      }
-
-      router.push(`/questions/${nextStep}`);
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -68,15 +55,15 @@ export default function AgeForm({
     }
 
     if (age !== anonymousPatientAge) {
-      answerMutate({ age: Number(age) });
-    } else {
-      if (!isStepInStepHistory) {
-        onStepHistoryChange((prevState) => [...prevState, step]);
-      }
-
-      router.push(`/questions/${nextStep}`);
+      onAnswerMutate({ age: Number(age) });
+      return;
     }
+
+    router.push(`/questions/${nextStep}`);
   };
+
+  const isPrevButtonDisabled =
+    !stepHistory.length || stepHistory.indexOf(step) === 0;
 
   return (
     <QuestionFormWrapper handleSubmit={handleSubmit}>
@@ -99,7 +86,7 @@ export default function AgeForm({
           router.push(previousStep);
         }}
         isNextButtonDisabled={!age}
-        isPrevButtonDisabled={false}
+        isPrevButtonDisabled={isPrevButtonDisabled}
       />
     </QuestionFormWrapper>
   );

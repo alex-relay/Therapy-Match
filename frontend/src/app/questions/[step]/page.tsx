@@ -11,6 +11,7 @@ import GeneralQuestion from "@/app/components/generalQuestions/GeneralQuestion";
 import { useNavContext } from "@/app/NavigationContext";
 import { useContext } from "react";
 import { AnonymousPatientContext } from "@/app/components/generalQuestions/client/AnonymousPatientContext";
+import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
 
 const Questions = () => {
   const params = useParams();
@@ -18,8 +19,14 @@ const Questions = () => {
 
   const { stepHistory, setStepHistory } = useNavContext();
   const nextStep = getAnonymousSessionNextStep(step);
-
   const { anonymousPatient } = useContext(AnonymousPatientContext);
+
+  const { mutate: answerMutate } = usePatchAnonymousQuestion({
+    nextStep,
+    stepHistory,
+    step,
+    onStepHistoryChange: setStepHistory,
+  });
 
   if (!step || !ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP[step]) {
     return "Step does not exist";
@@ -37,6 +44,7 @@ const Questions = () => {
         stepHistory={stepHistory}
         nextStep={nextStep}
         onStepHistoryChange={setStepHistory}
+        onAnswerMutate={answerMutate}
         step={step}
         previousStep={getPreviousAnonymousStep(step, stepHistory)}
       />

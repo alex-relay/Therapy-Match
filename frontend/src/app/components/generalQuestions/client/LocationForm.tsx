@@ -1,6 +1,5 @@
 "use client";
 
-import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { useRouter } from "next/navigation";
@@ -13,25 +12,14 @@ import { validatePostalCode, transformPostalCode } from "../utils";
 const LocationForm = ({
   entity,
   nextStep,
-  step,
-  onStepHistoryChange,
+  onAnswerMutate,
   stepHistory,
+  step,
   previousStep,
 }: AnonymousStepComponentProps) => {
   const [error, setError] = useState("");
   const router = useRouter();
   const [postalCode, setPostalCode] = useState(entity?.postal_code ?? "");
-
-  const isStepInStepHistory = stepHistory.includes(step);
-
-  const { mutate: answerMutate } = usePatchAnonymousQuestion({
-    onSuccess: () => {
-      if (!isStepInStepHistory) {
-        onStepHistoryChange((prevState) => [...prevState, step]);
-      }
-      router.push(`/questions/${nextStep}`);
-    },
-  });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,14 +31,15 @@ const LocationForm = ({
     }
 
     if (cleanPostalCode !== entity?.postal_code) {
-      answerMutate({ postal_code: cleanPostalCode });
-    } else {
-      if (!isStepInStepHistory) {
-        onStepHistoryChange((prevState) => [...prevState, step]);
-      }
-      router.push(`/questions/${nextStep}`);
+      onAnswerMutate({ postal_code: cleanPostalCode });
+      return;
     }
+
+    router.push(`/questions/${nextStep}`);
   };
+
+  const isPrevButtonDisabled =
+    !stepHistory.length || stepHistory.indexOf(step) === 0;
 
   return (
     <QuestionFormWrapper handleSubmit={handleSubmit}>
@@ -69,7 +58,7 @@ const LocationForm = ({
         />
       </Box>
       <NavigationButtons
-        isPrevButtonDisabled={!previousStep}
+        isPrevButtonDisabled={isPrevButtonDisabled}
         isNextButtonDisabled={!postalCode}
         onPrevButtonClick={() => {
           router.push(previousStep);

@@ -8,16 +8,13 @@ import {
   StyledRadioButton,
 } from "@/app/components/common/OptionsContainers";
 import { useRouter } from "next/navigation";
-import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
 import { AnonymousStepComponentProps } from "@/app/utils/utils";
 import NavigationButtons from "@/app/components/common/NavigationButtons";
 import QuestionFormWrapper from "./QuestionFormWrapper";
 
 export default function ReligiousPreferenceForm({
   nextStep,
-  step,
-  stepHistory,
-  onStepHistoryChange,
+  onAnswerMutate,
   entity,
   previousStep,
 }: AnonymousStepComponentProps) {
@@ -29,20 +26,6 @@ export default function ReligiousPreferenceForm({
     religiousPreferenceValue,
   );
 
-  console.log({ stepHistory });
-
-  const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
-
-  const { mutate: answerMutate } = usePatchAnonymousQuestion({
-    onSuccess: () => {
-      if (!isStepInStepHistory) {
-        onStepHistoryChange((prevState) => [...prevState, step]);
-      }
-
-      router.push(`/questions/${nextStep}`);
-    },
-  });
-
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -53,14 +36,11 @@ export default function ReligiousPreferenceForm({
     e.preventDefault();
 
     if (selectedValue !== religiousPreferenceValue) {
-      answerMutate({ is_religious_therapist_preference: selectedValue });
-    } else {
-      if (!isStepInStepHistory) {
-        onStepHistoryChange((prevState) => [...prevState, step]);
-      }
-
-      router.push(`/questions/${nextStep}`);
+      onAnswerMutate({ is_religious_therapist_preference: selectedValue });
+      return;
     }
+
+    router.push(`/questions/${nextStep}`);
   };
 
   return (

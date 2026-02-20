@@ -8,7 +8,6 @@ import {
   StyledRadioButton,
 } from "@/app/components/common/OptionsContainers";
 import { useRouter } from "next/navigation";
-import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
 import { AnonymousStepComponentProps } from "@/app/utils/utils";
 import NavigationButtons from "@/app/components/common/NavigationButtons";
 import QuestionFormWrapper from "./QuestionFormWrapper";
@@ -27,7 +26,7 @@ export default function GenderForm({
   entity,
   step,
   nextStep,
-  onStepHistoryChange,
+  onAnswerMutate,
   stepHistory,
   previousStep,
 }: AnonymousStepComponentProps) {
@@ -35,18 +34,6 @@ export default function GenderForm({
 
   const gender = entity?.gender ?? null;
   const [selectedValue, setSelectedValue] = useState<string | null>(gender);
-
-  const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
-
-  const { mutate: answerMutate } = usePatchAnonymousQuestion({
-    onSuccess: () => {
-      if (!isStepInStepHistory) {
-        onStepHistoryChange((prevState) => [...prevState, step]);
-      }
-
-      router.push(`/questions/${nextStep}`);
-    },
-  });
 
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -58,14 +45,11 @@ export default function GenderForm({
     e.preventDefault();
 
     if (selectedValue !== gender) {
-      answerMutate({ gender: selectedValue });
-    } else {
-      if (!isStepInStepHistory) {
-        onStepHistoryChange((prevState) => [...prevState, step]);
-      }
-
-      router.push(`/questions/${nextStep}`);
+      onAnswerMutate({ gender: selectedValue });
+      return;
     }
+
+    router.push(`/questions/${nextStep}`);
   };
 
   const handleIsChecked = (key: string) => {

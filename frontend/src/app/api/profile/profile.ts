@@ -1,3 +1,4 @@
+import { AnonymousQuestionsStepName } from "@/app/utils/utils";
 import {
   useMutation,
   UseMutationOptions,
@@ -5,6 +6,8 @@ import {
   useQueryClient,
   UseQueryOptions,
 } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { Dispatch, SetStateAction } from "react";
 
 const PROXY_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -81,14 +84,27 @@ export const patchAnonymousQuestion = async ({
   return response.json();
 };
 
-export const usePatchAnonymousQuestion = (
+export type PatchAnonymousQuestionHookProps = {
+  nextStep?: AnonymousQuestionsStepName;
+  stepHistory?: AnonymousQuestionsStepName[];
+  step?: AnonymousQuestionsStepName;
+  onStepHistoryChange?: Dispatch<SetStateAction<AnonymousQuestionsStepName[]>>;
   options?: UseMutationOptions<
     PatientProfileResponse,
     Error,
     PatchQuestionProps
-  >,
-) => {
+  >;
+};
+
+export const usePatchAnonymousQuestion = ({
+  nextStep,
+  stepHistory,
+  step,
+  onStepHistoryChange,
+  options,
+}: PatchAnonymousQuestionHookProps) => {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: patchAnonymousQuestion,
@@ -113,6 +129,12 @@ export const usePatchAnonymousQuestion = (
     },
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] }),
+    onSuccess: () => {
+      if (step && !stepHistory?.includes(step) && onStepHistoryChange) {
+        onStepHistoryChange((prevState) => [...prevState, step]);
+      }
+      router.push(`/questions/${nextStep}`);
+    },
     ...options,
   });
 };
