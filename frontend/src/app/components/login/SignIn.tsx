@@ -139,7 +139,7 @@ export default function SignIn() {
     }
 
     if (res?.ok) {
-      router.replace("/profile");
+      router.replace("/therapist/dashboard");
     }
   };
 

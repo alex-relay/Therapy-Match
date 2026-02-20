@@ -1,10 +1,8 @@
+from uuid import UUID
 from datetime import timedelta
 from sqlmodel import select
-from backend.models.user import (
-    Patient,
-    Therapist,
-    PersonalityTestScore,
-)
+from backend.routers.users.user_types import UserOption
+from backend.models.user import Patient, TherapistPersonalityTest
 from backend.types.scores_types import PersonalityTestCategory
 from backend.tests.test_utils import (
     add_test_patient,
@@ -12,93 +10,82 @@ from backend.tests.test_utils import (
     add_test_user,
     add_anonymous_patient,
     USER_ID,
-    add_personality_test_score,
+    MOCK_PERSONALITY_TEST,
+    add_anonymous_personality_test_score,
+    add_therapist_personality_test,
+    add_therapist_personality_test_score,
 )
 from backend.services.users import create_access_token
+from backend.services.scores import format_personality_test
 
 
-def test_create_therapist_personality_test_score(client_fixture, session_fixture):
+def test_create_therapist_personality_test(
+    client_fixture, session_fixture, mock_auth_headers
+):
     """test for creating a therapist personality test score"""
-    add_test_user(session_fixture)
-    add_test_therapist(session_fixture)
-
-    therapist = session_fixture.exec(select(Therapist)).first()
-
-    response = client_fixture.post(
-        f"/therapists/{str(therapist.id)}/personality-scores",
-        json={
-            "agreeableness": [1, 4, 1, 5, 3, 5, 3, 3, 5, 4],
-            "extroversion": [1, 4, 3, 5, 4, 3, 2, 5, 1, 4],
-            "openness": [1, 2, 3, 4, 5, 1, 2, 3, 4, 5],
-            "conscientiousness": [5, 1, 5, 1, 4, 2, 5, 1, 5, 5],
-            "neuroticism": [4, 2, 5, 4, 2, 4, 3, 2, 3, 2],
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    add_test_user(
+        session_fixture,
+        {
+            "roles": [UserOption.THERAPIST.value],
+            "id": UUID("b658ffce-d810-4341-a8ef-2d3651489daf"),
         },
     )
 
-    assert response.status_code == 201
-    data = response.json()
-
-    assert data["neuroticism"] == 1.9
-    assert data["conscientiousness"] == 3.8
-    assert data["agreeableness"] == 3.2
-    assert data["openness"] == 2.4
-    assert data["extroversion"] == 1.0
-
-    assert therapist.personality_test is not None
-
-    assert therapist.personality_test.therapist_id is not None
-    assert therapist.personality_test.patient_id is None
-
-    personality_test_score = session_fixture.exec(select(PersonalityTestScore)).first()
-    test_score_dict = personality_test_score.model_dump()
-
-    assert test_score_dict["agreeableness"] is not None
-    assert test_score_dict["openness"] is not None
-    assert test_score_dict["extroversion"] is not None
-    assert test_score_dict["conscientiousness"] is not None
-    assert test_score_dict["neuroticism"] is not None
-
-
-def test_create_patient_personality_test_score(client_fixture, session_fixture):
-    """test for creating a patient personality test score"""
-    add_test_user(session_fixture)
-    add_test_patient(session_fixture)
-
-    patient = session_fixture.exec(select(Patient)).first()
+    therapist = add_test_therapist(session_fixture)
 
     response = client_fixture.post(
-        f"/patients/{str(patient.id)}/personality-scores",
-        json={
-            "agreeableness": [1, 4, 1, 5, 3, 5, 3, 3, 5, 4],
-            "extroversion": [1, 4, 3, 5, 4, 3, 2, 5, 1, 4],
-            "openness": [1, 2, 3, 4, 5, 1, 2, 3, 4, 5],
-            "conscientiousness": [5, 1, 5, 1, 4, 2, 5, 1, 5, 5],
-            "neuroticism": [4, 2, 5, 4, 2, 4, 3, 2, 3, 2],
-        },
+        "/therapists/me/personality-tests", headers=mock_auth_headers
     )
 
-    assert response.status_code == 201
     data = response.json()
 
-    assert data["neuroticism"] == 1.9
-    assert data["conscientiousness"] == 3.8
-    assert data["agreeableness"] == 3.2
-    assert data["openness"] == 2.4
-    assert data["extroversion"] == 1.0
+    assert response.status_code == 201
+    assert data["id"] is not None
+    assert data["agreeableness"] == []
+    assert data["openness"] == []
+    assert data["extroversion"] == []
+    assert data["conscientiousness"] == []
+    assert data["neuroticism"] == []
 
-    assert patient.personality_test is not None
+    personality_test_score = session_fixture.exec(
+        select(TherapistPersonalityTest).where(
+            TherapistPersonalityTest.therapist_id == therapist.id
+        )
+    ).first()
 
-    assert patient.personality_test.therapist_id is None
-    assert patient.personality_test.patient_id == patient.id
-
-    personality_test_score = session_fixture.exec(select(PersonalityTestScore)).first()
     test_score_dict = personality_test_score.model_dump()
 
-    assert test_score_dict["agreeableness"] is not None
-    assert test_score_dict["openness"] is not None
-    assert test_score_dict["extroversion"] is not None
-    assert test_score_dict["conscientiousness"] is not None
-    assert test_score_dict["neuroticism"] is not None
+    assert test_score_dict["therapist_id"] == therapist.id
+
+
+def test_create_therapist_personality_test_with_existing_score(
+    session_fixture, client_fixture, mock_auth_headers
+):
+    """Test to raise an exception if a therapist that has a personality test tries to create one"""
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+
+    therapist = add_test_therapist(session_fixture)
+    personality_test = add_therapist_personality_test(
+        session_fixture, {"therapist_id": therapist.id, **(MOCK_PERSONALITY_TEST)}
+    )
+
+    formatted_personality_test = format_personality_test(personality_test)
+
+    add_therapist_personality_test_score(
+        therapist=therapist,
+        personality_test_scores=formatted_personality_test,
+        session_fixture=session_fixture,
+    )
+
+    response = client_fixture.post(
+        "/therapists/me/personality-tests", headers=mock_auth_headers
+    )
+
+    assert response.status_code == 409
+    data = response.json()
+
+    assert data["detail"] == "Personality test already exists"
 
 
 def test_create_personality_test_score_invalid_scores(client_fixture, session_fixture):
@@ -133,7 +120,9 @@ def test_get_anonymous_personality_test_score(
 ):
     """Test for retrieving a personality test"""
     patient = add_anonymous_patient(session_fixture, {"anonymous_patient_id": USER_ID})
-    add_personality_test_score(session_fixture, {"anonymous_patient_id": patient.id})
+    add_anonymous_personality_test_score(
+        session_fixture, {"anonymous_patient_id": patient.id}
+    )
 
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
@@ -200,7 +189,9 @@ def test_create_anonymous_session_scores_existing_score(
 ):
     """test for creating an anonymous session personality test score"""
     patient = add_anonymous_patient(session_fixture)
-    add_personality_test_score(session_fixture, {"anonymous_patient_id": patient.id})
+    add_anonymous_personality_test_score(
+        session_fixture, {"anonymous_patient_id": patient.id}
+    )
 
     access_token = create_access_token({"sub": USER_ID}, timedelta(minutes=60))
 
@@ -209,7 +200,7 @@ def test_create_anonymous_session_scores_existing_score(
         headers={**mock_auth_headers, "Cookie": f"anonymous_session={access_token}"},
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 409
     data = response.json()
     assert data["detail"] == "Anonymous patient already has personality test scores"
 
@@ -219,7 +210,7 @@ def test_patch_anonymous_session_test_score_existing_data(
 ):
     """test if the existing data is updated"""
     patient = add_anonymous_patient(session_fixture)
-    add_personality_test_score(
+    add_anonymous_personality_test_score(
         session_fixture,
         {
             "anonymous_patient_id": patient.id,
@@ -272,7 +263,7 @@ def test_patch_anonymous_session_test_score_non_existing_data(
 ):
     """test if the dataframe is empty from pgeocode"""
     patient = add_anonymous_patient(session_fixture)
-    add_personality_test_score(
+    add_anonymous_personality_test_score(
         session_fixture,
         {
             "anonymous_patient_id": patient.id,
@@ -306,7 +297,7 @@ def test_patch_anonymous_session_test_score_existing_data_with_new_entry(
 ):
     """test if the dataframe is empty from pgeocode"""
     patient = add_anonymous_patient(session_fixture)
-    add_personality_test_score(
+    add_anonymous_personality_test_score(
         session_fixture,
         {
             "anonymous_patient_id": patient.id,

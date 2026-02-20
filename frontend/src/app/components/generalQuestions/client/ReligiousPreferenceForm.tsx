@@ -1,53 +1,30 @@
 "use client";
 
-import { useState, useContext } from "react";
+import { useState } from "react";
 import RadioGroup from "@mui/material/RadioGroup";
 import FormControl from "@mui/material/FormControl";
 import {
   StyledFormControlLabel,
   StyledRadioButton,
 } from "@/app/components/common/OptionsContainers";
-import { useParams, useRouter } from "next/navigation";
-import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
-import {
-  getAnonymousSessionNextStep,
-  getPreviousStep,
-  AnonymousQuestionsStepName,
-} from "@/app/utils/utils";
+import { useRouter } from "next/navigation";
+import { AnonymousStepComponentProps } from "@/app/utils/utils";
 import NavigationButtons from "@/app/components/common/NavigationButtons";
-import { useNavContext } from "@/app/NavigationContext";
 import QuestionFormWrapper from "./QuestionFormWrapper";
-import { AnonymousPatientContext } from "./AnonymousPatientContext";
 
-export default function ReligiousPreferenceForm() {
+export default function ReligiousPreferenceForm({
+  nextStep,
+  onAnswerMutate,
+  entity,
+  previousStep,
+}: AnonymousStepComponentProps) {
   const router = useRouter();
-  const params = useParams();
-  const { stepHistory, setStepHistory } = useNavContext();
-  const { anonymousPatient } = useContext(AnonymousPatientContext);
 
   const religiousPreferenceValue =
-    anonymousPatient?.is_religious_therapist_preference ?? null;
-
+    entity?.is_religious_therapist_preference ?? null;
   const [selectedValue, setSelectedValue] = useState<boolean | null>(
     religiousPreferenceValue,
   );
-
-  const step = params.step as AnonymousQuestionsStepName;
-  const nextStep = !!selectedValue
-    ? "religion"
-    : getAnonymousSessionNextStep(step);
-
-  const isStepInStepHistory = stepHistory.indexOf(step) >= 0;
-
-  const { mutate: answerMutate } = usePatchAnonymousQuestion({
-    onSuccess: () => {
-      if (!isStepInStepHistory) {
-        setStepHistory((prevState) => [...prevState, step]);
-      }
-
-      router.push(`/questions/${nextStep}`);
-    },
-  });
 
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -58,15 +35,12 @@ export default function ReligiousPreferenceForm() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (selectedValue !== anonymousPatient?.is_religious_therapist_preference) {
-      answerMutate({ is_religious_therapist_preference: selectedValue });
-    } else {
-      if (!isStepInStepHistory) {
-        setStepHistory((prevState) => [...prevState, step]);
-      }
-
-      router.push(`/questions/${nextStep}`);
+    if (selectedValue !== religiousPreferenceValue) {
+      onAnswerMutate({ is_religious_therapist_preference: selectedValue });
+      return;
     }
+
+    router.push(`/questions/${nextStep}`);
   };
 
   return (
@@ -104,10 +78,7 @@ export default function ReligiousPreferenceForm() {
       <NavigationButtons
         isNextButtonDisabled={selectedValue === null}
         onPrevButtonClick={() => {
-          const previousStep = getPreviousStep(step, stepHistory);
-          if (previousStep) {
-            router.push(previousStep);
-          }
+          router.push(previousStep);
         }}
       />
     </QuestionFormWrapper>

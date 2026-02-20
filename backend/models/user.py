@@ -128,6 +128,17 @@ class AnonymousPersonalityTestScore(PersonalityTestScoreBaseMixin, table=True):
     )
 
 
+class TherapistPersonalityTest(PersonalityTestScoreBaseMixin, table=True):
+    """Therapist Personality test for the therapist model"""
+
+    __tablename__ = "therapist_personality_tests"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    therapist_id: UUID = Field(
+        foreign_key="therapists.id", unique=True, ondelete="CASCADE"
+    )
+
+
 class PersonalityTestScore(SQLModel, table=True):
     """Personality test scores model"""
 
