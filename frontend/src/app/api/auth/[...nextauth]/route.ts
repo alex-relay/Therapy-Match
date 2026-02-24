@@ -31,13 +31,15 @@ const handler = NextAuth({
               "Login failed: Invalid credentials for",
               credentials.emailAddress,
             );
-            return null; // Triggers the default "Sign In Failed" error
+            return null;
           }
 
-          // 4. Handle Unexpected Errors (500 Server Error)
           if (!res.ok) {
             console.error("Login failed: Backend returned error", res.status);
-            throw new Error("BackendError");
+            const errorData = await res.json();
+            throw new Error(
+              errorData.detail || "Unable to create an access token",
+            );
           }
 
           const user = await res.json();

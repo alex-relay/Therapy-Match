@@ -50,12 +50,11 @@ const StyledOptionsBox = styled(Box)(({ theme }) => ({
 
 const PersonalityTestQuestion = ({
   question,
-  index,
-  onAnswer,
   actions,
   selectedAnswer,
 }: QuestionProps) => (
   // TODO: refactor to use the GeneralQuestion component.
+  // TODO: refactor to use the radio button components for better accessibility and performance
   <QuestionForm.Card sx={{ width: "100%" }} variant="outlined">
     <Box
       sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
@@ -74,14 +73,11 @@ const PersonalityTestQuestion = ({
         {OPTIONS.map(({ option, value }) => (
           <StyledOptionButton
             size="small"
-            onClick={() => onAnswer(index, value)}
+            type="submit"
             key={option}
             value={value}
-            variant={
-              !!selectedAnswer && selectedAnswer === value
-                ? "contained"
-                : "outlined"
-            }
+            name={"score"}
+            variant={selectedAnswer === value ? "contained" : "outlined"}
           >
             <Typography> {option} </Typography>
           </StyledOptionButton>

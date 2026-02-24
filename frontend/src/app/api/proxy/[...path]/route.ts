@@ -41,10 +41,10 @@ async function handler(
     method: req.method,
     headers: {
       Authorization: `Bearer ${token.accessToken}`,
+      ...Object.fromEntries(req.headers),
     },
   };
 
-  // If it's a POST/PUT, we need to forward the body
   if (req.method !== "GET" && req.method !== "HEAD") {
     const contentType = req.headers.get("content-type") || "";
     try {
@@ -54,7 +54,6 @@ async function handler(
         (options.headers as Record<string, string>)["Content-Type"] =
           "application/json";
       } else {
-        // Forward raw body for non-JSON content types
         options.body = await req.arrayBuffer();
         (options.headers as Record<string, string>)["Content-Type"] =
           contentType;
@@ -64,11 +63,10 @@ async function handler(
     }
   }
 
-  const response = getResponse(targetUrl, options);
+  const response = await getResponse(targetUrl, options);
   return response;
 }
 
-// 3. Export for All Methods
 export {
   handler as GET,
   handler as POST,
