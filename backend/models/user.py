@@ -70,6 +70,10 @@ class Therapist(ProfileMixin, table=True):
         sa_relationship_kwargs={"cascade": "all, delete-orphan", "single_parent": True},
     )
 
+    raw_personality_scores: Optional["TherapistPersonalityTest"] = Relationship(
+        sa_relationship_kwargs={"cascade": "all, delete-orphan", "single_parent": True},
+    )
+
 
 class Patient(ProfileMixin, table=True):
     """Patient model"""

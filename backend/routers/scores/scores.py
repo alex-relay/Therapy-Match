@@ -47,13 +47,9 @@ def create_therapist_personality_test(
 ):
     """Create a personality test record for a therapist."""
 
-    if therapist.personality_test:
-        logger.exception("Personality test already exists")
+    if therapist.raw_personality_scores:
+        logger.warning("Personality test already exists")
         raise HTTPException(status_code=409, detail="Personality test already exists")
-
-    if not therapist.id:
-        logger.exception("Therapist id is not present")
-        raise HTTPException(status_code=422, detail="Therapist id not provided")
 
     logger.info("Creating the personality test")
 
@@ -63,7 +59,9 @@ def create_therapist_personality_test(
         create_therapist_personality_test_instance(personality_test, session)
         logger.info("Personality test created")
 
-        return AggregateUserPersonalityTestRead(**personality_test.model_dump())
+        return AggregateUserPersonalityTestRead(
+            **personality_test.model_dump(exclude={"therapist_id"})
+        )
 
     except (TestScoreCreationError, SQLAlchemyError) as e:
         logger.exception(str(e))
@@ -75,6 +73,7 @@ def create_therapist_personality_test(
         ) from e
 
 
+# The below post route should be refactored to /anonymous-sessions/current/personality-tests
 @router.post(
     "/anonymous-sessions/personality-tests",
     status_code=status.HTTP_201_CREATED,

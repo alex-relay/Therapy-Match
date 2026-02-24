@@ -8,6 +8,7 @@ import {
 } from "@/app/api/scores/scores";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UserType } from "@/app/api/users/users";
+import QuestionFormWrapper from "../generalQuestions/client/QuestionFormWrapper";
 
 type QuestionPageProps = {
   personalityTestScores: PersonalityTestGetResponse | undefined;
@@ -28,7 +29,7 @@ const getLatestQuestionIndex = (
   return personalityTestScoreValues.length - 1;
 };
 
-const LAST_QUESTION_INDEX = PERSONALITY_TEST_QUESTIONS.length - 1;
+// const LAST_QUESTION_INDEX = PERSONALITY_TEST_QUESTIONS.length - 1;
 
 const getIsQuestionAnswered = (
   answers: PersonalityTestQuestionAndScore[],
@@ -42,23 +43,26 @@ const AnonymousTestQuestionPage = ({
   onAnswerQuestion,
 }: QuestionPageProps) => {
   const queryParams = useSearchParams();
+  const router = useRouter();
 
   const [currentQuestion, setCurrentQuestion] = useState(() =>
     getLatestQuestionIndex(personalityTestScores),
   );
 
-  const router = useRouter();
-
-  const handleOptionClick = (index: number, value: number) => {
-    const questionAndAnswer = PERSONALITY_TEST_QUESTIONS[index];
+  const handleOptionClick = (value: number) => {
+    if (value == null) {
+      return;
+    }
+    const questionAndAnswer = PERSONALITY_TEST_QUESTIONS[currentQuestion];
     const userType = queryParams.get("type") as UserType;
-    const isLastQuestion = index === PERSONALITY_TEST_QUESTIONS.length - 1;
+    const isLastQuestion =
+      currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 1;
 
     if (!userType || !["patient", "therapist"].includes(userType)) {
       return;
     }
 
-    const isPersonalityTestCompleted = index === LAST_QUESTION_INDEX;
+    // const isPersonalityTestCompleted = currentQuestion === LAST_QUESTION_INDEX;
 
     onAnswerQuestion({
       id: questionAndAnswer.backendId,
@@ -66,14 +70,13 @@ const AnonymousTestQuestionPage = ({
       score: value,
     });
 
-    if (isPersonalityTestCompleted) {
+    // TODO: refactor to account for if the test has actually been completed
+    if (isLastQuestion) {
       router.push(`/register?type=${userType}`);
       return;
     }
 
-    if (!isLastQuestion) {
-      setCurrentQuestion((prevState) => prevState + 1);
-    }
+    setCurrentQuestion((prevState) => prevState + 1);
   };
 
   const { question, backendId, category } =
@@ -85,7 +88,7 @@ const AnonymousTestQuestionPage = ({
   );
 
   const isNextButtonDisabled =
-    currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 2 ||
+    currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 1 ||
     !selectedAnswer;
 
   if (!personalityTestScores) {
@@ -93,26 +96,37 @@ const AnonymousTestQuestionPage = ({
   }
 
   return (
-    <PersonalityTestQuestion
-      question={question}
-      index={currentQuestion}
-      onAnswer={handleOptionClick}
-      selectedAnswer={selectedAnswer?.score}
-      actions={
-        <NavigationButtons
-          onPrevButtonClick={() =>
-            setCurrentQuestion((prev) => (prev > 0 ? prev - 1 : prev))
-          }
-          onNextButtonClick={() =>
-            setCurrentQuestion((prev) =>
-              prev < PERSONALITY_TEST_QUESTIONS.length - 1 ? prev + 1 : prev,
-            )
-          }
-          isNextButtonDisabled={isNextButtonDisabled}
-          isPrevButtonDisabled={currentQuestion === 0}
-        />
-      }
-    />
+    <QuestionFormWrapper
+      handleSubmit={(e) => {
+        e.preventDefault();
+        const submitter = (e.nativeEvent as SubmitEvent).submitter;
+        const data = new FormData(e.currentTarget, submitter);
+        const value = data.get("score");
+
+        handleOptionClick(Number(value));
+      }}
+    >
+      <PersonalityTestQuestion
+        question={question}
+        index={currentQuestion}
+        onAnswer={handleOptionClick}
+        selectedAnswer={selectedAnswer?.score}
+        actions={
+          <NavigationButtons
+            onPrevButtonClick={() =>
+              setCurrentQuestion((prev) => (prev > 0 ? prev - 1 : prev))
+            }
+            onNextButtonClick={() =>
+              setCurrentQuestion((prev) =>
+                prev < PERSONALITY_TEST_QUESTIONS.length - 1 ? prev + 1 : prev,
+              )
+            }
+            isNextButtonDisabled={isNextButtonDisabled}
+            isPrevButtonDisabled={currentQuestion === 0}
+          />
+        }
+      />
+    </QuestionFormWrapper>
   );
 };
 

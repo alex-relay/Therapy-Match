@@ -3,15 +3,25 @@ import Tile from "@/app/components/common/Tile";
 import { useTheme } from "@mui/material/styles";
 import Stack from "@mui/material/Stack";
 import { useRouter } from "next/navigation";
+import { useCreateTherapistPersonalityTest } from "@/app/api/scores/scores";
 
 export default function Page() {
   const router = useRouter();
   const theme = useTheme();
+  const { mutate: createTherapistPersonalityTest, isPending } =
+    useCreateTherapistPersonalityTest({
+      onSuccess: () => router.push("/therapist/personality-test"),
+    });
 
   const handleProfileTileClick = () =>
     router.push("/therapist/questions/gender");
-  const handlePersonalityTestTileClick = () =>
-    router.push("/therapist/personality-tests");
+
+  const handleStartPersonalityTestTileClick = () => {
+    // to prevent a double click
+    if (!isPending) {
+      createTherapistPersonalityTest();
+    }
+  };
 
   return (
     <>
@@ -53,7 +63,7 @@ export default function Page() {
           }}
         >
           <Tile
-            onTileClick={handlePersonalityTestTileClick}
+            onTileClick={handleStartPersonalityTestTileClick}
             title="Start Personality Test"
           />
         </Stack>

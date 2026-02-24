@@ -38,7 +38,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 class TokenUser(SQLModel):
     """Docstring for TokenUser"""
 
-    email_address: str
+    id: UUID | None
 
 
 class Token(SQLModel):
@@ -275,6 +275,7 @@ def get_user(db, email_address: str):
 
 def authenticate_user(session, email_address: str, password: str):
     """Authenticate user"""
+
     user = get_user_by_email(email_address, session)
 
     if not user:
@@ -299,4 +300,5 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
 
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
     return encoded_jwt

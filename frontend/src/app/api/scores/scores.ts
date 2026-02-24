@@ -46,6 +46,43 @@ export type PersonalityTestGetResponse = {
   agreeableness: PersonalityTestQuestionAndScore[];
 };
 
+export type CreateTherapistPersonalityTestResponse = {
+  id: string;
+};
+
+const createTherapistPersonalityTest = async () => {
+  const response = await fetch(`${API_URL}/therapists/me/personality-tests`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Error: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      if (errorData?.detail) {
+        errorMessage = errorData.detail;
+      }
+    } catch (error) {
+      console.warn(`Non-JSON error response received: ${error}`);
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data = response.json();
+  return data;
+};
+
+const useCreateTherapistPersonalityTest = (
+  options?: UseMutationOptions<CreateTherapistPersonalityTestResponse, Error>,
+) => {
+  return useMutation({
+    mutationFn: createTherapistPersonalityTest,
+    ...options,
+  });
+};
+
 // TODO: need to change the endpoint name to: `.../anonymous-sessions/current/personality-tests`
 const createAnonymousSessionPersonalityTest = async () => {
   const response = await fetch(
@@ -234,4 +271,5 @@ export {
   useCreatePersonalityTest,
   useGetPersonalityTestScores,
   usePatchAnonymousPersonalityTestQuestion,
+  useCreateTherapistPersonalityTest,
 };
