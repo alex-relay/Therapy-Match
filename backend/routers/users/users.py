@@ -7,7 +7,7 @@ from typing import Annotated
 from fastapi import APIRouter, status, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from backend.core.database import SessionDep
-from backend.models.user import AnonymousPatient, Patient
+from backend.models.user import AnonymousPatient, Patient, Therapist
 from backend.core.logging import get_logger
 from backend.routers.users.user_types import UserOption
 from backend.schemas.users import (
@@ -17,6 +17,7 @@ from backend.schemas.users import (
     AnonymousSessionPatientBase,
     AnonymousSessionPatientResponse,
 )
+from backend.schemas.dashboard import TherapistDashboardRead
 from backend.routers.scores.exceptions import PersonalityTestScoreCreationError
 
 from backend.services.scores import (
@@ -36,6 +37,7 @@ from .exceptions import (
 from .dependencies import (
     get_anonymous_patient,
     get_patient_by_user_id,
+    get_therapist_by_user_id,
 )
 
 from ...services.users import (
@@ -332,3 +334,22 @@ def get_patient_profile(
         raise HTTPException(status_code=404, detail="Patient profile not found")
 
     return PatientRead(**current_patient.model_dump())
+
+
+@router.get("/therapists/me", response_model=TherapistRead)
+def get_therapist_profile(
+    therapist: Annotated[Therapist, Depends(get_therapist_by_user_id)]
+):
+    """get the current therapist's profile"""
+
+    return TherapistRead(**therapist.model_dump(exclude={"age", "gender"}))
+
+
+@router.get("/therapists/me/dashboard", response_model=None)
+def get_therapist_dashboard(
+    therapist: Annotated[Therapist, Depends(get_therapist_by_user_id)]
+):
+    return TherapistDashboardRead(
+        personality_test_scores=therapist.raw_personality_scores,
+        completed_personality_test=therapist.personality_test,
+    )

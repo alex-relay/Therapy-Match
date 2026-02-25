@@ -8,10 +8,14 @@ import { useCreateTherapistPersonalityTest } from "@/app/api/scores/scores";
 export default function Page() {
   const router = useRouter();
   const theme = useTheme();
-  const { mutate: createTherapistPersonalityTest, isPending } =
-    useCreateTherapistPersonalityTest({
-      onSuccess: () => router.push("/therapist/personality-test"),
-    });
+
+  const {
+    mutate: createTherapistPersonalityTest,
+    data: createTherapistResponse,
+    isPending,
+  } = useCreateTherapistPersonalityTest({
+    onSuccess: () => router.push("/therapist/personality-test"),
+  });
 
   const handleProfileTileClick = () =>
     router.push("/therapist/questions/gender");

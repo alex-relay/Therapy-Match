@@ -65,6 +65,7 @@ export default function AgeForm({
   const isPrevButtonDisabled =
     !stepHistory.length || stepHistory.indexOf(step) === 0;
 
+  // TODO: refactor this to a date of birth with calendar picker.
   return (
     <QuestionFormWrapper handleSubmit={handleSubmit}>
       <Box margin="auto">

@@ -40,7 +40,6 @@ def test_user_login_for_multiple_roles(client_fixture, session_fixture):
 
     assert "access_token" in data
     assert data["token_type"] == "bearer"
-    assert data["user"]["email_address"] == TEST_USER_BASE["email_address"]
     assert set(data["roles"]) == {UserOption.PATIENT.value, UserOption.THERAPIST.value}
 
 
@@ -83,7 +82,6 @@ def test_therapist_login(client_fixture, session_fixture):
         session_fixture,
         {
             "roles": [UserOption.THERAPIST.value],
-            "id": UUID("d658ffce-d810-4341-a8ef-2d3651489daf"),
         },
     )
 
@@ -100,7 +98,7 @@ def test_therapist_login(client_fixture, session_fixture):
 
     assert "access_token" in data
     assert data["token_type"] == "bearer"
-    assert data["user"]["email_address"] == TEST_USER_BASE["email_address"]
+    assert data["user"]["id"] == str(TEST_USER_BASE["id"])
     assert data["roles"] == [UserOption.THERAPIST.value]
 
 
@@ -121,7 +119,7 @@ def test_patient_login(client_fixture, session_fixture):
 
     assert "access_token" in data
     assert data["token_type"] == "bearer"
-    assert data["user"]["email_address"] == TEST_USER_BASE["email_address"]
+    assert str(data["user"]["id"]) == str(TEST_USER_BASE["id"])
     assert data["roles"] == [UserOption.PATIENT.value]
 
 
@@ -508,6 +506,58 @@ def test_create_patient_with_null_password_value(
     data = response.json()["detail"]
     assert response.status_code == 422
     assert data[0]["msg"] == "Input should be a valid string"
+
+
+def test_get_therapist_profile(client_fixture, session_fixture, mock_auth_headers):
+    """Test to get therapist profile"""
+
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    add_test_therapist(session_fixture)
+
+    response = client_fixture.get("/therapists/me", headers=mock_auth_headers)
+
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["id"] is not None
+    assert data["latitude"] == 40.7128
+    assert data["longitude"] == -74.006
+    assert data["age"] is None
+    assert data["gender"] is None
+
+
+def test_get_therapist_not_found(client_fixture, session_fixture, mock_auth_headers):
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+
+    response = client_fixture.get("/therapists/me", headers=mock_auth_headers)
+
+    data = response.json()
+
+    assert response.status_code == 404
+    assert data["detail"] == "Therapist not found"
+
+
+def test_get_therapist_profile_with_401_unauthorized(
+    client_fixture, session_fixture, mock_auth_headers, mock_jwt_decode
+):
+    """Test to produce an exception for a therapist not found"""
+
+    test_alternative_user_id = UUID("b758ffce-d810-4341-a8ef-2d3651489daf")
+
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    add_test_therapist(session_fixture)
+
+    mock_jwt_decode.return_value = {
+        "sub": str(test_alternative_user_id),
+        "exp": 9999999999,
+    }
+
+    response = client_fixture.get("/therapists/me", headers=mock_auth_headers)
+
+    data = response.json()
+
+    assert response.status_code == 401
+    assert data["detail"] == "Could not validate credentials"
 
 
 def test_create_patient_returns_409_for_existing_patient(

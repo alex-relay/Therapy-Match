@@ -106,6 +106,17 @@ TEST_PATIENT_BASE = {
     "user_id": UUID(USER_ID),
 }
 
+TEST_THERAPIST_BASE = {
+    "latitude": 40.7128,
+    "longitude": -74.0060,
+    "description": "Existing therapist for testing",
+    "specializations": ["anxiety", "depression"],
+    "therapist_type": TherapistTypeOption.PSYCHOLOGIST,
+    "gender": GenderOption.FEMALE,
+    "age": 45,
+    "user_id": UUID(USER_ID),
+}
+
 TEST_THERAPIST_PERSONALITY_TEST = {
     "id": "b658ffce-d810-4341-a8ef-2d3651489daf",
     "extroversion": [],
@@ -133,18 +144,14 @@ def add_test_patient(session_fixture, mock_overrides=None):
     return existing_patient
 
 
-def add_test_therapist(session_fixture):
+def add_test_therapist(session_fixture, mock_overrides=None):
     """Add a test therapist to the database."""
-    therapist = Therapist(
-        latitude=40.7128,
-        longitude=-74.0060,
-        description="Existing patient for testing",
-        specializations=["anxiety", "depression"],
-        therapist_type=TherapistTypeOption.PSYCHOLOGIST,
-        gender=GenderOption.FEMALE,
-        age=45,
-        user_id=UUID(USER_ID),
-    )
+    input_data = {
+        **TEST_THERAPIST_BASE,
+        **(mock_overrides or {}),
+    }
+
+    therapist = Therapist(**input_data)
 
     session_fixture.add(therapist)
     session_fixture.commit()
@@ -160,8 +167,8 @@ def add_test_user(session_fixture, mock_overrides=None):
         **TEST_USER_BASE,
         **(mock_overrides or {}),
     }
-    user = User(**input_data)
 
+    user = User(**input_data)
     session_fixture.add(user)
     session_fixture.commit()
     session_fixture.refresh(user)
