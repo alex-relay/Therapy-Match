@@ -4,17 +4,40 @@ import { useTheme } from "@mui/material/styles";
 import Stack from "@mui/material/Stack";
 import { useRouter } from "next/navigation";
 import { useCreateTherapistPersonalityTest } from "@/app/api/scores/scores";
+import { useGetTherapistDashboard } from "@/app/api/profile/profile";
 
 export default function Page() {
   const router = useRouter();
   const theme = useTheme();
+
+  const { data: therapistDashboard, isLoading: isTherapistDashboardLoading } =
+    useGetTherapistDashboard();
+
   const { mutate: createTherapistPersonalityTest, isPending } =
     useCreateTherapistPersonalityTest({
-      onSuccess: () => router.push("/therapist/personality-test"),
+      onSuccess: (data) => {
+        if (data.id) {
+          router.push("/therapist/personality-test");
+        } else {
+          console.error("Personality test creation returned no id", data);
+        }
+      },
+      // TODO: refactor this for the mutation function to handle the error
+      onError: (error) => {
+        console.error("Failed to create personality test", error);
+      },
     });
 
-  const handleProfileTileClick = () =>
-    router.push("/therapist/questions/gender");
+  const isPersonalityTestStarted =
+    !!therapistDashboard?.personality_test_scores;
+
+  const personalityTestTitleText = isPersonalityTestStarted
+    ? "Complete Personality Test"
+    : "Start Personality Test";
+
+  const handleCompletePersonalityTestTileClick = () => {
+    router.push("/therapist/personality-test");
+  };
 
   const handleStartPersonalityTestTileClick = () => {
     // to prevent a double click
@@ -22,6 +45,13 @@ export default function Page() {
       createTherapistPersonalityTest();
     }
   };
+
+  const personalityTestTileHandler = isPersonalityTestStarted
+    ? handleCompletePersonalityTestTileClick
+    : handleStartPersonalityTestTileClick;
+
+  const handleProfileTileClick = () =>
+    router.push("/therapist/questions/gender");
 
   return (
     <>
@@ -62,10 +92,14 @@ export default function Page() {
             },
           }}
         >
-          <Tile
-            onTileClick={handleStartPersonalityTestTileClick}
-            title="Start Personality Test"
-          />
+          {isTherapistDashboardLoading ? (
+            <div>Loading...</div>
+          ) : (
+            <Tile
+              onTileClick={personalityTestTileHandler}
+              title={personalityTestTitleText}
+            />
+          )}
         </Stack>
       </Stack>
     </>

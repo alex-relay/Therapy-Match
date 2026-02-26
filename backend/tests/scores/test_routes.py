@@ -349,3 +349,51 @@ def test_patch_anonymous_session_test_score_existing_data_with_new_entry(
         ],
         "id": data["id"],
     }
+
+
+def test_get_therapist_dashboard_with_incomplete_test(
+    client_fixture, mock_auth_headers, session_fixture
+):
+    """Test for retrieving the therapist dashboard with an incomplete personality test score"""
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST]})
+
+    therapist = add_test_therapist(session_fixture)
+
+    add_therapist_personality_test(
+        session_fixture, {"therapist_id": therapist.id, **(MOCK_PERSONALITY_TEST)}
+    )
+
+    response = client_fixture.get("/therapists/me/dashboard", headers=mock_auth_headers)
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["personality_test_scores"] is not None
+    assert data["completed_personality_test"] is None
+
+
+def test_get_therapist_dashboard_with_completed_test(
+    client_fixture, mock_auth_headers, session_fixture
+):
+    """Test for retrieving the therapist dashboard with a completed personality test score"""
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST]})
+
+    therapist = add_test_therapist(session_fixture)
+
+    personality_test = add_therapist_personality_test(
+        session_fixture, {"therapist_id": therapist.id, **(MOCK_PERSONALITY_TEST)}
+    )
+
+    add_therapist_personality_test_score(
+        therapist=therapist,
+        personality_test_scores=format_personality_test(personality_test),
+        session_fixture=session_fixture,
+    )
+
+    response = client_fixture.get("/therapists/me/dashboard", headers=mock_auth_headers)
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["personality_test_scores"] is not None
+    assert data["completed_personality_test"] is not None
