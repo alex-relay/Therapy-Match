@@ -1,5 +1,5 @@
-from backend.models.user import TherapistPersonalityTest, PersonalityTestScore
 from sqlmodel import SQLModel
+from backend.models.user import TherapistPersonalityTest, PersonalityTestScore
 
 
 class TherapistDashboardRead(SQLModel):

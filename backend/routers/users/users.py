@@ -329,26 +329,28 @@ def get_patient_profile(
     current_patient: Annotated[Patient, Depends(get_patient_by_user_id)],
 ):
     """get the current user's profile"""
-    if not current_patient:
-        logger.error("Current patient not found")
-        raise HTTPException(status_code=404, detail="Patient profile not found")
 
     return PatientRead(**current_patient.model_dump())
 
 
-@router.get("/therapists/me", response_model=TherapistRead)
+@router.get(
+    "/therapists/me",
+    response_model=TherapistRead,
+    response_model_exclude={"age", "gender"},
+)
 def get_therapist_profile(
     therapist: Annotated[Therapist, Depends(get_therapist_by_user_id)]
 ):
     """get the current therapist's profile"""
 
-    return TherapistRead(**therapist.model_dump(exclude={"age", "gender"}))
+    return TherapistRead(**therapist.model_dump())
 
 
-@router.get("/therapists/me/dashboard", response_model=None)
+@router.get("/therapists/me/dashboard", response_model=TherapistDashboardRead)
 def get_therapist_dashboard(
     therapist: Annotated[Therapist, Depends(get_therapist_by_user_id)]
 ):
+    """Get the data needed for the therapist dashboard"""
     return TherapistDashboardRead(
         personality_test_scores=therapist.raw_personality_scores,
         completed_personality_test=therapist.personality_test,

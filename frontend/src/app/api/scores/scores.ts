@@ -53,7 +53,6 @@ export type CreateTherapistPersonalityTestResponse = {
 const createTherapistPersonalityTest = async () => {
   const response = await fetch(`${API_URL}/therapists/me/personality-tests`, {
     method: "POST",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
   });
 
@@ -89,7 +88,6 @@ const createAnonymousSessionPersonalityTest = async () => {
     `${API_URL}/anonymous-sessions/personality-tests`,
     {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
     },
   );
@@ -127,7 +125,6 @@ const getAnonymousSessionPersonalityTestScores =
       `${API_URL}/anonymous-sessions/personality-tests`,
       {
         method: "GET",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
       },
     );
@@ -165,7 +162,6 @@ const patchAnonymousPersonalityTestQuestion = async (
     `${API_URL}/anonymous-sessions/personality-tests`,
     {
       method: "PATCH",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(question),
     },

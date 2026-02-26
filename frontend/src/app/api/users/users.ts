@@ -9,7 +9,6 @@ interface Session {
 export const createAnonymousSession = async () => {
   const response = await fetch(`${API_URL}/anonymous-sessions`, {
     method: "POST",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
   });
 
@@ -78,7 +77,6 @@ const createUser = ({
       "Content-Type": "application/json",
     },
     method: "POST",
-    credentials: "include",
     body: JSON.stringify({ ...formData, user_type }),
   }).then(async (response) => {
     if (!response.ok) {

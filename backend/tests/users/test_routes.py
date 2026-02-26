@@ -522,11 +522,12 @@ def test_get_therapist_profile(client_fixture, session_fixture, mock_auth_header
     assert data["id"] is not None
     assert data["latitude"] == 40.7128
     assert data["longitude"] == -74.006
-    assert data["age"] is None
-    assert data["gender"] is None
+    assert "age" not in data
+    assert "gender" not in data
 
 
 def test_get_therapist_not_found(client_fixture, session_fixture, mock_auth_headers):
+    """Get therapist that does not have a therapist entry in the db"""
     add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
 
     response = client_fixture.get("/therapists/me", headers=mock_auth_headers)
@@ -540,7 +541,7 @@ def test_get_therapist_not_found(client_fixture, session_fixture, mock_auth_head
 def test_get_therapist_profile_with_401_unauthorized(
     client_fixture, session_fixture, mock_auth_headers, mock_jwt_decode
 ):
-    """Test to produce an exception for a therapist not found"""
+    """Test that a JWT sub referencing a non-existent user returns 401 with message."""
 
     test_alternative_user_id = UUID("b758ffce-d810-4341-a8ef-2d3651489daf")
 

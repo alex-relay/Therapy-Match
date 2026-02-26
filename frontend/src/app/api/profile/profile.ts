@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
+import { PersonalityTestQuestionAndScore } from "../scores/scores";
 
 const PROXY_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -72,7 +73,6 @@ export const patchAnonymousQuestion = async ({
   const response = await fetch(`${PROXY_URL}/anonymous-sessions`, {
     method: "PATCH",
     body: JSON.stringify(profileData),
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
   });
 
@@ -96,7 +96,24 @@ export type PatchAnonymousQuestionHookProps = {
   >;
 };
 
-export const usePatchAnonymousQuestion = ({
+type TherapistDashboardResponse = {
+  personality_test_scores: {
+    openness: PersonalityTestQuestionAndScore[];
+    conscientiousness: PersonalityTestQuestionAndScore[];
+    extraversion: PersonalityTestQuestionAndScore[];
+    agreeableness: PersonalityTestQuestionAndScore[];
+    neuroticism: PersonalityTestQuestionAndScore[];
+  };
+  completed_personality_test: {
+    openness: number;
+    conscientiousness: number;
+    extraversion: number;
+    agreeableness: number;
+    neuroticism: number;
+  };
+};
+
+const usePatchAnonymousQuestion = ({
   nextStep,
   stepHistory,
   step,
@@ -143,19 +160,50 @@ const getAnonymousPatientSession =
   async (): Promise<PatientProfileResponse> => {
     const response = await fetch(`${PROXY_URL}/anonymous-sessions`, {
       method: "GET",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
     });
     if (!response.ok) {
       const resp = await response.json();
       throw new Error(
-        resp.detail || resp.message || "Failed to fetch anonymous session",
+        resp.detail ||
+          resp.message ||
+          "Failed to fetch anonymous patient session",
       );
     }
     return response.json();
   };
 
-export const useGetAnonymousPatientSession = (
+// TODO: refactor the error handling to put the try/catch block in a function
+const getTherapistDashboard = async (): Promise<TherapistDashboardResponse> => {
+  const response = await fetch(`${PROXY_URL}/therapists/me/dashboard`, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    const resp = await response.json();
+    throw new Error(
+      resp.detail || resp.message || "Failed to fetch therapist dashboard",
+    );
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+const useGetTherapistDashboard = (
+  options?: Omit<
+    UseQueryOptions<TherapistDashboardResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
+) => {
+  return useQuery({
+    queryKey: ["therapist", "dashboard"],
+    queryFn: getTherapistDashboard,
+    ...options,
+  });
+};
+
+const useGetAnonymousPatientSession = (
   options?: Omit<
     UseQueryOptions<PatientProfileResponse, Error>,
     "queryKey" | "queryFn"
@@ -166,4 +214,10 @@ export const useGetAnonymousPatientSession = (
     queryFn: getAnonymousPatientSession,
     ...options,
   });
+};
+
+export {
+  useGetTherapistDashboard,
+  useGetAnonymousPatientSession,
+  usePatchAnonymousQuestion,
 };

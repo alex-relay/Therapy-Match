@@ -1,7 +1,13 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { z } from "zod";
 
 const FASTAPI_URL = process.env.FASTAPI_URL;
+
+const CredentialsSchema = z.object({
+  emailAddress: z.email("Invalid email format"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
 const handler = NextAuth({
   providers: [
@@ -16,21 +22,30 @@ const handler = NextAuth({
           return null;
         }
 
+        const validationResult = CredentialsSchema.safeParse(credentials);
+
+        if (!validationResult.success) {
+          console.warn(
+            "Login failed: Validation error",
+            validationResult.error,
+          );
+          return null;
+        }
+
+        const { emailAddress, password } = validationResult.data;
+
         try {
           const res = await fetch(`${FASTAPI_URL}/token`, {
             method: "POST",
             body: new URLSearchParams({
-              username: credentials?.emailAddress || "",
-              password: credentials?.password || "",
+              username: emailAddress,
+              password: password,
             }),
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
           });
 
           if (res.status === 401) {
-            console.warn(
-              "Login failed: Invalid credentials for",
-              credentials.emailAddress,
-            );
+            console.warn("Login failed: Invalid credentials for", emailAddress);
             return null;
           }
 
@@ -78,7 +93,7 @@ const handler = NextAuth({
           return null;
         } catch (error) {
           console.error("Anonymous session critical failure:", error);
-          throw new Error("NetworkError");
+          throw new Error("Error in creating anonymous session");
         }
       },
     }),
