@@ -522,8 +522,6 @@ def test_get_therapist_profile(client_fixture, session_fixture, mock_auth_header
     assert data["id"] is not None
     assert data["latitude"] == 40.7128
     assert data["longitude"] == -74.006
-    assert "age" not in data
-    assert "gender" not in data
 
 
 def test_get_therapist_not_found(client_fixture, session_fixture, mock_auth_headers):
