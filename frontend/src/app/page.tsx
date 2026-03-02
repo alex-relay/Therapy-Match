@@ -26,7 +26,6 @@ export default function Home() {
   };
 
   const handleTherapistTileClick = () => {
-    sessionStorage.setItem("stepHistory", JSON.stringify([]));
     router.push("/register?type=therapist");
   };
 

@@ -12,14 +12,16 @@ from backend.routers.users.dependencies import (
 from backend.routers.scores.exceptions import TestScoreCreationError
 from backend.schemas.scores import (
     AnonymousPersonalityTestRead,
-    AggregateUserPersonalityTestRead,
+    TherapistPersonalityTestRead,
     PersonalityTestQuestion,
 )
 from backend.services.scores import (
     create_therapist_personality_test_instance,
     create_anonymous_session_test_score,
     update_anonymous_session_test_score_category,
+    update_therapist_personality_test_category,
     patch_anonymous_test_score_category,
+    patch_therapist_test_score_category,
 )
 
 from backend.core.logging import get_logger
@@ -39,7 +41,7 @@ PERSONALITY_TRAITS = [
 @router.post(
     "/therapists/me/personality-tests",
     status_code=status.HTTP_201_CREATED,
-    response_model=AggregateUserPersonalityTestRead,
+    response_model=TherapistPersonalityTestRead,
 )
 def create_therapist_personality_test(
     therapist: Annotated[Therapist, Depends(get_therapist_by_user_id)],
@@ -59,7 +61,7 @@ def create_therapist_personality_test(
         create_therapist_personality_test_instance(personality_test, session)
         logger.info("Personality test created")
 
-        return AggregateUserPersonalityTestRead(
+        return TherapistPersonalityTestRead(
             **personality_test.model_dump(exclude={"therapist_id"})
         )
 
@@ -73,7 +75,74 @@ def create_therapist_personality_test(
         ) from e
 
 
-# The below post route should be refactored to /anonymous-sessions/current/personality-tests
+@router.get(
+    "/therapists/me/personality-test",
+    status_code=status.HTTP_200_OK,
+    response_model=TherapistPersonalityTestRead,
+)
+def get_therapist_personality_test(
+    therapist: Annotated[Therapist, Depends(get_therapist_by_user_id)]
+):
+    """
+    Get the personality test answers of the therapist.
+    The route returns a 404 if the therapist does not have a personality test record.
+    """
+    if not therapist.raw_personality_scores:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Therapist personality test not found",
+        )
+    return TherapistPersonalityTestRead(**therapist.raw_personality_scores.model_dump())
+
+
+@router.patch(
+    "/therapists/me/personality-test",
+    status_code=status.HTTP_200_OK,
+    response_model=TherapistPersonalityTestRead,
+)
+def patch_therapist_personality_test(
+    data: PersonalityTestQuestion,
+    therapist: Annotated[Therapist, Depends(get_therapist_by_user_id)],
+    session: SessionDep,
+):
+    """
+    Patch route to update the answers of the therapist personality test.
+    The route updates the DB record of the therapist personality test with the new
+    answer provided in the request.
+    """
+    if not therapist.raw_personality_scores:
+        raise HTTPException(
+            status_code=400, detail="Therapist personality test not found"
+        )
+
+    try:
+        updated_test_category_obj = update_therapist_personality_test_category(
+            data, therapist.raw_personality_scores
+        )
+
+        logger.info("Persisting the updated therapist personality test to the DB")
+
+        updated_therapist_personality_test = patch_therapist_test_score_category(
+            updated_test_category_obj, therapist.raw_personality_scores, session
+        )
+
+    except (TestScoreCreationError, ValueError) as e:
+        logger.exception(str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("Unable to save the updated therapist personality test")
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to save the updated therapist personality test",
+        ) from e
+
+    return TherapistPersonalityTestRead(
+        **updated_therapist_personality_test.model_dump()
+    )
+
+
+# TODO: The below post route should be refactored
+# to /anonymous-sessions/current/personality-test since it's a Singleton
 @router.post(
     "/anonymous-sessions/personality-tests",
     status_code=status.HTTP_201_CREATED,
@@ -97,14 +166,21 @@ def create_anonymous_session_test_scores(
         test_score = create_anonymous_session_test_score(anonymous_patient, session)
         logger.info("Anonymous test score created")
 
-        return test_score
-
     except TestScoreCreationError as e:
         logger.exception("Failed to create anonymous session test scores")
         raise HTTPException(
             status_code=500,
             detail=e,
         ) from e
+    except Exception as e:
+        logger.exception("Error in creating anonymous session test scores")
+        raise HTTPException(
+            status_code=500, detail="Error in creating anonymous session test scores"
+        ) from e
+
+    # TODO: Refactor the return type to AnonymousPersonalityTestRead
+    # and return the created test score in that format
+    return test_score
 
 
 @router.get(

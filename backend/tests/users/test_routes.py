@@ -294,7 +294,7 @@ def test_create_anonymous_session(client_fixture, session_fixture):
         "/anonymous-sessions",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
 
     assert data["access_token"] is not None

@@ -6,7 +6,6 @@ import {
   useQueryClient,
   UseQueryOptions,
 } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
 import { PersonalityTestQuestionAndScore } from "../scores/scores";
 
@@ -114,14 +113,9 @@ type TherapistDashboardResponse = {
 };
 
 const usePatchAnonymousQuestion = ({
-  nextStep,
-  stepHistory,
-  step,
-  onStepHistoryChange,
   options,
 }: PatchAnonymousQuestionHookProps) => {
   const queryClient = useQueryClient();
-  const router = useRouter();
 
   return useMutation({
     mutationFn: patchAnonymousQuestion,
@@ -146,12 +140,6 @@ const usePatchAnonymousQuestion = ({
     },
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] }),
-    onSuccess: () => {
-      if (step && !stepHistory?.includes(step) && onStepHistoryChange) {
-        onStepHistoryChange((prevState) => [...prevState, step]);
-      }
-      router.push(`/questions/${nextStep}`);
-    },
     ...options,
   });
 };

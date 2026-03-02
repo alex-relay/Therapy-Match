@@ -353,6 +353,7 @@ export type AnonymousStepComponentProps = {
 export type TherapistStepComponentProps = {
   step: TherapistQuestionStepName;
   onStepHistoryChange: Dispatch<SetStateAction<TherapistQuestionStepName[]>>;
+  onAnswerMutate: (body: PatchQuestionProps) => void;
   stepHistory: TherapistQuestionStepName[];
   entity: PatientProfileResponse | null; // TODO: This needs to change to the TherapistProfileResponse
   nextStep: TherapistQuestionStepName;

@@ -252,7 +252,11 @@ def register_therapist(data: UserCreate, session: SessionDep):
         raise HTTPException(status_code=500, detail="An internal error occurred") from e
 
 
-@router.post("/anonymous-sessions")
+@router.post(
+    "/anonymous-sessions",
+    status_code=status.HTTP_201_CREATED,
+    response_model=AnonymousSessionToken,
+)
 def create_anonymous_session(
     db_session: SessionDep,
 ) -> AnonymousSessionToken:

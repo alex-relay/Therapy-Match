@@ -302,6 +302,15 @@ def get_anonymous_test_score(
         raise ValueError("Unable to retrieve anonymous test score") from e
 
 
+def _get_existing_answer(data: dict, category_answers: list[dict]) -> int | None:
+    """Helper function to check if a question has already been answered in a category"""
+    for idx, answer in enumerate(category_answers):
+        if data["id"] == answer["id"]:
+            return idx
+
+    return None
+
+
 def update_anonymous_session_test_score_category(
     data: PersonalityTestQuestion, personality_test: AnonymousPersonalityTestScore
 ) -> dict[str, list[PersonalityTestQuestion]]:
@@ -313,25 +322,74 @@ def update_anonymous_session_test_score_category(
         raise ValueError("Updated data is not present")
 
     personality_test_obj = personality_test.model_dump()
+    personality_test_answer = data.model_dump()
     category_answers = personality_test_obj.get(data.category)
 
     if category_answers is None:
         raise ValueError("Invalid category index")
 
-    personality_test_answer = data.model_dump()
+    existing_answer_index = _get_existing_answer(
+        personality_test_answer, category_answers
+    )
 
-    is_answered_previously = False
-
-    for idx, answer in enumerate(category_answers):
-        if answer["id"] == data.id:
-            category_answers[idx] = personality_test_answer
-            is_answered_previously = True
-            break
-
-    if not is_answered_previously:
+    if existing_answer_index is not None:
+        category_answers[existing_answer_index] = personality_test_answer
+    else:
         category_answers.append(personality_test_answer)
 
     return {data.category: category_answers}
+
+
+def update_therapist_personality_test_category(
+    answer: PersonalityTestQuestion, personality_test: TherapistPersonalityTest
+):
+    """Update a category of a therapist personality test model."""
+    if answer is None:
+        raise ValueError("No update provided for the test")
+
+    if personality_test is None:
+        raise ValueError("Personality test not provided")
+
+    answer_to_object = answer.model_dump()
+    personality_test_to_object = personality_test.model_dump()
+    category_answers = personality_test_to_object.get(answer.category)
+
+    if category_answers is None:
+        raise ValueError("Invalid category index")
+
+    existing_answer_index = _get_existing_answer(answer_to_object, category_answers)
+
+    if existing_answer_index is not None:
+        category_answers[existing_answer_index] = answer_to_object
+    else:
+        category_answers.append(answer_to_object)
+
+    return {answer.category: category_answers}
+
+
+def patch_therapist_test_score_category(
+    data: dict, personality_test: TherapistPersonalityTest, session: Session
+):
+    """Persist the category update to the DB"""
+    if data is None:
+        raise ValueError("Updated category is not provided")
+    if personality_test is None:
+        raise ValueError("Personality test not provided")
+
+    updated_personality_test = personality_test.sqlmodel_update(data)
+
+    try:
+        session.add(updated_personality_test)
+        session.commit()
+        session.refresh(updated_personality_test)
+    except SQLAlchemyError as e:
+        session.rollback()
+        logger.exception("Unable to persist the therapist personality test score")
+        raise TestScoreUpdateError(
+            "Unable to persist the personality test to the DB"
+        ) from e
+
+    return updated_personality_test
 
 
 def patch_anonymous_test_score_category(
