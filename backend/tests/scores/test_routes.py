@@ -292,6 +292,131 @@ def test_patch_anonymous_session_test_score_non_existing_data(
     }
 
 
+def test_patch_therapist_personality_test_none_test(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test patching a therapist personality test when no test exists"""
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    add_test_therapist(session_fixture)
+
+    response = client_fixture.patch(
+        "/therapists/me/personality-test",
+        headers={**mock_auth_headers},
+        json={"id": "1", "category": PersonalityTestCategory.AGREEABLENESS, "score": 5},
+    )
+
+    data = response.json()
+
+    assert response.status_code == 400
+    assert data["detail"] == "Therapist personality test not found"
+
+
+def test_patch_therapist_personality_test_score_existing_data(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """test if the personality test is updated"""
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    therapist = add_test_therapist(session_fixture)
+    add_therapist_personality_test(
+        session_fixture,
+        {
+            "therapist_id": therapist.id,
+            "openness": [
+                {"id": "1", "category": PersonalityTestCategory.OPENNESS, "score": 3},
+            ],
+            "agreeableness": [
+                {
+                    "id": "1",
+                    "category": PersonalityTestCategory.AGREEABLENESS,
+                    "score": 3,
+                },
+                {
+                    "id": "2",
+                    "category": PersonalityTestCategory.AGREEABLENESS,
+                    "score": 2,
+                },
+                {
+                    "id": "3",
+                    "category": PersonalityTestCategory.AGREEABLENESS,
+                    "score": 1,
+                },
+            ],
+        },
+    )
+
+    response = client_fixture.patch(
+        "/therapists/me/personality-test",
+        headers={**mock_auth_headers},
+        json={"id": "1", "category": PersonalityTestCategory.AGREEABLENESS, "score": 5},
+    )
+
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data == {
+        "extroversion": [],
+        "conscientiousness": [],
+        "openness": [
+            {"id": "1", "category": PersonalityTestCategory.OPENNESS, "score": 3},
+        ],
+        "neuroticism": [],
+        "agreeableness": [
+            {"id": "1", "category": PersonalityTestCategory.AGREEABLENESS, "score": 5},
+            {"id": "2", "category": PersonalityTestCategory.AGREEABLENESS, "score": 2},
+            {"id": "3", "category": PersonalityTestCategory.AGREEABLENESS, "score": 1},
+        ],
+        "id": data["id"],
+    }
+
+
+def test_patch_therapist_personality_test_score_non_existing_category(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """test if the personality test is updated"""
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    therapist = add_test_therapist(session_fixture)
+    add_therapist_personality_test(
+        session_fixture, {"therapist_id": therapist.id, **(MOCK_PERSONALITY_TEST)}
+    )
+
+    response = client_fixture.patch(
+        "/therapists/me/personality-test",
+        headers={**mock_auth_headers},
+        json={"id": "1", "category": "test", "score": 5},
+    )
+
+    assert response.status_code == 422
+
+
+def test_patch_therapist_personality_test_score_non_existing_data(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test patching therapist personality test when category has no existing data"""
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    therapist = add_test_therapist(session_fixture)
+    add_therapist_personality_test(session_fixture, {"therapist_id": therapist.id})
+
+    response = client_fixture.patch(
+        "/therapists/me/personality-test",
+        headers={**mock_auth_headers},
+        json={"id": "1", "category": PersonalityTestCategory.AGREEABLENESS, "score": 5},
+    )
+
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data == {
+        "extroversion": [],
+        "conscientiousness": [],
+        "openness": [],
+        "neuroticism": [],
+        "agreeableness": [
+            {"id": "1", "category": PersonalityTestCategory.AGREEABLENESS, "score": 5},
+        ],
+        "id": data["id"],
+    }
+
+
 def test_patch_anonymous_session_test_score_existing_data_with_new_entry(
     client_fixture, session_fixture, mock_auth_headers
 ):

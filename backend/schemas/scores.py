@@ -32,6 +32,12 @@ class AnonymousPersonalityTestRead(PersonalityTestBase):
     id: UUID
 
 
+class TherapistPersonalityTestRead(PersonalityTestBase):
+    """Docstring for TherapistPersonalityTestRead"""
+
+    id: UUID
+
+
 class AggregateUserPersonalityTestRead(SQLModel):
     """Aggregate User Personality Test Read"""
 

@@ -18,7 +18,15 @@ const Questions = () => {
 
   return (
     <GeneralQuestion headerTitle={headerTitle}>
-      <FormComponent />
+      <FormComponent
+        step={step}
+        onStepHistoryChange={() => {}}
+        stepHistory={[]}
+        onAnswerMutate={() => {}}
+        entity={null}
+        nextStep={step}
+        previousStep=""
+      />
     </GeneralQuestion>
   );
 };

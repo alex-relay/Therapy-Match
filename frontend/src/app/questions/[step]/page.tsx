@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP } from "@/app/components/generalQuestions/generalQuestions";
 import {
   AnonymousQuestionsStepName,
@@ -15,6 +15,7 @@ import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
 
 const Questions = () => {
   const params = useParams();
+  const router = useRouter();
   const step = params.step as AnonymousQuestionsStepName;
 
   const { stepHistory, setStepHistory } = useNavContext();
@@ -22,10 +23,14 @@ const Questions = () => {
   const { anonymousPatient } = useContext(AnonymousPatientContext);
 
   const { mutate: answerMutate } = usePatchAnonymousQuestion({
-    nextStep,
-    stepHistory,
-    step,
-    onStepHistoryChange: setStepHistory,
+    options: {
+      onSuccess: () => {
+        if (!stepHistory?.includes(step)) {
+          setStepHistory((prevState) => [...prevState, step]);
+        }
+        router.push(`/questions/${nextStep}`);
+      },
+    },
   });
 
   if (!step || !ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP[step]) {

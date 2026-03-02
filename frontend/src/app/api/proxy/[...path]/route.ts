@@ -41,7 +41,6 @@ async function handler(
     method: req.method,
     headers: {
       Authorization: `Bearer ${token.accessToken}`,
-      ...Object.fromEntries(req.headers),
     },
   };
 
@@ -50,6 +49,7 @@ async function handler(
     try {
       if (contentType.includes("application/json") || contentType === "") {
         const body = await req.json();
+
         options.body = JSON.stringify(body);
         (options.headers as Record<string, string>)["Content-Type"] =
           "application/json";
