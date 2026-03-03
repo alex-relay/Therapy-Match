@@ -76,6 +76,7 @@ class TherapistCreate(UserProfileMixin):
     specializations: list[str] | None = None
     is_lgbtq_specialization: StrictBool | None = None
     is_religious_specialization: StrictBool | None = None
+    is_profile_complete: StrictBool = False
 
 
 class PatientRead(PatientCreate):

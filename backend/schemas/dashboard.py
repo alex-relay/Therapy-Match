@@ -7,3 +7,4 @@ class TherapistDashboardRead(SQLModel):
 
     personality_test_scores: TherapistPersonalityTest | None
     completed_personality_test: PersonalityTestScore | None
+    is_profile_complete: bool = False

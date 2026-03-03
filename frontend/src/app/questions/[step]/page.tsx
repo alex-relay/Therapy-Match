@@ -8,7 +8,7 @@ import {
   getPreviousAnonymousStep,
 } from "@/app/utils/utils";
 import GeneralQuestion from "@/app/components/generalQuestions/GeneralQuestion";
-import { useNavContext } from "@/app/NavigationContext";
+import { useNavContext } from "@/app/contexts/NavigationContext";
 import { useContext } from "react";
 import { AnonymousPatientContext } from "@/app/components/generalQuestions/client/AnonymousPatientContext";
 import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
@@ -20,6 +20,8 @@ const Questions = () => {
 
   const { stepHistory, setStepHistory } = useNavContext();
   const nextStep = getAnonymousSessionNextStep(step);
+
+  // TODO: remove this context and just use the hook directly here.
   const { anonymousPatient } = useContext(AnonymousPatientContext);
 
   const { mutate: answerMutate } = usePatchAnonymousQuestion({

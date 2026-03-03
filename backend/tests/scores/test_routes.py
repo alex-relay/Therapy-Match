@@ -522,3 +522,4 @@ def test_get_therapist_dashboard_with_completed_test(
 
     assert data["personality_test_scores"] is not None
     assert data["completed_personality_test"] is not None
+    assert data["is_profile_complete"] is False

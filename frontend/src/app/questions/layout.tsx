@@ -1,19 +1,13 @@
 "use client";
 
-import PageContainer from "@/app/components/common/PageContainer";
-import StyledStack from "@/app/components/common/PageStyledStack";
 import AnonymousPatientProvider from "@/app/components/generalQuestions/client/AnonymousPatientContext";
-import NavigationContextProvider from "@/app/NavigationContext";
+import NavigationContextProvider from "@/app/contexts/NavigationContext";
 import React from "react";
 
 const FormLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <AnonymousPatientProvider>
-      <NavigationContextProvider>
-        <PageContainer>
-          <StyledStack>{children}</StyledStack>
-        </PageContainer>
-      </NavigationContextProvider>
+      <NavigationContextProvider>{children}</NavigationContextProvider>
     </AnonymousPatientProvider>
   );
 };

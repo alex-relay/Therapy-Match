@@ -64,6 +64,7 @@ class Therapist(ProfileMixin, table=True):
     user_id: UUID | None = Field(default=None, foreign_key="users.id", unique=True)
     therapist_type: TherapistTypeOption | None = Field(default=None)
     specializations: List[str] = Field(sa_column=Column(ARRAY(String)))
+    is_profile_complete: bool = Field(default=False)
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(
         back_populates="therapist",

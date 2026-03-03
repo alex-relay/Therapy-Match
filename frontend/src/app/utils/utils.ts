@@ -4,6 +4,7 @@ import { ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP } from "@/app/compone
 import {
   PatchQuestionProps,
   PatientProfileResponse,
+  TherapistProfileResponse,
 } from "../api/profile/profile";
 
 export type QuestionOptions = {
@@ -355,7 +356,7 @@ export type TherapistStepComponentProps = {
   onStepHistoryChange: Dispatch<SetStateAction<TherapistQuestionStepName[]>>;
   onAnswerMutate: (body: PatchQuestionProps) => void;
   stepHistory: TherapistQuestionStepName[];
-  entity: PatientProfileResponse | null; // TODO: This needs to change to the TherapistProfileResponse
+  entity: TherapistProfileResponse | null;
   nextStep: TherapistQuestionStepName;
   previousStep: string;
 };

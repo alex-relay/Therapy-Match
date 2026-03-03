@@ -340,7 +340,6 @@ def get_patient_profile(
 @router.get(
     "/therapists/me",
     response_model=TherapistRead,
-    response_model_exclude={"age", "gender"},
 )
 def get_therapist_profile(
     therapist: Annotated[Therapist, Depends(get_therapist_by_user_id)]
@@ -356,6 +355,7 @@ def get_therapist_dashboard(
 ):
     """Get the data needed for the therapist dashboard"""
     return TherapistDashboardRead(
+        is_profile_complete=therapist.is_profile_complete,
         personality_test_scores=therapist.raw_personality_scores,
         completed_personality_test=therapist.personality_test,
     )

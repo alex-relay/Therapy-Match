@@ -66,23 +66,6 @@ export interface PatientProfileResponse {
 
 export type PatchQuestionProps = Partial<PatientProfilePatchRequest>;
 
-export const patchAnonymousQuestion = async ({
-  ...profileData
-}: PatchQuestionProps): Promise<PatientProfileResponse> => {
-  const response = await fetch(`${PROXY_URL}/anonymous-sessions`, {
-    method: "PATCH",
-    body: JSON.stringify(profileData),
-    headers: { "Content-Type": "application/json" },
-  });
-
-  if (!response.ok) {
-    const resp = await response.json();
-    throw new Error(resp.detail || resp.message || "Failed to update session");
-  }
-
-  return response.json();
-};
-
 export type PatchAnonymousQuestionHookProps = {
   nextStep?: AnonymousQuestionsStepName;
   stepHistory?: AnonymousQuestionsStepName[];
@@ -93,6 +76,20 @@ export type PatchAnonymousQuestionHookProps = {
     Error,
     PatchQuestionProps
   >;
+};
+
+export type TherapistProfileResponse = {
+  age: number | null;
+  gender: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  postal_code: string | null;
+  therapist_type: string | null;
+  specializations: string | null;
+  is_lgbtq_specialization: boolean | null;
+  is_religious_specialization: boolean | null;
+  is_profile_complete: boolean | null;
+  id: string;
 };
 
 type TherapistDashboardResponse = {
@@ -110,6 +107,24 @@ type TherapistDashboardResponse = {
     agreeableness: number;
     neuroticism: number;
   };
+  is_profile_complete: boolean;
+};
+
+export const patchAnonymousQuestion = async ({
+  ...profileData
+}: PatchQuestionProps): Promise<PatientProfileResponse> => {
+  const response = await fetch(`${PROXY_URL}/anonymous-sessions`, {
+    method: "PATCH",
+    body: JSON.stringify(profileData),
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    const resp = await response.json();
+    throw new Error(resp.detail || resp.message || "Failed to update session");
+  }
+
+  return response.json();
 };
 
 const usePatchAnonymousQuestion = ({
@@ -140,6 +155,36 @@ const usePatchAnonymousQuestion = ({
     },
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: ["anonymousPatientSession"] }),
+    ...options,
+  });
+};
+
+const getTherapistProfile = async (): Promise<TherapistProfileResponse> => {
+  const response = await fetch(`${PROXY_URL}/therapists/me`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    const errorMsg = await response.json();
+    throw new Error(
+      errorMsg["detail"] || "Unable to load the therapist profile",
+    );
+  }
+
+  const data = response.json();
+  return data;
+};
+
+const useGetTherapistProfile = (
+  options?: Omit<
+    UseQueryOptions<TherapistProfileResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
+) => {
+  return useQuery({
+    queryFn: getTherapistProfile,
+    queryKey: ["therapist", "profile"],
     ...options,
   });
 };
@@ -208,4 +253,5 @@ export {
   useGetTherapistDashboard,
   useGetAnonymousPatientSession,
   usePatchAnonymousQuestion,
+  useGetTherapistProfile,
 };
