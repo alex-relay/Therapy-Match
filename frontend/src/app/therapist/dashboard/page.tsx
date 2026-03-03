@@ -51,7 +51,7 @@ export default function Page() {
     : handleStartPersonalityTestTileClick;
 
   const handleProfileTileClick = () => {
-    sessionStorage.setItem("therapistStepHistory", JSON.stringify([]));
+    sessionStorage.setItem("therapistProfileStepHistory", JSON.stringify([]));
     router.push("/therapist/questions/gender");
   };
 

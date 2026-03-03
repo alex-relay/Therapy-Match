@@ -204,6 +204,7 @@ def get_anonymous_session_personality_test(
     return personality_test
 
 
+# TODO: refactor this endpoint to /anonymous-sessions/current/personality-test
 @router.patch(
     "/anonymous-sessions/personality-tests",
     status_code=status.HTTP_200_OK,

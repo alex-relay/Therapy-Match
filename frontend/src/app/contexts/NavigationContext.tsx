@@ -8,7 +8,7 @@ import {
   useEffect,
   useContext,
 } from "react";
-import { AnonymousQuestionsStepName } from "./utils/utils";
+import { AnonymousQuestionsStepName } from "../utils/utils";
 
 type NavContextType = {
   stepHistory: AnonymousQuestionsStepName[];
@@ -49,6 +49,7 @@ const getInitialHistory = (): AnonymousQuestionsStepName[] => {
         JSON.parse(savedHistory);
       if (
         Array.isArray(parsedSavedHistory) &&
+        // TODO: update to check for actual steps, not just a string type.
         parsedSavedHistory.every((item) => typeof item === "string")
       ) {
         return parsedSavedHistory;

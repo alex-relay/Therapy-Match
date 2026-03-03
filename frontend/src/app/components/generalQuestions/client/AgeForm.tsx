@@ -59,7 +59,7 @@ export default function AgeForm({
       return;
     }
 
-    router.push(`/questions/${nextStep}`);
+    router.push(nextStep);
   };
 
   const isPrevButtonDisabled =
