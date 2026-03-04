@@ -14,6 +14,7 @@ from backend.schemas.users import (
     PatientRead,
     TherapistRead,
     UserCreate,
+    TherapistBase,
     AnonymousSessionPatientBase,
     AnonymousSessionPatientResponse,
 )
@@ -32,6 +33,7 @@ from .exceptions import (
     GeocodingServiceError,
     UserCreationError,
     PatientCreationError,
+    TherapistUpdateError,
 )
 
 from .dependencies import (
@@ -49,6 +51,7 @@ from ...services.users import (
     Token,
     AnonymousSessionToken,
     create_user,
+    patch_therapist_model,
     create_anonymous_patient_session,
     TokenUser,
     get_user_by_email,
@@ -346,7 +349,35 @@ def get_therapist_profile(
 ):
     """get the current therapist's profile"""
 
-    return TherapistRead(**therapist.model_dump())
+    return TherapistRead(**therapist.model_dump(exclude={"user_id"}))
+
+
+@router.patch("/therapists/me", response_model=TherapistRead)
+def patch_therapist_profile(
+    data: TherapistBase,
+    therapist: Annotated[Therapist, Depends(get_therapist_by_user_id)],
+    session: SessionDep,
+):
+    """patch the current therapist's profile"""
+
+    try:
+        logger.info("Updating the therapist model")
+
+        updated_therapist_model = patch_therapist_model(therapist, data, session)
+
+    except ValueError as e:
+        logger.exception("Issue with data on therapist patch")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    except TherapistUpdateError as e:
+        logger.exception("Issue with persisting to the DB on therapist patch")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+    except Exception as e:
+        logger.exception("Unexpected error during therapist patch")
+        raise HTTPException(status_code=500, detail="An internal error occurred") from e
+
+    return TherapistRead(**updated_therapist_model.model_dump(exclude={"user_id"}))
 
 
 @router.get("/therapists/me/dashboard", response_model=TherapistDashboardRead)
