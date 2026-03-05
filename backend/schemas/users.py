@@ -14,7 +14,10 @@ from pydantic import (
 from sqlmodel import SQLModel
 from backend.routers.users.user_types import GenderOption, UserOption
 
-POSTAL_CODE_REGEX = re.compile(r"^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?\d[ABCEGHJ-NPRSTV-Z]\d$")
+POSTAL_CODE_REGEX = re.compile(
+    r"^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?\d[ABCEGHJ-NPRSTV-Z]\d$"
+)
+
 
 def validate_postal_code(value: str | None) -> str | None:
     """Validates the canadian postal code format"""
@@ -75,6 +78,7 @@ class UserProfileMixin(SQLModel):
     age: int | None = Field(default=None, ge=10, le=120)
     gender: GenderOption | None = None
     personality_test_id: UUID | None = None
+    postal_code: CanadianPostalCode = None
 
 
 class PatientBase(UserProfileMixin):
@@ -83,7 +87,6 @@ class PatientBase(UserProfileMixin):
     therapy_needs: list[str] = []
     is_lgbtq_therapist_preference: StrictBool | None = None
     is_religious_therapist_preference: StrictBool | None = None
-    postal_code: CanadianPostalCode = None
 
 
 class TherapistBase(UserProfileMixin):
@@ -94,7 +97,6 @@ class TherapistBase(UserProfileMixin):
     is_lgbtq_specialization: StrictBool | None = None
     is_religious_specialization: StrictBool | None = None
     is_profile_complete: StrictBool = False
-    postal_code: CanadianPostalCode = None
 
     model_config = ConfigDict(extra="forbid")  # type: ignore
 

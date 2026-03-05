@@ -39,6 +39,10 @@ const Questions = () => {
     return "Step does not exist";
   }
 
+  if (!anonymousPatient) {
+    return null;
+  }
+
   const FormComponent =
     ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP[step].component;
   const headerTitle =

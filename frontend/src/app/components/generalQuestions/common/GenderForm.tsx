@@ -8,12 +8,9 @@ import {
   StyledRadioButton,
 } from "@/app/components/common/OptionsContainers";
 import { useRouter } from "next/navigation";
-import {
-  AnonymousStepComponentProps,
-  TherapistStepComponentProps,
-} from "@/app/utils/utils";
+import { SharedFormProps } from "@/app/utils/utils";
 import NavigationButtons from "@/app/components/common/NavigationButtons";
-import QuestionFormWrapper from "./QuestionFormWrapper";
+import QuestionFormWrapper from "../client/QuestionFormWrapper";
 
 const OPTIONS_MAP = {
   male: "Male",
@@ -25,13 +22,15 @@ const OPTIONS_MAP = {
 
 type GenderFormValues = keyof typeof OPTIONS_MAP | "";
 
-export default function GenderForm({
+export default function GenderForm<T extends string>({
   entity,
   nextStep,
   onAnswerMutate,
+  step,
+  onStepHistoryChange,
   stepHistory,
   previousStep,
-}: AnonymousStepComponentProps | TherapistStepComponentProps) {
+}: SharedFormProps<T, { gender: string | null }>) {
   const router = useRouter();
 
   const gender = entity?.gender ?? null;
@@ -51,6 +50,10 @@ export default function GenderForm({
       return;
     }
 
+    if (!stepHistory.includes(step)) {
+      onStepHistoryChange((prevState) => [...prevState, step]);
+    }
+
     router.push(nextStep);
   };
 
@@ -61,6 +64,9 @@ export default function GenderForm({
 
     return key === gender;
   };
+
+  const isPrevButtonDisabled =
+    !stepHistory.length || stepHistory.indexOf(step) === 0;
 
   return (
     <QuestionFormWrapper handleSubmit={handleSubmit}>
@@ -91,7 +97,7 @@ export default function GenderForm({
       </FormControl>
       <NavigationButtons
         isNextButtonDisabled={!selectedValue && !gender}
-        isPrevButtonDisabled={stepHistory.length <= 1}
+        isPrevButtonDisabled={isPrevButtonDisabled}
         onPrevButtonClick={() => {
           router.push(previousStep);
         }}

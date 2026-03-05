@@ -9,7 +9,7 @@ import NavigationButtons from "@/app/components/common/NavigationButtons";
 import { useRouter } from "next/navigation";
 import {
   TherapyNeedsOptions,
-  TherapyNeedsOptionsMap,
+  TherapyNeedsOptionsAndSpecializationsMap,
   usePatchAnonymousQuestion,
 } from "@/app/api/profile/profile";
 import { AnonymousStepComponentProps } from "@/app/utils/utils";
@@ -90,34 +90,36 @@ const TherapyNeeds = ({
           gap: 2,
         }}
       >
-        {Object.entries(TherapyNeedsOptionsMap).map(([key, value]) => {
-          const isChecked = therapyNeeds.includes(key as TherapyNeedsOptions);
-          return (
-            <Box
-              width="300px"
-              key={key}
-              sx={{
-                textAlign: "center",
-              }}
-            >
-              <StyledFormControlLabel
-                control={
-                  <Checkbox
-                    checked={isChecked}
-                    value={key}
-                    onChange={(event) => handleOptionClick(event, isChecked)}
-                    name={key}
-                    sx={{
-                      display: "none",
-                    }}
-                  />
-                }
-                checked={isChecked}
-                label={value}
-              />
-            </Box>
-          );
-        })}
+        {Object.entries(TherapyNeedsOptionsAndSpecializationsMap).map(
+          ([key, value]) => {
+            const isChecked = therapyNeeds.includes(key as TherapyNeedsOptions);
+            return (
+              <Box
+                width="300px"
+                key={key}
+                sx={{
+                  textAlign: "center",
+                }}
+              >
+                <StyledFormControlLabel
+                  control={
+                    <Checkbox
+                      checked={isChecked}
+                      value={key}
+                      onChange={(event) => handleOptionClick(event, isChecked)}
+                      name={key}
+                      sx={{
+                        display: "none",
+                      }}
+                    />
+                  }
+                  checked={isChecked}
+                  label={value}
+                />
+              </Box>
+            );
+          },
+        )}
       </FormGroup>
       <NavigationButtons
         onPrevButtonClick={() => {

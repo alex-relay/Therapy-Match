@@ -3,6 +3,7 @@ import { CategoryType } from "../api/scores/scores";
 import { ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP } from "@/app/components/generalQuestions/generalQuestions";
 import {
   PatchQuestionProps,
+  PatchTherapistProfileProps,
   PatientProfileResponse,
   TherapistProfileResponse,
 } from "../api/profile/profile";
@@ -326,40 +327,49 @@ const PERSONALITY_TEST_QUESTIONS: PersonalityTestQuestionAndAnswers[] = [
   },
 ];
 
+export type SharedStepNames = "age" | "location" | "gender";
+
 export type AnonymousQuestionsStepName =
-  | "gender"
+  | SharedStepNames
   | "religious-importance"
   | "lgbtq-preference"
-  | "age"
-  | "location"
   | "therapy-needs";
 
 export type TherapistQuestionStepName =
-  | "gender"
-  | "age"
-  | "location"
+  | SharedStepNames
   | "therapy-needs"
-  | "specializations";
+  | "specializations"
+  | "lgbtq-specialization"
+  | "religious-specialization";
 
-export type AnonymousStepComponentProps = {
-  step: AnonymousQuestionsStepName;
-  onStepHistoryChange: Dispatch<SetStateAction<AnonymousQuestionsStepName[]>>;
+export interface SharedFormProps<TStep, TBody> {
+  step: TStep;
+  stepHistory: TStep[];
+  onStepHistoryChange: Dispatch<SetStateAction<TStep[]>>;
+  onAnswerMutate: (body: TBody) => void;
+  entity: PatientProfileResponse | TherapistProfileResponse;
+  nextStep: TStep;
+  previousStep: TStep | string;
+}
+
+export interface AnonymousStepComponentProps
+  extends SharedFormProps<AnonymousQuestionsStepName, PatchQuestionProps> {
   onAnswerMutate: (body: PatchQuestionProps) => void;
-  stepHistory: AnonymousQuestionsStepName[];
-  entity: PatientProfileResponse | null;
+  entity: PatientProfileResponse;
   nextStep: AnonymousQuestionsStepName;
-  previousStep: string;
-};
+  previousStep: AnonymousQuestionsStepName | "/";
+}
 
-export type TherapistStepComponentProps = {
-  step: TherapistQuestionStepName;
-  onStepHistoryChange: Dispatch<SetStateAction<TherapistQuestionStepName[]>>;
-  onAnswerMutate: (body: PatchQuestionProps) => void;
-  stepHistory: TherapistQuestionStepName[];
-  entity: TherapistProfileResponse | null;
+export interface TherapistStepComponentProps
+  extends SharedFormProps<
+    TherapistQuestionStepName,
+    PatchTherapistProfileProps
+  > {
+  onAnswerMutate: (body: PatchTherapistProfileProps) => void;
+  entity: TherapistProfileResponse;
   nextStep: TherapistQuestionStepName;
-  previousStep: string;
-};
+  previousStep: TherapistQuestionStepName | "/";
+}
 
 type AnonymousStepInfoBase = {
   component: React.FunctionComponent<AnonymousStepComponentProps>;
@@ -411,7 +421,7 @@ const getPreviousAnonymousStep = (
   const currentStepIndex = stepHistory.indexOf(currentStep);
 
   if (currentStepIndex < 0) {
-    return `/questions/${stepHistory[stepHistory.length - 1]}`;
+    return stepHistory[stepHistory.length - 1];
   }
 
   if (currentStepIndex === 0) {
@@ -420,11 +430,35 @@ const getPreviousAnonymousStep = (
 
   const previousStep = stepHistory[currentStepIndex - 1];
 
-  return `/questions/${previousStep}`;
+  return previousStep;
+};
+
+const getPreviousTherapistProfileStep = (
+  currentStep: TherapistQuestionStepName,
+  stepHistory: TherapistQuestionStepName[],
+) => {
+  if (!currentStep || !stepHistory.length) {
+    return "/";
+  }
+
+  const currentStepIndex = stepHistory.indexOf(currentStep);
+
+  if (currentStepIndex < 0) {
+    return stepHistory[stepHistory.length - 1];
+  }
+
+  if (currentStepIndex === 0) {
+    return "/";
+  }
+
+  const previousStep = stepHistory[currentStepIndex - 1];
+
+  return previousStep;
 };
 
 export {
   PERSONALITY_TEST_QUESTIONS,
   getAnonymousSessionNextStep,
   getPreviousAnonymousStep,
+  getPreviousTherapistProfileStep,
 };

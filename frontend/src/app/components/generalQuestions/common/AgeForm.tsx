@@ -4,8 +4,8 @@ import TextField from "@mui/material/TextField";
 import { useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import NavigationButtons from "../../common/NavigationButtons";
-import { AnonymousStepComponentProps } from "@/app/utils/utils";
-import QuestionFormWrapper from "./QuestionFormWrapper";
+import { SharedFormProps } from "@/app/utils/utils";
+import QuestionFormWrapper from "../client/QuestionFormWrapper";
 
 const validateAgeInput = (
   age: string | null,
@@ -32,20 +32,21 @@ const validateAgeInput = (
   return true;
 };
 
-export default function AgeForm({
+export default function AgeForm<T extends string>({
   entity,
   nextStep,
   step,
   stepHistory,
   onAnswerMutate,
+  onStepHistoryChange,
   previousStep,
-}: AnonymousStepComponentProps) {
+}: SharedFormProps<T, { age: number }>) {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const anonymousPatientAge = entity?.age ? String(entity?.age) : "";
+  const entityAge = entity?.age ? String(entity?.age) : "";
 
-  const [age, setAge] = useState<string | null>(anonymousPatientAge);
+  const [age, setAge] = useState<string>(entityAge);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -54,9 +55,13 @@ export default function AgeForm({
       return;
     }
 
-    if (age !== anonymousPatientAge) {
+    if (age !== entityAge) {
       onAnswerMutate({ age: Number(age) });
       return;
+    }
+
+    if (!stepHistory?.includes(step)) {
+      onStepHistoryChange((prevState) => [...prevState, step]);
     }
 
     router.push(nextStep);
@@ -77,6 +82,9 @@ export default function AgeForm({
           placeholder="e.g. 27"
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             setAge(event.target.value);
+            if (error) {
+              setError("");
+            }
           }}
           helperText={!!error ? error : null}
           error={!!error}

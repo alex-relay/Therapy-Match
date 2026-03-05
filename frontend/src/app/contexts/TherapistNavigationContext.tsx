@@ -41,19 +41,18 @@ const getInitialHistory = (): TherapistQuestionStepName[] => {
   const currentPathIsHomepage = currentPath === "/";
 
   if (currentPathIsHomepage) {
-    window.sessionStorage.removeItem("therapistProfileStepHistory"); // Clear storage on homepage
+    window.sessionStorage.removeItem("therapistProfileStepHistory");
     return [];
   }
 
-  const savedHistory = window.sessionStorage.getItem("stepHistory");
+  const savedHistory = window.sessionStorage.getItem(
+    "therapistProfileStepHistory",
+  );
   if (savedHistory) {
     try {
       const parsedSavedHistory: TherapistQuestionStepName[] =
         JSON.parse(savedHistory);
-      if (
-        Array.isArray(parsedSavedHistory) &&
-        parsedSavedHistory.every((item) => typeof item === "string")
-      ) {
+      if (Array.isArray(parsedSavedHistory)) {
         return parsedSavedHistory;
       }
     } catch (error) {
@@ -73,13 +72,14 @@ export const TherapistNavigationContextProvider = ({
     useState<TherapistQuestionStepName[]>(getInitialHistory);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !("sessionStorage" in window)) {
-      return;
-    }
     const currentPath = window.location.pathname;
     const currentPathIsHomepage = currentPath === "/";
 
-    if (!currentPathIsHomepage) {
+    if (
+      !currentPathIsHomepage &&
+      typeof window === "undefined" &&
+      !("sessionStorage" in window)
+    ) {
       sessionStorage.setItem(
         "therapistProfileStepHistory",
         JSON.stringify(therapistProfileStepHistory),

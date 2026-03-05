@@ -643,21 +643,25 @@ def test_patch_anonymous_patient_updates(
     assert anonymous_session_record.age == 30
 
 
-def test_patch_therapist_personality_test_score_invalid_postal_code(client_fixture, session_fixture, mock_auth_headers):
+def test_patch_therapist_invalid_postal_code(
+    client_fixture, session_fixture, mock_auth_headers
+):
     """Test patching a therapist personality test with an invalid postal code"""
     add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
     add_test_therapist(session_fixture)
 
     response = client_fixture.patch(
         "/therapists/me",
-        headers={**mock_auth_headers},
+        headers={mock_auth_headers},
         json={"postal_code": "A1D 2E3"},
     )
 
     data = response.json()
 
     assert response.status_code == 422
-    assert data["detail"][0]["msg"] == "Value error, Invalid Canadian postal code format"
+    assert (
+        data["detail"][0]["msg"] == "Value error, Invalid Canadian postal code format"
+    )
 
 
 def test_patch_therapist_age(client_fixture, session_fixture, mock_auth_headers):
@@ -745,7 +749,9 @@ def test_patch_therapist_specializations(
     assert data["longitude"] == TEST_THERAPIST_BASE["longitude"]
 
 
-def test_patch_therapist_invalid_field(client_fixture, session_fixture, mock_auth_headers):
+def test_patch_therapist_invalid_field(
+    client_fixture, session_fixture, mock_auth_headers
+):
     """Test that a patch request with an invalid field returns 422"""
 
     add_test_user(session_fixture)

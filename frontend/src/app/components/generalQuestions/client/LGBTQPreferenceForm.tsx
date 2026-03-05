@@ -18,6 +18,7 @@ const LGBTQPreferenceForm = ({
   stepHistory,
   step,
   onAnswerMutate,
+  onStepHistoryChange,
   entity,
 }: AnonymousStepComponentProps) => {
   const router = useRouter();
@@ -37,6 +38,11 @@ const LGBTQPreferenceForm = ({
       });
       return;
     }
+
+    if (!stepHistory?.includes(step)) {
+      onStepHistoryChange((prevState) => [...prevState, step]);
+    }
+
     router.push(`/questions/${nextStep}`);
   };
 

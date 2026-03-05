@@ -37,10 +37,13 @@ export default function ReligionForm() {
   const params = useParams();
   const step = params.step as AnonymousQuestionsStepName;
 
+  // TODO: Remove this hook and just use the mutation passed down in the props.
   const { mutate: answerMutate } = usePatchAnonymousQuestion({
-    onSuccess: () => {
-      const nextStep = getAnonymousSessionNextStep(step);
-      router.push(`/questions/${nextStep}`);
+    options: {
+      onSuccess: () => {
+        const nextStep = getAnonymousSessionNextStep(step);
+        router.push(`/questions/${nextStep}`);
+      },
     },
   });
 
