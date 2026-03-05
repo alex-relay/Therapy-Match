@@ -17,6 +17,9 @@ from backend.tests.test_utils import (
 )
 from backend.models.user import GenderOption, AnonymousPatient, User
 
+MOCK_LONGITUDE = -79.3626
+MOCK_LATITUDE = 43.6555
+
 
 def test_user_login_for_multiple_roles(client_fixture, session_fixture):
     """Test user login route"""
@@ -317,7 +320,7 @@ def test_create_patient(client_fixture, session_fixture, mock_auth_headers):
     """Test creating a new patient."""
 
     anonymous_patient_overrides = {
-        "latitude": 43.6555,
+        "latitude": MOCK_LATITUDE,
         "longitude": -19.6345,
         "description": None,
         "therapy_needs": ["anxiety", "depression"],
@@ -363,7 +366,7 @@ def test_create_patient_without_personality_test(
     """Test creating a new patient."""
 
     overrides = {
-        "latitude": 43.6555,
+        "latitude": MOCK_LATITUDE,
         "longitude": -19.6345,
         "description": None,
         "therapy_needs": ["anxiety", "depression"],
@@ -399,7 +402,7 @@ def test_create_patient_with_invalid_first_name(
     """invalid first name data for creating a patient"""
 
     overrides = {
-        "latitude": 43.6555,
+        "latitude": MOCK_LATITUDE,
         "longitude": -19.6345,
         "description": None,
         "therapy_needs": ["anxiety", "depression"],
@@ -441,7 +444,7 @@ def test_create_patient_with_invalid_email(
 ):
     """invalid data create patient"""
     overrides = {
-        "latitude": 43.6555,
+        "latitude": MOCK_LATITUDE,
         "longitude": -19.6345,
         "description": None,
         "therapy_needs": ["anxiety", "depression"],
@@ -479,7 +482,7 @@ def test_create_patient_with_null_password_value(
 ):
     """invalid data create patient"""
     overrides = {
-        "latitude": 43.6555,
+        "latitude": MOCK_LATITUDE,
         "longitude": -19.6345,
         "description": None,
         "therapy_needs": ["anxiety", "depression"],
@@ -569,7 +572,7 @@ def test_create_patient_returns_409_for_existing_patient(
 
     overrides = {
         "session_id": USER_ID,
-        "latitude": 43.6555,
+        "latitude": MOCK_LATITUDE,
         "longitude": -19.6345,
         "description": None,
         "therapy_needs": ["anxiety", "depression"],
@@ -652,7 +655,7 @@ def test_patch_therapist_invalid_postal_code(
 
     response = client_fixture.patch(
         "/therapists/me",
-        headers={mock_auth_headers},
+        headers=mock_auth_headers,
         json={"postal_code": "A1D 2E3"},
     )
 
@@ -827,8 +830,8 @@ def test_patch_anonymous_patient_saves_location_coordinates(
 
     mock_location = pd.Series(
         {
-            "latitude": np.float64(43.6555),
-            "longitude": np.float64(-79.3626),
+            "latitude": np.float64(MOCK_LATITUDE),
+            "longitude": np.float64(MOCK_LONGITUDE),
         }
     )
 
@@ -845,8 +848,8 @@ def test_patch_anonymous_patient_saves_location_coordinates(
     assert response.status_code == 200
 
     data = response.json()
-    assert data["longitude"] == -79.3626
-    assert data["latitude"] == 43.6555
+    assert data["longitude"] == MOCK_LONGITUDE
+    assert data["latitude"] == MOCK_LATITUDE
     assert data["postal_code"] == "M5A 4L1"
 
 
@@ -897,6 +900,36 @@ def test_patch_anonymous_patient_no_location(
     assert data == {
         "detail": "Postal code 'L4J 6B6' is invalid or could not be geocoded."
     }
+
+
+def test_patch_therapist_valid_postal_code(
+    client_fixture, session_fixture, mock_auth_headers, mocker
+):
+    """Test that patching with a valid postal code updates the postal code and location"""
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    add_test_therapist(session_fixture)
+
+    mock_location = pd.Series(
+        {
+            "latitude": np.float64(MOCK_LATITUDE),
+            "longitude": np.float64(MOCK_LONGITUDE),
+        }
+    )
+
+    mocker.patch("pgeocode.Nominatim.query_postal_code", return_value=mock_location)
+
+    response = client_fixture.patch(
+        "/therapists/me",
+        json={"postal_code": "M5A 4L1"},
+        headers=mock_auth_headers,
+    )
+
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["postal_code"] == "M5A 4L1"
+    assert data["latitude"] == MOCK_LATITUDE
+    assert data["longitude"] == MOCK_LONGITUDE
 
 
 def test_patch_anonymous_patient_lgbtq_preference(
