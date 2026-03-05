@@ -5,18 +5,19 @@ import TextField from "@mui/material/TextField";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import NavigationButtons from "../../common/NavigationButtons";
-import { AnonymousStepComponentProps } from "@/app/utils/utils";
-import QuestionFormWrapper from "./QuestionFormWrapper";
+import { SharedFormProps } from "@/app/utils/utils";
+import QuestionFormWrapper from "../client/QuestionFormWrapper";
 import { validatePostalCode, transformPostalCode } from "../utils";
 
-const LocationForm = ({
+const LocationForm = <T extends string>({
   entity,
   nextStep,
   onAnswerMutate,
+  onStepHistoryChange,
   stepHistory,
   step,
   previousStep,
-}: AnonymousStepComponentProps) => {
+}: SharedFormProps<T, { postal_code: string }>) => {
   const [error, setError] = useState("");
   const router = useRouter();
   const [postalCode, setPostalCode] = useState(entity?.postal_code ?? "");
@@ -35,7 +36,11 @@ const LocationForm = ({
       return;
     }
 
-    router.push(`/questions/${nextStep}`);
+    if (!stepHistory?.includes(step)) {
+      onStepHistoryChange((prevState) => [...prevState, step]);
+    }
+
+    router.push(nextStep);
   };
 
   const isPrevButtonDisabled =
@@ -52,6 +57,9 @@ const LocationForm = ({
           placeholder="e.g., M5A 4L1"
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             setPostalCode(event.target.value);
+            if (error) {
+              setError("");
+            }
           }}
           helperText={error || null}
           error={!!error}

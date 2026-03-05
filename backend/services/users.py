@@ -4,21 +4,19 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session, select, SQLModel
+from sqlalchemy.exc import SQLAlchemyError
 from passlib.context import CryptContext
 from backend.models.user import Therapist, Patient, User, AnonymousPatient
 from backend.core.logging import get_logger
 from backend.core.config import settings
 from backend.routers.users.user_types import UserOption
-from ..schemas.users import (
-    UserCreate,
-    AnonymousSessionPatientBase,
-)
-
+from ..schemas.users import UserCreate, AnonymousSessionPatientBase, TherapistBase
 
 from .location_service import get_coordinates_from_postal_code
 from ..routers.users.exceptions import (
     PatientCreationError,
     UserCreationError,
+    TherapistUpdateError,
     PatientNotFoundError,
     InvalidPostalCodeError,
     GeocodingServiceError,
@@ -94,6 +92,41 @@ def create_anonymous_patient_session(
         raise ValueError("Unable to create anonymous patient session") from e
 
     return patient
+
+
+def patch_therapist_model(
+    therapist: Therapist, data: TherapistBase, session: Session
+) -> Therapist:
+    """patches a therapist model with new data and commits to the database"""
+    if not therapist:
+        raise ValueError("Therapist not provided")
+
+    if not data:
+        raise ValueError("Data to update was not provided")
+
+    patch_data_dict = data.model_dump(exclude_unset=True)
+
+    if data.postal_code is not None:
+        postal_code = data.postal_code
+        coordinates = _get_coordinates(postal_code)
+
+        patch_data_dict["latitude"] = coordinates["latitude"]
+        patch_data_dict["longitude"] = coordinates["longitude"]
+
+    therapist.sqlmodel_update(patch_data_dict)
+
+    try:
+        session.add(therapist)
+        session.commit()
+        session.refresh(therapist)
+    except SQLAlchemyError as e:
+        session.rollback()
+        logger.exception("Failed to update therapist")
+        raise TherapistUpdateError(
+            "An internal database error prevented the update."
+        ) from e
+
+    return therapist
 
 
 def _get_coordinates(postal_code: str | None) -> dict[str, float]:

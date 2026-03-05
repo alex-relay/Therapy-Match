@@ -1,10 +1,35 @@
 """ schemas for the user router """
 
 import re
+from typing import Annotated
 from uuid import UUID
-from pydantic import EmailStr, Field, field_validator, ConfigDict, StrictBool
+from pydantic import (
+    EmailStr,
+    Field,
+    field_validator,
+    ConfigDict,
+    StrictBool,
+    BeforeValidator,
+)
 from sqlmodel import SQLModel
 from backend.routers.users.user_types import GenderOption, UserOption
+
+POSTAL_CODE_REGEX = re.compile(
+    r"^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?\d[ABCEGHJ-NPRSTV-Z]\d$"
+)
+
+
+def validate_postal_code(value: str | None) -> str | None:
+    """Validates the canadian postal code format"""
+    if value is None:
+        return value
+    value = value.upper()
+    if not POSTAL_CODE_REGEX.match(value):
+        raise ValueError("Invalid Canadian postal code format")
+    return value
+
+
+CanadianPostalCode = Annotated[str | None, BeforeValidator(validate_postal_code)]
 
 
 class UserBase(SQLModel):
@@ -14,12 +39,6 @@ class UserBase(SQLModel):
     last_name: str = Field(min_length=2)
     email_address: EmailStr
     user_type: UserOption
-
-
-class AnonymousSessionCookie(SQLModel):
-    """session cookie for the anonymous patient session"""
-
-    anonymous_session: str
 
 
 class UserCreate(UserBase):
@@ -59,9 +78,10 @@ class UserProfileMixin(SQLModel):
     age: int | None = Field(default=None, ge=10, le=120)
     gender: GenderOption | None = None
     personality_test_id: UUID | None = None
+    postal_code: CanadianPostalCode = None
 
 
-class PatientCreate(UserProfileMixin):
+class PatientBase(UserProfileMixin):
     """Patient Create Model"""
 
     therapy_needs: list[str] = []
@@ -69,8 +89,8 @@ class PatientCreate(UserProfileMixin):
     is_religious_therapist_preference: StrictBool | None = None
 
 
-class TherapistCreate(UserProfileMixin):
-    """Therapist Create Model"""
+class TherapistBase(UserProfileMixin):
+    """Therapist Base Model"""
 
     therapist_type: str | None = None
     specializations: list[str] | None = None
@@ -78,21 +98,13 @@ class TherapistCreate(UserProfileMixin):
     is_religious_specialization: StrictBool | None = None
     is_profile_complete: StrictBool = False
 
+    model_config = ConfigDict(extra="forbid")  # type: ignore
 
-class PatientRead(PatientCreate):
+
+class PatientRead(PatientBase):
     """PatientRead Model"""
 
     id: UUID | None = None
-
-
-class LocationCoordinate(SQLModel):
-    """coordinates model"""
-
-    lat: float
-    lon: float
-
-
-POSTAL_CODE_REGEX = re.compile(r"^[ABCEGHJ-NPRSTVXY]\d[A-Z][ -]?\d[A-Z]\d$")
 
 
 class AnonymousSessionPatientBase(SQLModel):
@@ -105,19 +117,9 @@ class AnonymousSessionPatientBase(SQLModel):
     gender: GenderOption | None = None
     is_lgbtq_therapist_preference: StrictBool | None = None
     is_religious_therapist_preference: StrictBool | None = None
-    postal_code: str | None = None
+    postal_code: CanadianPostalCode = None
 
     model_config = ConfigDict(extra="forbid")  # type: ignore
-
-    @field_validator("postal_code")
-    @classmethod
-    def validate_postal_code(cls, value):
-        """Validates the canadian postal code format"""
-        if value is None:
-            return value
-        if not POSTAL_CODE_REGEX.match(value):
-            raise ValueError("Invalid Canadian postal code format")
-        return value
 
 
 class AnonymousSessionPatientRead(AnonymousSessionPatientBase):
@@ -137,7 +139,7 @@ class AnonymousSessionPatientResponse(AnonymousSessionPatientBase):
     longitude: float | None = None
 
 
-class TherapistRead(TherapistCreate):
+class TherapistRead(TherapistBase):
     """Therapist Read Model"""
 
     id: UUID

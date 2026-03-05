@@ -12,6 +12,7 @@ from backend.tests.test_utils import (
     USER_ID,
     TEST_USER_BASE,
     TEST_USER_PASSWORD,
+    TEST_THERAPIST_BASE,
     MOCK_PERSONALITY_TEST,
 )
 from backend.models.user import GenderOption, AnonymousPatient, User
@@ -640,6 +641,135 @@ def test_patch_anonymous_patient_updates(
 
     assert response.status_code == 200
     assert anonymous_session_record.age == 30
+
+
+def test_patch_therapist_invalid_postal_code(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test patching a therapist personality test with an invalid postal code"""
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    add_test_therapist(session_fixture)
+
+    response = client_fixture.patch(
+        "/therapists/me",
+        headers={mock_auth_headers},
+        json={"postal_code": "A1D 2E3"},
+    )
+
+    data = response.json()
+
+    assert response.status_code == 422
+    assert (
+        data["detail"][0]["msg"] == "Value error, Invalid Canadian postal code format"
+    )
+
+
+def test_patch_therapist_age(client_fixture, session_fixture, mock_auth_headers):
+    """Test patch request to update age updates the record and does not affect other fields"""
+    updated_age_value = 50
+
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    add_test_therapist(session_fixture)
+
+    response = client_fixture.patch(
+        "/therapists/me", json={"age": updated_age_value}, headers=mock_auth_headers
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["age"] == updated_age_value
+    assert data["gender"] == TEST_THERAPIST_BASE["gender"].value
+    assert data["description"] == TEST_THERAPIST_BASE["description"]
+    assert data["latitude"] == TEST_THERAPIST_BASE["latitude"]
+    assert data["longitude"] == TEST_THERAPIST_BASE["longitude"]
+    assert data["specializations"] == TEST_THERAPIST_BASE["specializations"]
+
+
+def test_patch_therapist_location(
+    client_fixture, session_fixture, mock_auth_headers, mocker
+):
+    """Test patch request to update location updates the record and does not affect other fields"""
+    updated_latitude_value = 41.8781
+    updated_longitude_value = -87.6298
+
+    add_test_user(session_fixture)
+    add_test_therapist(session_fixture)
+
+    mock_location = pd.Series(
+        {
+            "latitude": np.float64(updated_latitude_value),
+            "longitude": np.float64(updated_longitude_value),
+        }
+    )
+
+    mocker.patch("pgeocode.Nominatim.query_postal_code", return_value=mock_location)
+
+    response = client_fixture.patch(
+        "/therapists/me",
+        json={
+            "latitude": updated_latitude_value,
+            "longitude": updated_longitude_value,
+        },
+        headers=mock_auth_headers,
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["latitude"] == updated_latitude_value
+    assert data["longitude"] == updated_longitude_value
+    assert data["age"] == TEST_THERAPIST_BASE["age"]
+    assert data["gender"] == TEST_THERAPIST_BASE["gender"].value
+
+
+def test_patch_therapist_specializations(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test patch request for specializations updates the record and does not affect other fields"""
+    updated_specializations_value = ["addictions", "stress"]
+
+    add_test_user(session_fixture)
+    add_test_therapist(session_fixture)
+
+    response = client_fixture.patch(
+        "/therapists/me",
+        json={"specializations": updated_specializations_value},
+        headers=mock_auth_headers,
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["specializations"] == updated_specializations_value
+    assert data["age"] == TEST_THERAPIST_BASE["age"]
+    assert data["gender"] == TEST_THERAPIST_BASE["gender"].value
+    assert data["description"] == TEST_THERAPIST_BASE["description"]
+    assert data["latitude"] == TEST_THERAPIST_BASE["latitude"]
+    assert data["longitude"] == TEST_THERAPIST_BASE["longitude"]
+
+
+def test_patch_therapist_invalid_field(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test that a patch request with an invalid field returns 422"""
+
+    add_test_user(session_fixture)
+    add_test_therapist(session_fixture)
+
+    response = client_fixture.patch(
+        "/therapists/me",
+        json={
+            "invalid_field": "invalid_value",
+        },
+        headers=mock_auth_headers,
+    )
+
+    assert response.status_code == 422
+    data = response.json()
+
+    assert data["detail"][0]["loc"] == ["body", "invalid_field"]
+    assert data["detail"][0]["msg"] == "Extra inputs are not permitted"
 
 
 def test_patch_anonyomous_patient_does_not_affect_older_data(

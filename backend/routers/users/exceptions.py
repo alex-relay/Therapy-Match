@@ -16,3 +16,7 @@ class UserCreationError(Exception):
 
 class PatientCreationError(Exception):
     """Raised when there is an error creating a new patient."""
+
+
+class TherapistUpdateError(Exception):
+    """Raised when there is an error in updating the therapist model."""

@@ -2,9 +2,9 @@ import {
   AnonymousQuestionsComponentMap,
   TherapistQuestionsComponentMap,
 } from "@/app/utils/utils";
-import AgeForm from "./client/AgeForm";
-import GenderForm from "./client/GenderForm";
-import LocationForm from "./client/LocationForm";
+import AgeForm from "./common/AgeForm";
+import GenderForm from "./common/GenderForm";
+import LocationForm from "./common/LocationForm";
 import TherapyNeedsForm from "./client/TherapyNeedsForm";
 import ReligiousPreferenceForm from "./client/ReligiousPreferenceForm";
 import LGBTQPreferenceForm from "./client/LGBTQPreferenceForm";
@@ -69,18 +69,18 @@ const THERAPIST_QUESTIONS_COMPONENT_MAP: TherapistQuestionsComponentMap = {
   gender: {
     component: GenderForm,
     title: "What is your gender identity?",
-    getNextStep: () => "specializations",
+    getNextStep: () => "age",
   },
   specializations: {
     component: null,
     title: "What are your therapist specializations?",
-    getNextStep: () => "",
+    getNextStep: () => "lgbtq-specialization",
   },
   lgbtq: {
     component: null,
     title:
       "Are you LGBTQ informed and do you provide therapeutic services to the LGBTQ population?",
-    getNextStep: () => "",
+    getNextStep: () => "service-types",
   },
   "service-types": {
     component: null,
