@@ -48,6 +48,7 @@ const getInitialHistory = (): TherapistQuestionStepName[] => {
   const savedHistory = window.sessionStorage.getItem(
     "therapistProfileStepHistory",
   );
+
   if (savedHistory) {
     try {
       const parsedSavedHistory: TherapistQuestionStepName[] =
@@ -77,8 +78,8 @@ export const TherapistNavigationContextProvider = ({
 
     if (
       !currentPathIsHomepage &&
-      typeof window === "undefined" &&
-      !("sessionStorage" in window)
+      typeof window !== "undefined" &&
+      "sessionStorage" in window
     ) {
       sessionStorage.setItem(
         "therapistProfileStepHistory",

@@ -27,6 +27,8 @@ const Questions = () => {
     return "Step is not available";
   }
 
+  const nextStep = THERAPIST_QUESTIONS_COMPONENT_MAP[step].getNextStep();
+
   const { mutate: patchTherapistProfile } = usePatchTherapistProfile({
     onSuccess: () => {
       if (!therapistProfileStepHistory?.includes(step)) {
@@ -35,8 +37,6 @@ const Questions = () => {
       router.push(nextStep);
     },
   });
-
-  const nextStep = THERAPIST_QUESTIONS_COMPONENT_MAP[step].getNextStep();
 
   if (!therapistProfile) {
     return null;
