@@ -1,40 +1,39 @@
 "use client";
-
 import { useState } from "react";
-import RadioGroup from "@mui/material/RadioGroup";
+import { useRouter } from "next/navigation";
+import NavigationButtons from "../../common/NavigationButtons";
+import { TherapistStepComponentProps } from "@/app/utils/utils";
+import QuestionFormWrapper from "../client/QuestionFormWrapper";
 import FormControl from "@mui/material/FormControl";
+import RadioGroup from "@mui/material/RadioGroup";
 import {
   StyledFormControlLabel,
   StyledRadioButton,
 } from "@/app/components/common/OptionsContainers";
-import { useRouter } from "next/navigation";
-import { AnonymousStepComponentProps } from "@/app/utils/utils";
-import NavigationButtons from "@/app/components/common/NavigationButtons";
-import QuestionFormWrapper from "./QuestionFormWrapper";
 
-export default function ReligiousPreferenceForm({
+export default function LGBTQSpecializationForm({
   nextStep,
   onAnswerMutate,
-  entity: { is_religious_therapist_preference },
+  entity: { is_lgbtq_specialization },
   previousStep,
-}: AnonymousStepComponentProps) {
+}: TherapistStepComponentProps) {
   const router = useRouter();
 
-  const [selectedValue, setSelectedValue] = useState<boolean | null>(
-    is_religious_therapist_preference,
+  const [selectedPreference, setSelectedPreference] = useState<boolean | null>(
+    is_lgbtq_specialization,
   );
 
   const handleRadioButtonChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    setSelectedValue(event.target.value === "yes" ? true : false);
+    setSelectedPreference(event.target.value === "yes");
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (selectedValue !== is_religious_therapist_preference) {
-      onAnswerMutate({ is_religious_therapist_preference: selectedValue });
+    if (selectedPreference !== is_lgbtq_specialization) {
+      onAnswerMutate({ is_lgbtq_specialization: selectedPreference });
       return;
     }
 
@@ -44,7 +43,7 @@ export default function ReligiousPreferenceForm({
   return (
     <QuestionFormWrapper handleSubmit={handleSubmit}>
       <FormControl
-        id="religious-preference-question-label"
+        id="lgbtq-specialization-question-label"
         sx={{
           margin: "auto",
           width: "80%",
@@ -52,29 +51,27 @@ export default function ReligiousPreferenceForm({
         }}
       >
         <RadioGroup
-          aria-labelledby="religious-preference-question-label"
-          name="religiousPreference"
+          aria-labelledby="lgbtq-specialization-question-label"
+          name="lgbtqPreference"
           sx={{ gap: 2 }}
           onChange={handleRadioButtonChange}
         >
           <StyledFormControlLabel
-            key="yes"
             value="yes"
             label="Yes"
             control={<StyledRadioButton />}
-            checked={selectedValue === true}
+            checked={selectedPreference === true}
           />
           <StyledFormControlLabel
-            key="no"
             value="no"
             label="No"
             control={<StyledRadioButton />}
-            checked={selectedValue === false}
+            checked={selectedPreference === false}
           />
         </RadioGroup>
       </FormControl>
       <NavigationButtons
-        isNextButtonDisabled={selectedValue === null}
+        isNextButtonDisabled={selectedPreference === null}
         onPrevButtonClick={() => {
           router.push(previousStep);
         }}

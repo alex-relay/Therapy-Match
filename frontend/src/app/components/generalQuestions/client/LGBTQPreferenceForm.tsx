@@ -19,20 +19,18 @@ const LGBTQPreferenceForm = ({
   step,
   onAnswerMutate,
   onStepHistoryChange,
-  entity,
+  entity: { is_lgbtq_therapist_preference },
 }: AnonymousStepComponentProps) => {
   const router = useRouter();
 
-  const lgbtqPreferenceValue = entity?.is_lgbtq_therapist_preference ?? null;
-
   const [selectedValue, setSelectedValue] = useState<boolean | null>(
-    lgbtqPreferenceValue,
+    is_lgbtq_therapist_preference,
   );
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (selectedValue !== lgbtqPreferenceValue) {
+    if (selectedValue !== is_lgbtq_therapist_preference) {
       onAnswerMutate({
         is_lgbtq_therapist_preference: selectedValue,
       });
