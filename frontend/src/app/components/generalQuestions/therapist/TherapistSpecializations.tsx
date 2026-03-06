@@ -59,8 +59,9 @@ const TherapistSpecializations = ({
 
     if (!stepHistory.includes(step)) {
       onStepHistoryChange((prev) => [...prev, step]);
-      router.push(nextStep);
     }
+
+    router.push(nextStep);
   };
 
   const isPrevButtonDisabled =

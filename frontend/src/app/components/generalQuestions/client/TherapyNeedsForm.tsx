@@ -20,11 +20,11 @@ const TherapyNeeds = ({
   stepHistory,
   previousStep,
   onStepHistoryChange,
-  entity,
+  entity: { therapy_needs },
 }: AnonymousStepComponentProps) => {
   const router = useRouter();
 
-  const therapyNeedsValue = entity?.therapy_needs ?? [];
+  const therapyNeedsValue = therapy_needs ?? [];
 
   const [therapyNeeds, setTherapyNeeds] =
     useState<TherapyNeedsOptions[]>(therapyNeedsValue);

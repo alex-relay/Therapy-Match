@@ -23,7 +23,7 @@ const OPTIONS_MAP = {
 type GenderFormValues = keyof typeof OPTIONS_MAP | "";
 
 export default function GenderForm<T extends string>({
-  entity,
+  entity: { gender },
   nextStep,
   onAnswerMutate,
   step,
@@ -33,7 +33,6 @@ export default function GenderForm<T extends string>({
 }: SharedFormProps<T, { gender: string | null }>) {
   const router = useRouter();
 
-  const gender = entity?.gender ?? null;
   const [selectedValue, setSelectedValue] = useState<string | null>(gender);
 
   const handleRadioButtonChange = (

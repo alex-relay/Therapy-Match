@@ -10,7 +10,7 @@ import QuestionFormWrapper from "../client/QuestionFormWrapper";
 import { validatePostalCode, transformPostalCode } from "../utils";
 
 const LocationForm = <T extends string>({
-  entity,
+  entity: { postal_code },
   nextStep,
   onAnswerMutate,
   onStepHistoryChange,
@@ -20,7 +20,8 @@ const LocationForm = <T extends string>({
 }: SharedFormProps<T, { postal_code: string }>) => {
   const [error, setError] = useState("");
   const router = useRouter();
-  const [postalCode, setPostalCode] = useState(entity?.postal_code ?? "");
+
+  const [postalCode, setPostalCode] = useState(postal_code);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,7 +32,7 @@ const LocationForm = <T extends string>({
       return;
     }
 
-    if (cleanPostalCode !== entity?.postal_code) {
+    if (cleanPostalCode !== postal_code) {
       onAnswerMutate({ postal_code: cleanPostalCode });
       return;
     }

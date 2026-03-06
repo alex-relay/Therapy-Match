@@ -340,7 +340,8 @@ export type TherapistQuestionStepName =
   | "therapy-needs"
   | "specializations"
   | "lgbtq-specialization"
-  | "religious-specialization";
+  | "religious-specialization"
+  | "service-types";
 
 export interface SharedFormProps<TStep, TBody> {
   step: TStep;

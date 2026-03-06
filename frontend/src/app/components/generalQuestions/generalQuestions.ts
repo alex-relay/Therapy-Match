@@ -9,6 +9,8 @@ import TherapyNeedsForm from "./client/TherapyNeedsForm";
 import ReligiousPreferenceForm from "./client/ReligiousPreferenceForm";
 import LGBTQPreferenceForm from "./client/LGBTQPreferenceForm";
 import TherapistSpecializations from "./therapist/TherapistSpecializations";
+import LGBTQSpecializationForm from "./therapist/LGBTQSpecialization";
+import ReligiousSpecializationForm from "./therapist/ReligiousSpecializationForm";
 
 const ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP: AnonymousQuestionsComponentMap =
   {
@@ -78,9 +80,15 @@ const THERAPIST_QUESTIONS_COMPONENT_MAP: TherapistQuestionsComponentMap = {
     getNextStep: () => "lgbtq-specialization",
   },
   "lgbtq-specialization": {
-    component: null,
+    component: LGBTQSpecializationForm,
     title:
       "Are you LGBTQ informed and do you provide therapeutic services to the LGBTQ population?",
+    getNextStep: () => "religious-specialization",
+  },
+  "religious-specialization": {
+    component: ReligiousSpecializationForm,
+    title:
+      "Do you provide services for clients seeking to incorporate religion in their therapy?",
     getNextStep: () => "service-types",
   },
   "service-types": {

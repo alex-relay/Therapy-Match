@@ -66,6 +66,8 @@ class Therapist(ProfileMixin, table=True):
     therapist_type: TherapistTypeOption | None = Field(default=None)
     specializations: List[str] = Field(sa_column=Column(ARRAY(String)))
     is_profile_complete: bool = Field(default=False)
+    is_lgbtq_specialization: bool | None = Field(default=None)
+    is_religious_specialization: bool | None = Field(default=None)
 
     personality_test: Optional["PersonalityTestScore"] = Relationship(
         back_populates="therapist",
