@@ -8,6 +8,7 @@ import LocationForm from "./common/LocationForm";
 import TherapyNeedsForm from "./client/TherapyNeedsForm";
 import ReligiousPreferenceForm from "./client/ReligiousPreferenceForm";
 import LGBTQPreferenceForm from "./client/LGBTQPreferenceForm";
+import TherapistSpecializations from "./therapist/TherapistSpecializations";
 
 const ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP: AnonymousQuestionsComponentMap =
   {
@@ -56,6 +57,11 @@ const ANONYMOUS_SESSION_GENERAL_QUESTIONS_COMPONENT_MAP: AnonymousQuestionsCompo
   };
 
 const THERAPIST_QUESTIONS_COMPONENT_MAP: TherapistQuestionsComponentMap = {
+  gender: {
+    component: GenderForm,
+    title: "What is your gender identity?",
+    getNextStep: () => "age",
+  },
   age: {
     component: AgeForm,
     title: "What is your age?",
@@ -64,19 +70,14 @@ const THERAPIST_QUESTIONS_COMPONENT_MAP: TherapistQuestionsComponentMap = {
   location: {
     component: LocationForm,
     title: "What is your postal code?",
-    getNextStep: () => "gender",
-  },
-  gender: {
-    component: GenderForm,
-    title: "What is your gender identity?",
-    getNextStep: () => "age",
+    getNextStep: () => "specializations",
   },
   specializations: {
-    component: null,
-    title: "What are your therapist specializations?",
+    component: TherapistSpecializations,
+    title: "What are your therapist specializations (Select all that apply)?",
     getNextStep: () => "lgbtq-specialization",
   },
-  lgbtq: {
+  "lgbtq-specialization": {
     component: null,
     title:
       "Are you LGBTQ informed and do you provide therapeutic services to the LGBTQ population?",

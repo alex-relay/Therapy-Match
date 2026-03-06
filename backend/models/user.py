@@ -5,6 +5,7 @@ from pydantic import EmailStr, ConfigDict, field_validator, ValidationError
 from sqlalchemy import Column, String
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlmodel import Field, SQLModel, Relationship
+from backend.schemas.users import CanadianPostalCode
 from backend.routers.users.user_types import (
     GenderOption,
     TherapistTypeOption,
@@ -33,6 +34,7 @@ class ProfileMixin(SQLModel):
     description: str | None = Field(default=None)
     age: int | None = Field(ge=10, le=120, default=None)
     gender: GenderOption | None = Field(default=None)
+    postal_code: CanadianPostalCode = Field(default=None)
 
 
 class AnonymousPatient(ProfileMixin, table=True):
@@ -42,7 +44,6 @@ class AnonymousPatient(ProfileMixin, table=True):
 
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
     session_id: str = Field(index=True, unique=True)
-    postal_code: str | None = Field(default=None)
     therapy_needs: List[str] = Field(
         default_factory=list, sa_column=Column(ARRAY(String))
     )

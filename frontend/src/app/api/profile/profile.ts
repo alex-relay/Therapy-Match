@@ -95,7 +95,7 @@ export interface TherapistProfileResponse {
   longitude: number | null;
   postal_code: string | null;
   therapist_type: string | null;
-  specializations: string | null;
+  specializations: TherapistSpecializationsOptions[] | null;
   is_lgbtq_specialization: boolean | null;
   is_religious_specialization: boolean | null;
   is_profile_complete: boolean | null;

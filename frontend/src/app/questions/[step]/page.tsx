@@ -9,9 +9,10 @@ import {
 } from "@/app/utils/utils";
 import GeneralQuestion from "@/app/components/generalQuestions/GeneralQuestion";
 import { useNavContext } from "@/app/contexts/NavigationContext";
-import { useContext } from "react";
-import { AnonymousPatientContext } from "@/app/components/generalQuestions/client/AnonymousPatientContext";
-import { usePatchAnonymousQuestion } from "@/app/api/profile/profile";
+import {
+  useGetAnonymousPatientSession,
+  usePatchAnonymousQuestion,
+} from "@/app/api/profile/profile";
 
 const Questions = () => {
   const params = useParams();
@@ -22,7 +23,8 @@ const Questions = () => {
   const nextStep = getAnonymousSessionNextStep(step);
 
   // TODO: remove this context and just use the hook directly here.
-  const { anonymousPatient } = useContext(AnonymousPatientContext);
+  const { data: anonymousPatient, isLoading: isAnonymousPatientLoading } =
+    useGetAnonymousPatientSession();
 
   const { mutate: answerMutate } = usePatchAnonymousQuestion({
     options: {
@@ -39,7 +41,7 @@ const Questions = () => {
     return "Step does not exist";
   }
 
-  if (!anonymousPatient) {
+  if (!anonymousPatient || isAnonymousPatientLoading) {
     return null;
   }
 
