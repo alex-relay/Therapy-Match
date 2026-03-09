@@ -1,5 +1,5 @@
-import QuestionPageContainer from "../components/personalityTestQuestions/QuestionPageContainer";
+import AnonymousQuestionPageContainer from "../components/personalityTestQuestions/AnonymousQuestionPageContainer";
 
 export default function Page() {
-  return <QuestionPageContainer />;
+  return <AnonymousQuestionPageContainer />;
 }

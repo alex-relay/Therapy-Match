@@ -5,8 +5,7 @@ import {
   PersonalityTestGetResponse,
   PersonalityTestQuestionAndScore,
 } from "@/app/api/scores/scores";
-import { useRouter, useSearchParams } from "next/navigation";
-import { UserType } from "@/app/api/users/users";
+import { useRouter } from "next/navigation";
 import QuestionFormWrapper from "../generalQuestions/client/QuestionFormWrapper";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
@@ -23,26 +22,24 @@ const getLatestQuestionIndex = (
     .filter((val) => Array.isArray(val))
     .flat();
 
-  return personalityTestScoreValues.length > 0
-    ? personalityTestScoreValues.length - 1
-    : 0;
+  if (personalityTestScoreValues.length === 0) {
+    return 0;
+  }
+
+  return personalityTestScoreValues.length - 1;
 };
 
-const getIsQuestionAnswered = (
+const findQuestionAnswered = (
   answers: PersonalityTestQuestionAndScore[],
   questionId: string,
 ) => {
   return answers.find((answer) => answer.id === questionId);
 };
 
-// TODO: refactor this entire form to use Radio buttons for better accessibility and performance.
-// This will also simplify the form handling logic significantly.
-
-const AnonymousTestQuestionPage = ({
+const TherapistTestQuestionPage = ({
   personalityTestScores,
   onAnswerQuestion,
 }: QuestionPageProps) => {
-  const queryParams = useSearchParams();
   const router = useRouter();
 
   const [currentQuestion, setCurrentQuestion] = useState(() =>
@@ -55,13 +52,8 @@ const AnonymousTestQuestionPage = ({
     }
 
     const questionAndAnswer = PERSONALITY_TEST_QUESTIONS[currentQuestion];
-    const userType = queryParams.get("type") as UserType;
     const isLastQuestion =
       currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 1;
-
-    if (!userType || !["patient", "therapist"].includes(userType)) {
-      return;
-    }
 
     onAnswerQuestion({
       id: questionAndAnswer.backendId,
@@ -70,20 +62,17 @@ const AnonymousTestQuestionPage = ({
     });
 
     if (isLastQuestion) {
-      router.push(`/register?type=${userType}`);
+      router.push("/therapist/dashboard");
       return;
     }
+    setCurrentQuestion((prevState) => prevState + 1);
   };
-
-  if (!personalityTestScores) {
-    return null;
-  }
 
   const { question, backendId, category } =
     PERSONALITY_TEST_QUESTIONS[currentQuestion];
 
-  const selectedAnswer = getIsQuestionAnswered(
-    personalityTestScores[category] ?? [],
+  const selectedAnswer = findQuestionAnswered(
+    personalityTestScores ? personalityTestScores[category] : [],
     backendId,
   );
 
@@ -91,6 +80,11 @@ const AnonymousTestQuestionPage = ({
     currentQuestion === PERSONALITY_TEST_QUESTIONS.length - 1 ||
     !selectedAnswer;
 
+  if (!personalityTestScores) {
+    return null;
+  }
+  // TODO: refactor this entire form to use Radio buttons for better accessibility and performance.
+  // This will also simplify the form handling logic significantly.
   return (
     <QuestionFormWrapper
       handleSubmit={(e) => {
@@ -145,4 +139,4 @@ const AnonymousTestQuestionPage = ({
   );
 };
 
-export default AnonymousTestQuestionPage;
+export default TherapistTestQuestionPage;

@@ -21,7 +21,7 @@ const LocationForm = <T extends string>({
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const [postalCode, setPostalCode] = useState(postal_code);
+  const [postalCode, setPostalCode] = useState<string>(postal_code ?? "");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
