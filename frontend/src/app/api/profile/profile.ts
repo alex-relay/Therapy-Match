@@ -40,7 +40,7 @@ export type Coordinate = {
   longitude: number;
 };
 
-export interface UserProfileRequestBase {
+interface UserProfileRequestBase {
   personality_test_id: string | null;
   postal_code: string | null;
   description: string | null;
@@ -62,16 +62,19 @@ export interface PatientProfilePatchRequest extends UserProfileRequestBase {
   is_lgbtq_therapist_preference: boolean | null;
 }
 
-export interface PatientProfileResponse {
-  therapy_needs: TherapyNeedsOptions[] | null;
-  personality_test_id: string | null;
-  location: Coordinate | null;
-  description: string | null;
+interface UserProfileResponseBase {
   age: number | null;
   gender: string | null;
   latitude: number | null;
   longitude: number | null;
   postal_code: string | null;
+  personality_test_id: string | null;
+  id: string;
+}
+
+export interface PatientProfileResponse extends UserProfileResponseBase {
+  therapy_needs: TherapyNeedsOptions[] | null;
+  description: string | null;
   is_religious_therapist_preference: boolean | null;
   is_lgbtq_therapist_preference: boolean | null;
 }
@@ -88,12 +91,7 @@ export type PatchAnonymousQuestionHookProps = {
 
 export type PatchTherapistProfileProps = Partial<TherapistProfilePatchRequest>;
 
-export interface TherapistProfileResponse {
-  age: number | null;
-  gender: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  postal_code: string | null;
+export interface TherapistProfileResponse extends UserProfileResponseBase {
   therapist_type: string | null;
   specializations: TherapistSpecializationsOptions[] | null;
   is_lgbtq_specialization: boolean | null;

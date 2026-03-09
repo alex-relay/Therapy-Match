@@ -3,6 +3,7 @@ import {
   UseMutationOptions,
   useQuery,
   useQueryClient,
+  UseQueryOptions,
 } from "@tanstack/react-query";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -79,6 +80,127 @@ const useCreateTherapistPersonalityTest = (
   return useMutation({
     mutationFn: createTherapistPersonalityTest,
     ...options,
+  });
+};
+
+const getTherapistPersonalityTest =
+  async (): Promise<PersonalityTestGetResponse> => {
+    const response = await fetch(`${API_URL}/therapists/me/personality-test`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      const errorMsg = await response.json();
+      throw new Error(
+        errorMsg["detail"] || "Unable to get the therapist personality test",
+      );
+    }
+
+    const data = await response.json();
+    return data;
+  };
+
+const useGetTherapistPersonalityTest = (
+  options?: Omit<
+    UseQueryOptions<PersonalityTestGetResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
+) => {
+  return useQuery({
+    queryFn: getTherapistPersonalityTest,
+    queryKey: ["therapist", "personality-test"],
+    ...options,
+  });
+};
+
+const patchTherapistPersonalityTest = async (
+  question: PersonalityTestQuestionAndScore,
+): Promise<PersonalityTestPatchResponse> => {
+  const response = await fetch(`${API_URL}/therapists/me/personality-test`, {
+    method: "PATCH",
+    body: JSON.stringify(question),
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    const res = await response.json();
+    throw new Error(
+      res?.detail ||
+        res?.msg ||
+        "Unable to update the therapist personality tests",
+    );
+  }
+
+  const data = await response.json();
+
+  return data;
+};
+
+const usePatchTherapistPersonalityTest = (
+  options?: UseMutationOptions<
+    PersonalityTestPatchResponse,
+    Error,
+    PersonalityTestQuestionAndScore,
+    { currentTest: PersonalityTestGetResponse }
+  >,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: patchTherapistPersonalityTest,
+    onMutate: (question) => {
+      queryClient.cancelQueries({
+        queryKey: ["therapist", "personality-test"],
+      });
+
+      const currentTest = queryClient.getQueryData([
+        "therapist",
+        "personality-test",
+      ]);
+
+      queryClient.setQueryData(
+        ["therapist", "personality-test"],
+        (
+          currentTest: PersonalityTestGetResponse,
+        ): PersonalityTestGetResponse => {
+          const category = question.category;
+          const currentTestCopy = { ...currentTest };
+          const currentTestCategoryAnswers = currentTestCopy[category];
+
+          const isAnswerExists = currentTestCategoryAnswers.find(
+            (answer) => question.id === answer.id,
+          );
+
+          if (isAnswerExists) {
+            const updatedCategory = currentTestCategoryAnswers.map((answer) =>
+              answer.id === question.id ? question : answer,
+            );
+            return {
+              ...currentTestCopy,
+              [category]: updatedCategory,
+            };
+          } else {
+            return {
+              ...currentTestCopy,
+              [category]: [...currentTestCategoryAnswers, question],
+            };
+          }
+        },
+      );
+
+      return { currentTest };
+    },
+    onError: (_, __, context) => {
+      queryClient.setQueryData(
+        ["therapist", "personality-test"],
+        context?.currentTest,
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["therapist", "personality-test"],
+      });
+    },
   });
 };
 
@@ -268,4 +390,6 @@ export {
   useGetPersonalityTestScores,
   usePatchAnonymousPersonalityTestQuestion,
   useCreateTherapistPersonalityTest,
+  useGetTherapistPersonalityTest,
+  usePatchTherapistPersonalityTest,
 };
