@@ -2,7 +2,11 @@ from uuid import UUID
 from datetime import timedelta
 from sqlmodel import select
 from backend.routers.users.user_types import UserOption
-from backend.models.user import Patient, TherapistPersonalityTest
+from backend.models.user import (
+    Patient,
+    TherapistPersonalityTest,
+    Therapist,
+)
 from backend.types.scores_types import PersonalityTestCategory
 from backend.tests.test_utils import (
     add_test_patient,
@@ -523,3 +527,37 @@ def test_get_therapist_dashboard_with_completed_test(
     assert data["personality_test_scores"] is not None
     assert data["completed_personality_test"] is not None
     assert data["is_profile_complete"] is False
+
+
+def test_patch_therapist_personality_test_score_complete_test(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test patching a therapist personality test when the test becomes complete after the patch"""
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    therapist = add_test_therapist(session_fixture)
+    add_therapist_personality_test(
+        session_fixture,
+        {"therapist_id": therapist.id, **(MOCK_PERSONALITY_TEST)},
+    )
+
+    response = client_fixture.patch(
+        "/therapists/me/personality-test",
+        headers={**mock_auth_headers},
+        json={"id": "1", "category": PersonalityTestCategory.NEUROTICISM, "score": 5},
+    )
+
+    data = response.json()
+
+    assert response.status_code == 200
+
+    therapist_record = session_fixture.exec(
+        select(Therapist).where(Therapist.id == therapist.id)
+    ).first()
+
+    assert therapist_record.id == therapist.id
+    assert data["extroversion"] is not None
+    assert data["openness"] is not None
+    assert data["neuroticism"] is not None
+    assert data["conscientiousness"] is not None
+    assert data["agreeableness"] is not None
+    assert therapist_record.personality_test is not None

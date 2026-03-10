@@ -12,10 +12,6 @@ class PersonalityTestQuestion(SQLModel):
     score: int
 
 
-class PersonalityTestQuestionList(SQLModel):
-    category: list[PersonalityTestQuestion]
-
-
 class PersonalityTestBase(SQLModel):
     """Base model for the anonymous personality test"""
 
@@ -38,21 +34,10 @@ class TherapistPersonalityTestRead(PersonalityTestBase):
     id: UUID
 
 
-class AggregateUserPersonalityTestRead(SQLModel):
-    """Aggregate User Personality Test Read"""
-
-    id: UUID
-    extroversion: list[int]
-    conscientiousness: list[int]
-    openness: list[int]
-    neuroticism: list[int]
-    agreeableness: list[int]
-
-
 class UserPersonalityTestRead(SQLModel):
     """User Personality Test Read"""
 
-    id: str
+    id: UUID
     extroversion: float
     conscientiousness: float
     openness: float

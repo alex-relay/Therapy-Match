@@ -22,20 +22,15 @@ from backend.services.scores import (
     update_therapist_personality_test_category,
     patch_anonymous_test_score_category,
     patch_therapist_test_score_category,
+    get_is_personality_test_complete,
+    format_personality_test,
+    add_therapist_personality_test_score,
 )
 
 from backend.core.logging import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)
-
-PERSONALITY_TRAITS = [
-    "extroversion",
-    "openness",
-    "neuroticism",
-    "conscientiousness",
-    "agreeableness",
-]
 
 
 @router.post(
@@ -115,16 +110,44 @@ def patch_therapist_personality_test(
             status_code=400, detail="Therapist personality test not found"
         )
 
+    raw_personality_test_scores = therapist.raw_personality_scores
+
     try:
         updated_test_category_obj = update_therapist_personality_test_category(
-            data, therapist.raw_personality_scores
+            data, raw_personality_test_scores
         )
 
         logger.info("Persisting the updated therapist personality test to the DB")
 
         updated_therapist_personality_test = patch_therapist_test_score_category(
-            updated_test_category_obj, therapist.raw_personality_scores, session
+            updated_test_category_obj, raw_personality_test_scores, session
         )
+
+        is_personality_test_complete = get_is_personality_test_complete(
+            raw_personality_test_scores
+        )
+
+        if is_personality_test_complete:
+            logger.info(
+                """Therapist personality test is complete.
+                Calculating and saving the personality test scores."""
+            )
+
+            formatted_personality_test_score = format_personality_test(
+                therapist.raw_personality_scores
+            )
+
+            therapist_test_update = add_therapist_personality_test_score(
+                therapist, formatted_personality_test_score, session
+            )
+
+            return TherapistPersonalityTestRead(
+                **(
+                    therapist_test_update.model_dump()
+                    if therapist_test_update
+                    else updated_therapist_personality_test.model_dump()
+                )
+            )
 
     except (TestScoreCreationError, ValueError) as e:
         logger.exception(str(e))
