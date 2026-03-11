@@ -1,14 +1,11 @@
 "use client";
-import Tile from "@/app/components/common/Tile";
-import { useTheme } from "@mui/material/styles";
-import Stack from "@mui/material/Stack";
 import { useRouter } from "next/navigation";
 import { useCreateTherapistPersonalityTest } from "@/app/api/scores/scores";
 import { useGetTherapistDashboard } from "@/app/api/profile/profile";
+import TileSection from "@/app/components/therapist/dashboard/TileSection";
 
 export default function Page() {
   const router = useRouter();
-  const theme = useTheme();
 
   const { data: therapistDashboard, isLoading: isTherapistDashboardLoading } =
     useGetTherapistDashboard();
@@ -30,10 +27,6 @@ export default function Page() {
 
   const isPersonalityTestStarted =
     !!therapistDashboard?.personality_test_scores;
-
-  const personalityTestTitleText = isPersonalityTestStarted
-    ? "Complete Personality Test"
-    : "Start Personality Test";
 
   const handleCompletePersonalityTestTileClick = () => {
     router.push("/therapist/personality-test");
@@ -57,53 +50,12 @@ export default function Page() {
 
   return (
     <>
-      <Stack
-        flexDirection="row"
-        width="100%"
-        maxWidth="1000px"
-        justifyContent="space-between"
-        sx={{
-          [theme.breakpoints.down("md")]: {
-            flexDirection: "column",
-            alignItems: "start",
-            gap: "50px",
-          },
-        }}
-      >
-        <Stack
-          border="5px solid red"
-          padding="50px"
-          borderRadius="10px"
-          sx={{
-            [theme.breakpoints.down("md")]: {
-              width: "100%",
-              alignItems: "center",
-            },
-          }}
-        >
-          <Tile onTileClick={handleProfileTileClick} title="Complete Profile" />
-        </Stack>
-        <Stack
-          border="5px solid red"
-          padding="50px"
-          borderRadius="10px"
-          sx={{
-            [theme.breakpoints.down("md")]: {
-              width: "100%",
-              alignItems: "center",
-            },
-          }}
-        >
-          {isTherapistDashboardLoading ? (
-            <div>Loading...</div>
-          ) : (
-            <Tile
-              onTileClick={personalityTestTileHandler}
-              title={personalityTestTitleText}
-            />
-          )}
-        </Stack>
-      </Stack>
+      <TileSection
+        handleProfileTileClick={handleProfileTileClick}
+        personalityTestTileHandler={personalityTestTileHandler}
+        isTherapistDashboardLoading={isTherapistDashboardLoading}
+        therapistDashboard={therapistDashboard}
+      />
     </>
   );
 }

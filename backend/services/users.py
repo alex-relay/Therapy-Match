@@ -94,6 +94,12 @@ def create_anonymous_patient_session(
     return patient
 
 
+def _get_is_therapist_profile_complete(profile: Therapist) -> bool:
+    profile_dict = profile.model_dump(exclude={"description"})
+
+    return None not in profile_dict.values()
+
+
 def patch_therapist_model(
     therapist: Therapist, data: TherapistBase, session: Session
 ) -> Therapist:
@@ -114,6 +120,14 @@ def patch_therapist_model(
         patch_data_dict["longitude"] = coordinates["longitude"]
 
     therapist.sqlmodel_update(patch_data_dict)
+
+    is_profile_complete = _get_is_therapist_profile_complete(therapist)
+
+    if not is_profile_complete and therapist.is_profile_complete is True:
+        therapist.sqlmodel_update({"is_profile_complete": False})
+
+    if is_profile_complete and therapist.is_profile_complete is False:
+        therapist.sqlmodel_update({"is_profile_complete": True})
 
     try:
         session.add(therapist)

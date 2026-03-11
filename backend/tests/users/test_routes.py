@@ -667,6 +667,48 @@ def test_patch_therapist_invalid_postal_code(
     )
 
 
+def test_patch_therapist_is_profile_incomplete(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test patching a therapist profile"""
+    updated_age_value = 50
+
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    add_test_therapist(session_fixture, {"postal_code": None})
+
+    response = client_fixture.patch(
+        "/therapists/me", json={"age": updated_age_value}, headers=mock_auth_headers
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["is_profile_complete"] is False
+    assert data["postal_code"] is None
+    assert data["age"] == updated_age_value
+
+
+def test_patch_therapist_is_profile_complete(
+    client_fixture, session_fixture, mock_auth_headers
+):
+    """Test that is_profile_complete is True when all required fields are set."""
+    updated_age_value = 50
+
+    add_test_user(session_fixture, {"roles": [UserOption.THERAPIST.value]})
+    add_test_therapist(session_fixture, {"age": None})
+
+    response = client_fixture.patch(
+        "/therapists/me", json={"age": updated_age_value}, headers=mock_auth_headers
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["is_profile_complete"] is True
+    assert data["postal_code"] is not None
+    assert data["age"] == updated_age_value
+
+
 def test_patch_therapist_age(client_fixture, session_fixture, mock_auth_headers):
     """Test patch request to update age updates the record and does not affect other fields"""
     updated_age_value = 50
