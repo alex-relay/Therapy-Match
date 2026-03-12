@@ -104,6 +104,7 @@ const handler = NextAuth({
       if (user) {
         token.accessToken = user.access_token;
         token.user = user.user;
+        token.roles = user.roles;
       }
       return token;
     },
@@ -111,6 +112,7 @@ const handler = NextAuth({
       if (token?.accessToken) {
         // session.accessToken = token.accessToken as string;
         session.user = token.user;
+        session.roles = token.roles;
       }
       return session;
     },

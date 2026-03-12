@@ -62,7 +62,9 @@ class Therapist(ProfileMixin, table=True):
     __tablename__ = "therapists"
 
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID | None = Field(default=None, foreign_key="users.id", unique=True)
+    user_id: UUID | None = Field(
+        default=None, foreign_key="users.id", unique=True, ondelete="CASCADE"
+    )
     therapist_type: TherapistTypeOption | None = Field(default=None)
     specializations: List[str] = Field(sa_column=Column(ARRAY(String)))
     is_profile_complete: bool = Field(default=False)
@@ -85,7 +87,9 @@ class Patient(ProfileMixin, table=True):
     __tablename__ = "patients"
 
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID | None = Field(default=None, foreign_key="users.id", unique=True)
+    user_id: UUID | None = Field(
+        default=None, foreign_key="users.id", unique=True, ondelete="CASCADE"
+    )
     therapy_needs: List[str] = Field(sa_column=Column(ARRAY(String)))
     is_lgbtq_therapist_preference: bool | None = Field(default=None)
     is_religious_therapist_preference: bool | None = Field(default=None)

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
@@ -139,7 +139,14 @@ export default function SignIn() {
     }
 
     if (res?.ok) {
-      router.replace("/therapist/dashboard");
+      const session = await getSession();
+      if (session?.roles[0] === "patient") {
+        router.replace("/profile");
+      }
+
+      if (session?.roles[0] === "therapist") {
+        router.replace("/therapist/dashboard");
+      }
     }
   };
 
