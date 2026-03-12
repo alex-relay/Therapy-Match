@@ -8,6 +8,7 @@ from backend.models.user import (
     Patient,
     PersonalityTestScore,
     TherapistPersonalityTest,
+    Therapist,
 )
 from backend.schemas.scores import Scores, AggregateScores, PersonalityTestQuestion
 from backend.routers.scores.exceptions import (
@@ -20,6 +21,18 @@ from backend.core.logging import get_logger
 logger = get_logger(__name__)
 
 ScoresType = list[float]
+
+PERSONALITY_TEST_LENGTH = 50
+
+PERSONALITY_TRAITS = frozenset(
+    [
+        "extroversion",
+        "openness",
+        "neuroticism",
+        "conscientiousness",
+        "agreeableness",
+    ]
+)
 
 
 def _calculate_extroversion_score(scores: ScoresType) -> float | None:
@@ -128,6 +141,8 @@ def _calculate_conscientiousness_score(scores: ScoresType) -> float | None:
     return scores_sum / 10
 
 
+# TODO: Refactor to break out the logic to calculated the personality test score
+# into its own method.
 def format_personality_test(
     personality_test: AnonymousPersonalityTestScore | TherapistPersonalityTest | None,
 ) -> Scores:
@@ -369,7 +384,7 @@ def update_therapist_personality_test_category(
 
 def patch_therapist_test_score_category(
     data: dict, personality_test: TherapistPersonalityTest, session: Session
-):
+) -> TherapistPersonalityTest:
     """Persist the category update to the DB"""
     if data is None:
         raise ValueError("Updated category is not provided")
@@ -418,3 +433,51 @@ def patch_anonymous_test_score_category(
             "Unable to persist the update anonymous personality test score"
         )
         raise TestScoreUpdateError("Failed to save the updated test score") from e
+
+
+def get_is_personality_test_complete(
+    personality_test: TherapistPersonalityTest,
+) -> bool:
+    if not personality_test:
+        raise ValueError("A personality test was not provided")
+
+    personality_test_to_obj = personality_test.model_dump()
+
+    total_answers = sum(
+        len(answers)
+        for category, answers in personality_test_to_obj.items()
+        if category in PERSONALITY_TRAITS
+    )
+
+    return total_answers == PERSONALITY_TEST_LENGTH
+
+
+def add_therapist_personality_test_score(
+    therapist: Therapist, personality_test_scores: Scores, session: Session
+) -> TherapistPersonalityTest | None:
+    if not therapist:
+        raise ValueError("Therapist not provided")
+
+    if not personality_test_scores:
+        raise ValueError("Personality test scores weren't provided")
+
+    try:
+        therapist.personality_test = PersonalityTestScore(
+            therapist_id=therapist.id,
+            extroversion=Decimal(personality_test_scores.extroversion),
+            conscientiousness=Decimal(personality_test_scores.conscientiousness),
+            agreeableness=Decimal(personality_test_scores.agreeableness),
+            neuroticism=Decimal(personality_test_scores.neuroticism),
+            openness=Decimal(personality_test_scores.openness),
+        )
+        session.add(therapist)
+        session.commit()
+        session.refresh(therapist)
+
+        return therapist.raw_personality_scores
+    except SQLAlchemyError as e:
+        session.rollback()
+        logger.exception("Unable to update the therapist personality test")
+        raise TestScoreUpdateError(
+            "Unable to update the therapist personality test"
+        ) from e

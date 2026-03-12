@@ -112,9 +112,12 @@ TEST_THERAPIST_BASE = {
     "description": "Existing therapist for testing",
     "specializations": ["anxiety", "depression"],
     "therapist_type": TherapistTypeOption.PSYCHOLOGIST,
+    "is_lgbtq_specialization": False,
+    "is_religious_specialization": False,
     "gender": GenderOption.FEMALE,
     "age": 45,
     "user_id": UUID(USER_ID),
+    "postal_code": "M5A 4L1",
 }
 
 TEST_THERAPIST_PERSONALITY_TEST = {

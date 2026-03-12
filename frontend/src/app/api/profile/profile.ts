@@ -5,7 +5,7 @@ import {
   useQueryClient,
   UseQueryOptions,
 } from "@tanstack/react-query";
-import { PersonalityTestQuestionAndScore } from "../scores/scores";
+import { PersonalityTestGetResponse } from "../scores/scores";
 
 const PROXY_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -100,14 +100,8 @@ export interface TherapistProfileResponse extends UserProfileResponseBase {
   id: string;
 }
 
-type TherapistDashboardResponse = {
-  personality_test_scores: {
-    openness: PersonalityTestQuestionAndScore[];
-    conscientiousness: PersonalityTestQuestionAndScore[];
-    extraversion: PersonalityTestQuestionAndScore[];
-    agreeableness: PersonalityTestQuestionAndScore[];
-    neuroticism: PersonalityTestQuestionAndScore[];
-  };
+export type TherapistDashboardResponse = {
+  personality_test_scores: PersonalityTestGetResponse;
   completed_personality_test: {
     openness: number;
     conscientiousness: number;
