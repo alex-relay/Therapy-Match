@@ -52,8 +52,8 @@ const TileSection = ({
 
   const profileTileTitleText = getUserProfileTileCopy(therapistDashboard);
 
-  const isPersonalityTestIconDisplayed =
-    !!therapistDashboard?.completed_personality_test;
+  // const isPersonalityTestIconDisplayed =
+  //   !!therapistDashboard?.completed_personality_test;
 
   return (
     <Stack
@@ -85,10 +85,13 @@ const TileSection = ({
             onTileClick={personalityTestTileHandler}
             title={personalityTestTitleText}
             sx={{ width: "100%" }}
-            isImageDisplayed={isPersonalityTestIconDisplayed}
             image={
               <CheckCircleOutlineIcon
-                color="success"
+                color={
+                  !!therapistDashboard?.completed_personality_test
+                    ? "success"
+                    : "disabled"
+                }
                 fontSize="large"
                 sx={{ width: "50px", height: "50px" }}
               />

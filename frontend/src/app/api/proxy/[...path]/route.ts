@@ -8,6 +8,8 @@ if (!API_URL) {
   throw new Error("FASTAPI_URL environment variable is not configured");
 }
 
+const PUBLIC_ROUTE_PATHS = ["therapists"];
+
 const getResponse = async (targetUrl: string, options: RequestInit) => {
   try {
     const response = await fetch(targetUrl, options);
@@ -20,28 +22,43 @@ const getResponse = async (targetUrl: string, options: RequestInit) => {
   }
 };
 
+// TODO: refactor to account for a user registering and not having a token issued.
+
 async function handler(
   req: NextRequest,
-  { params }: { params: { path: string[] } },
+  { params }: { params: { path: string[]; method: string } },
 ) {
   const token = await getToken({ req });
 
-  if (!token || !token.accessToken) {
+  const resolvedParams = await params;
+
+  const isPublicRoute = resolvedParams.path.some((p) =>
+    PUBLIC_ROUTE_PATHS.includes(p),
+  );
+
+  if (
+    isPublicRoute &&
+    resolvedParams.method === "POST" &&
+    (!token || !token.accessToken)
+  ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const resolvedParams = await params;
   const path = resolvedParams.path.join("/");
   const queryString = req.nextUrl.search;
 
   // TODO: set up a list of allowed URL's. This is vulnerable to an SSRF attack
   const targetUrl = `${API_URL}/${path}${queryString}`;
 
+  const headers: Record<string, string> = {};
+
+  if (token?.accessToken) {
+    headers["Authorization"] = `Bearer ${token.accessToken}`;
+  }
+
   const options: RequestInit = {
     method: req.method,
-    headers: {
-      Authorization: `Bearer ${token.accessToken}`,
-    },
+    headers,
   };
 
   if (req.method !== "GET" && req.method !== "HEAD") {

@@ -10,10 +10,9 @@ import {
   StyledFormControlLabel,
   StyledRadioButton,
 } from "@/app/components/common/OptionsContainers";
+import { usePatchTherapistProfile } from "@/app/api/profile/profile";
 
 export default function ReligiousSpecializationForm({
-  nextStep,
-  onAnswerMutate,
   entity,
   previousStep,
 }: TherapistStepComponentProps) {
@@ -31,15 +30,23 @@ export default function ReligiousSpecializationForm({
     setSelectedPreference(event.target.value === "yes");
   };
 
+  const { mutate: patchTherapistProfile } = usePatchTherapistProfile({
+    onSuccess: () => {
+      router.push(`/therapist/dashboard`);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (selectedPreference !== entityReligiousSpecialization) {
-      onAnswerMutate({ is_religious_specialization: selectedPreference });
+      patchTherapistProfile({
+        is_religious_specialization: selectedPreference,
+      });
       return;
     }
 
-    router.push(nextStep);
+    router.push(`/therapist/dashboard`);
   };
 
   return (

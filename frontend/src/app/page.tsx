@@ -25,9 +25,9 @@ export default function Home() {
     }
   };
 
-  const handleTherapistTileClick = () => {
-    router.push("/register?type=therapist");
-  };
+  // const handleTherapistTileClick = () => {
+  //   router.push("/register?type=therapist");
+  // };
 
   return (
     <>
@@ -35,18 +35,12 @@ export default function Home() {
         What type of therapy are you looking for?
       </Typography>
       <Stack direction="row" gap={12.5}>
-        <Tile
-          onTileClick={handlePatientTileClick}
-          title="Myself"
-          image="/globe.svg"
-          alt="globe"
-        />
-        <Tile
+        <Tile onTileClick={handlePatientTileClick} title="Myself" alt="globe" />
+        {/* <Tile
           onTileClick={handleTherapistTileClick}
           title="Therapist"
-          image="/globe.svg"
           alt="globe"
-        />
+        /> */}
       </Stack>
     </>
   );
